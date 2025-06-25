@@ -20,7 +20,7 @@ export default function QuizPage({ auth }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <h3 className="text-2xl font-bold mb-4">Quiz</h3>
                             <p className="mb-6">Answer the following questions:</p>

@@ -79,7 +79,7 @@ export default function LearningContentContent({ auth, courseId }) {
             <Head title={course.title} />
             <div className="py-12">
                 <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <h3 className="text-lg font-semibold mb-2">{course.title}</h3>
                             <p className="mb-4">{course.description}</p>
@@ -89,7 +89,7 @@ export default function LearningContentContent({ auth, courseId }) {
                                     <li key={topic.id}>
                                         <Link
                                             href={route('learning-content.topic.show', topic.id)}
-                                            className="text-indigo-600 hover:underline"
+                                            className="text-black-900 hover:underline"
                                         >
                                             {topic.title}
                                         </Link>

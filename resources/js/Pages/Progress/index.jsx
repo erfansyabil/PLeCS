@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link} from '@inertiajs/react';
 
-export default function LearningContentIndex({ auth }) {
+export default function ProgressIndex({ auth }) {
     const courses = [
         {
             id: 1,
@@ -29,7 +29,7 @@ export default function LearningContentIndex({ auth }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Learning Content
+                    View Your Course Progress
                 </h2>
             }
         >
@@ -39,7 +39,7 @@ export default function LearningContentIndex({ auth }) {
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
-                                Welcome to the Learning Content module. Here you can browse, add, and manage your learning materials.
+                                Here you can view your progress
                             </p>
 
                             {/* Grid of Course Cards */}
@@ -56,10 +56,10 @@ export default function LearningContentIndex({ auth }) {
                                             {course.description}
                                         </p>
                                         <Link
-                                            href={route('learning-content.show', course.id)}
+                                            href={route('progress.show',  course.id)}
                                             className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
                                         >
-                                            View Course
+                                            View Progress
                                         </Link>
                                     </div>
                                 ))}

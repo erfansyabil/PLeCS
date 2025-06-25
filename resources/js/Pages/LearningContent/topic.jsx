@@ -71,7 +71,7 @@ export default function TopicPage({ auth, topicId }) {
             <Head title={topic.title} />
             <div className="py-12">
                 <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <h3 className="text-lg font-bold mb-4">{topic.title}</h3>
                             <p>{topic.content}</p>

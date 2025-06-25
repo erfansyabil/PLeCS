@@ -12,7 +12,7 @@ export default function AuthenticatedLayout({ header, children }) {
         useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-300 dark:bg-gray-300">
             <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
@@ -41,6 +41,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={route().current('assessment.index')}
                                 >
                                     Assessment
+                                </NavLink>
+                                <NavLink
+                                    href={route('progress.index')}
+                                    active={route().current('progress.index')}
+                                >
+                                    Your Progress
                                 </NavLink>
                                 <NavLink
                                     href={route('feedback.index')}

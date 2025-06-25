@@ -53,7 +53,17 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/feedback/form', function () {
         return Inertia::render('Feedback/form');
-    })->middleware(['auth', 'verified'])->name('feedback.form');
+        })->middleware(['auth', 'verified'])->name('feedback.form');
+
+
+    Route::get('/progress', function () {
+        return Inertia::render('Progress/index');
+        })->middleware(['auth', 'verified'])->name('progress.index');
+
+    Route::get('/progress/{id}', function ($id) {
+        // You can pass more data as needed
+        return Inertia::render('Progress/show', ['courseId' => $id]);
+        })->middleware(['auth', 'verified'])->name('progress.show');
 });
 
 

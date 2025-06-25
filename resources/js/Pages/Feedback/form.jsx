@@ -30,7 +30,7 @@ export default function FeedbackForm({ auth }) {
             <Head title="Feedback" />
             <div className="py-12">
                 <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             {submitted ? (
                                 <div className="text-green-600 dark:text-green-400">

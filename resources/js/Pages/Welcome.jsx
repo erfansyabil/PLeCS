@@ -67,6 +67,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         >
                                             Register
                                         </Link>
+                                        <a href={route('auth.google.redirect')}
+                                        className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] focus-visible:ring-2">
+                                            Sign in with Google
+                                        </a>
                                     </>
                                 )}
                             </nav>
@@ -89,7 +93,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                             onError={handleImageError}
                                         />
                                         <img
-                                            src="http://localhost:8000/storage/cs_bg.jpg"
+                                            src="/storage/cs_bg.jpg"
                                             alt="Computer Science Background"
                                             className="hidden aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.25)] dark:block"
                                         />

@@ -93,7 +93,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                             onError={handleImageError}
                                         />
                                         <img
-                                            src="/storage/cs_bg.jpg"
+                                            src="/images/cs_bg.jpg"
                                             alt="Computer Science Background"
                                             className="hidden aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.25)] dark:block"
                                         />

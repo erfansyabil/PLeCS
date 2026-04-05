@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\GoogleController;
 
 Route::get('/', function () {
@@ -19,9 +20,9 @@ Route::get('/', function () {
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -41,7 +42,50 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('LearningContent/topic', ['topicId' => $id]);
         })->middleware(['auth', 'verified'])->name('learning-content.topic.show');
     
-    
+        // Manage Additional Content module route
+    Route::get('/manage-additional-content', function () {
+        return Inertia::render('AdditionalContent/index');
+        })->middleware(['auth', 'verified'])->name('manage-additional-content.index');
+
+    Route::get('/manage-additional-content/{id}', function ($id) {
+        return Inertia::render('AdditionalContent/content', ['courseId' => $id]);
+        })->middleware(['auth', 'verified'])->name('manage-additional-content.show');
+
+    Route::get('/manage-additional-content/topic/{id}', function ($id) {
+        return Inertia::render('AdditionalContent/topic', ['topicId' => $id]);
+        })->middleware(['auth', 'verified'])->name('manage-additional-content.topic.show');
+
+
+    // View Topics module route
+    Route::get('/view-topics', function () {
+        return Inertia::render('Topics/index');
+        })->middleware(['auth', 'verified'])->name('view-topics.index');
+
+    Route::get('/view-topics/{id}', function ($id) {
+        return Inertia::render('Topics/show', ['topicId' => $id]);
+        })->middleware(['auth', 'verified'])->name('view-topics.show');
+
+
+    // Manage Learning Content module route (for administrators)
+    Route::get('/manage-learning-content', function () {
+        return Inertia::render('ManageLearningContent/index');
+        })->middleware(['auth', 'verified'])->name('manage-learning-content.index');
+
+    Route::get('/manage-learning-content/{id}', function ($id) {
+        return Inertia::render('ManageLearningContent/show', ['contentId' => $id]);
+        })->middleware(['auth', 'verified'])->name('manage-learning-content.show');
+
+
+    // Manage Quizzes and Coding Exercises module route (for administrators)
+    Route::get('/manage-quizzes-coding', function () {
+        return Inertia::render('ManageQuizzesCoding/index');
+        })->middleware(['auth', 'verified'])->name('manage-quizzes-coding.index');
+
+    Route::get('/manage-quizzes-coding/{id}', function ($id) {
+        return Inertia::render('ManageQuizzesCoding/show', ['quizId' => $id]);
+        })->middleware(['auth', 'verified'])->name('manage-quizzes-coding.show');
+
+
     // Assessment module route
     Route::get('/assessment', function () {
         return Inertia::render('Assessment/index');

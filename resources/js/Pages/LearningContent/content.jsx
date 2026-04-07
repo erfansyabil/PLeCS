@@ -1,7 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
+import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function LearningContentContent({ auth, courseId }) {
+export default function LearningContentContent({ auth, courseId, layout }) {
     const courses = [
         {
             id: 1,
@@ -53,23 +56,40 @@ export default function LearningContentContent({ auth, courseId }) {
         },
     ];
 
+        // Determine which layout to use
+        const getLayout = () => {
+            switch (layout) {
+                case 'StudentLayout':
+                    return StudentLayout;
+                case 'TeacherLayout':
+                    return TeacherLayout;
+                case 'AdministratorLayout':
+                    return AdministratorLayout;
+                default:
+                    return AuthenticatedLayout; // fallback
+            }
+        };
+
     // Find the course by ID (courseId is a string, so use ==)
     const course = courses.find(c => c.id == courseId);
 
     if (!course) {
+        
         return (
-            <AuthenticatedLayout>
+            <LayoutComponent>
                 <Head title="Course Not Found" />
                 <div className="p-6 text-gray-900 dark:text-white">
                     <h2 className="text-xl font-semibold mb-4">Course Not Found</h2>
                     <p>The course you are looking for does not exist.</p>
                 </div>
-            </AuthenticatedLayout>
+            </LayoutComponent>
         );
     }
 
+    const LayoutComponent = getLayout();
     return (
-        <AuthenticatedLayout
+
+        <LayoutComponent
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     {course.title}
@@ -100,6 +120,6 @@ export default function LearningContentContent({ auth, courseId }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </LayoutComponent>
     );
 }

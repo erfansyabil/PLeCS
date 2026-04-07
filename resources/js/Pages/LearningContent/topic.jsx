@@ -1,7 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
+import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head } from '@inertiajs/react';
 
-export default function TopicPage({ auth, topicId }) {
+export default function TopicPage({ auth, topicId, layout }) {
+
+    // Determine which layout to use
+        const getLayout = () => {
+            switch (layout) {
+                case 'StudentLayout':
+                    return StudentLayout;
+                case 'TeacherLayout':
+                    return TeacherLayout;
+                case 'AdministratorLayout':
+                    return AdministratorLayout;
+                default:
+                    return AuthenticatedLayout; // fallback
+            }
+        };
+
     // You can fetch or map topicId to topic content here
     // Example:
     const topics = {
@@ -49,6 +67,7 @@ export default function TopicPage({ auth, topicId }) {
     const topic = topics[topicId];
 
     if (!topic) {
+    const LayoutComponent = getLayout();
         return (
             <AuthenticatedLayout>
                 <Head title="Topic Not Found" />
@@ -60,8 +79,9 @@ export default function TopicPage({ auth, topicId }) {
         );
     }
 
+    const LayoutComponent = getLayout();
     return (
-        <AuthenticatedLayout
+        <LayoutComponent
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     {topic.title}
@@ -79,6 +99,6 @@ export default function TopicPage({ auth, topicId }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </LayoutComponent>
     );
 }

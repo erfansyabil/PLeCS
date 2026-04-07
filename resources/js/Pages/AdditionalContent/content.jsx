@@ -1,7 +1,7 @@
-import TeacherLayout from '@/Layouts/TeacherLayoutLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function AdditionalContentContent({ auth, courseId }) {
+export default function AdditionalContentContent({ auth, courseId, layout }) {
     const courses = [
         {
             id: 1,

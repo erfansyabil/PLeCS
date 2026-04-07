@@ -18,9 +18,20 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+
+        // Determine which layout to use based on role
+        $layout = match($user->role) {
+            'student' => 'StudentLayout',
+            'teacher' => 'TeacherLayout',
+            'administrator' => 'AdministratorLayout',
+            default => 'AuthenticatedLayout', // fallback
+        };
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'layout' => $layout,
         ]);
     }
 

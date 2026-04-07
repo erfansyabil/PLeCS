@@ -57,13 +57,13 @@ Route::middleware('auth')->group(function () {
 
 
     // View Topics module route
-    Route::get('/view-topics', function () {
-        return Inertia::render('Topics/index');
-        })->middleware(['auth', 'verified'])->name('view-topics.index');
+    // Route::get('/view-topics', function () {
+    //     return Inertia::render('Topics/index');
+    //     })->middleware(['auth', 'verified'])->name('view-topics.index');
 
-    Route::get('/view-topics/{id}', function ($id) {
-        return Inertia::render('Topics/show', ['topicId' => $id]);
-        })->middleware(['auth', 'verified'])->name('view-topics.show');
+    // Route::get('/view-topics/{id}', function ($id) {
+    //     return Inertia::render('Topics/show', ['topicId' => $id]);
+    //     })->middleware(['auth', 'verified'])->name('view-topics.show');
 
 
     // Manage Learning Content module route (for administrators)

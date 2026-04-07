@@ -1,12 +1,32 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import StudentLayout from '@/Layouts/StudentLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
+import AdministratorLayout from '@/Layouts/AdministratorLayout';
+import { Head, usePage } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit({ mustVerifyEmail, status, layout }) {
+    const { auth } = usePage().props;
+
+    // Determine which layout to use
+    const getLayout = () => {
+        switch (layout) {
+            case 'StudentLayout':
+                return StudentLayout;
+            case 'TeacherLayout':
+                return TeacherLayout;
+            case 'AdministratorLayout':
+                return AdministratorLayout;
+            default:
+                return AuthenticatedLayout; // fallback
+        }
+    };
+
+    const LayoutComponent = getLayout();
     return (
-        <AuthenticatedLayout
+        <LayoutComponent
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Profile
@@ -34,6 +54,6 @@ export default function Edit({ mustVerifyEmail, status }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </LayoutComponent>
     );
 }

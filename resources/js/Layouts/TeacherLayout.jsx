@@ -37,8 +37,8 @@ export default function TeacherLayout({ header, children }) {
                                     Manage Additional Learning Content
                                 </NavLink>
                                 <NavLink
-                                    href={route('view-topics.index')}
-                                    active={route().current('view-topics.index')}
+                                    href={route('learning-content.index')}
+                                    active={route().current('learning-content.index')}
                                 >
                                     View Topics
                                 </NavLink>

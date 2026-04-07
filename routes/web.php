@@ -30,17 +30,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Learning Content module route
-    Route::get('/learning-content', function () {
-        return Inertia::render('LearningContent/index');
-        })->middleware(['auth', 'verified'])->name('learning-content.index');
+    Route::get('/learning-content', [\App\Http\Controllers\LearningContentController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('learning-content.index');
 
-    Route::get('/learning-content/{id}', function ($id) {
-        return Inertia::render('LearningContent/content', ['courseId' => $id]);
-        })->middleware(['auth', 'verified'])->name('learning-content.show');
+    Route::get('/learning-content/{id}', [\App\Http\Controllers\LearningContentController::class, 'content'])
+        ->middleware(['auth', 'verified'])
+        ->name('learning-content.show');
 
-    Route::get('/learning-content/topic/{id}', function ($id) {
-        return Inertia::render('LearningContent/topic', ['topicId' => $id]);
-        })->middleware(['auth', 'verified'])->name('learning-content.topic.show');
+    Route::get('/learning-content/topic/{id}', [\App\Http\Controllers\LearningContentController::class, 'topic'])
+        ->middleware(['auth', 'verified'])
+        ->name('learning-content.topic.show');
     
         // Manage Additional Content module route
     Route::get('/manage-additional-content', function () {

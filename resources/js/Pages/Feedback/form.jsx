@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
+import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head } from '@inertiajs/react';
 
-export default function FeedbackForm({ auth }) {
+export default function FeedbackForm({ auth, layout }) {
     const [form, setForm] = useState({
         subject: '',
         message: '',
@@ -19,8 +22,24 @@ export default function FeedbackForm({ auth }) {
         setSubmitted(true);
     };
 
+    // Determine which layout to use
+    const getLayout = () => {
+        switch (layout) {
+            case 'StudentLayout':
+                return StudentLayout;
+            case 'TeacherLayout':
+                return TeacherLayout;
+            case 'AdministratorLayout':
+                return AdministratorLayout;
+            default:
+                return AuthenticatedLayout; // fallback
+        }
+    };
+
+    const LayoutComponent = getLayout();
+
     return (
-        <AuthenticatedLayout
+        <LayoutComponent
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Feedback & Suggestion
@@ -78,6 +97,6 @@ export default function FeedbackForm({ auth }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </LayoutComponent>
     );
 }

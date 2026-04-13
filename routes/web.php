@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -29,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Learning Content module route
+    // Learning Content module routes - accessible to students, teachers, and administrators
     Route::get('/learning-content', [\App\Http\Controllers\LearningContentController::class, 'index'])
         ->middleware(['auth', 'verified'])
         ->name('learning-content.index');
@@ -42,10 +43,10 @@ Route::middleware('auth')->group(function () {
         ->middleware(['auth', 'verified'])
         ->name('learning-content.topic.show');
     
-        // Manage Additional Content module route
+    // Manage Additional Content module route - accessible to teachers and administrators only
     Route::get('/manage-additional-content', function () {
         return Inertia::render('AdditionalContent/index');
-        })->middleware(['auth', 'verified'])->name('manage-additional-content.index');
+        })->middleware(['auth', 'verified', 'role:teacher,administrator'])->name('manage-additional-content.index');
 
     Route::get('/manage-additional-content/{id}', function ($id) {
         return Inertia::render('AdditionalContent/content', ['courseId' => $id]);
@@ -96,12 +97,40 @@ Route::middleware('auth')->group(function () {
         'courseId' => $course,
         ]);})->name('quiz.show');
 
-    Route::get('/feedback', function () {
-        return Inertia::render('Feedback/index');
+    Route::get('/feedback', function (Request $request) {
+        $user = $request->user();
+
+        // Determine which layout to use based on role
+        $layout = match($user->role) {
+            'student' => 'StudentLayout',
+            'teacher' => 'TeacherLayout',
+            'administrator' => 'AdministratorLayout',
+            default => 'AuthenticatedLayout', // fallback
+        };
+
+        return Inertia::render('Feedback/index', [
+            'layout' => $layout,
+        ]);
         })->middleware(['auth', 'verified'])->name('feedback.index');
     
-    Route::get('/feedback/form', function () {
-        return Inertia::render('Feedback/form');
+    Route::get('/teacher-feedback', function () {
+        return Inertia::render('Feedback/index', ['layout' => 'TeacherLayout']);
+        })->middleware(['auth', 'verified'])->name('teacher-feedback.index');
+    
+    Route::get('/feedback/form', function (Request $request) {
+        $user = $request->user();
+
+        // Determine which layout to use based on role
+        $layout = match($user->role) {
+            'student' => 'StudentLayout',
+            'teacher' => 'TeacherLayout',
+            'administrator' => 'AdministratorLayout',
+            default => 'AuthenticatedLayout', // fallback
+        };
+
+        return Inertia::render('Feedback/form', [
+            'layout' => $layout,
+        ]);
         })->middleware(['auth', 'verified'])->name('feedback.form');
 
 

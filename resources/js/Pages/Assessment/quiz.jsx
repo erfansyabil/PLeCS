@@ -1,4 +1,4 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
 import { Head } from '@inertiajs/react';
 
 export default function QuizPage({ auth }) {
@@ -8,7 +8,7 @@ export default function QuizPage({ auth }) {
     // const [score, setScore] = useState(0);
 
     return (
-        <AuthenticatedLayout
+        <StudentLayout
             auth={auth}
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
@@ -51,7 +51,7 @@ export default function QuizPage({ auth }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </StudentLayout>
     );
 }
 

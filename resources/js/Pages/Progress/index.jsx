@@ -1,4 +1,4 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link} from '@inertiajs/react';
 
 export default function ProgressIndex({ auth }) {
@@ -26,7 +26,7 @@ export default function ProgressIndex({ auth }) {
     ];
 
     return (
-        <AuthenticatedLayout
+        <StudentLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     View Your Course Progress
@@ -68,6 +68,6 @@ export default function ProgressIndex({ auth }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </StudentLayout>
     );
 }

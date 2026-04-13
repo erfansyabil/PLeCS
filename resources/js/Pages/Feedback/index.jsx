@@ -1,7 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
+import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link} from '@inertiajs/react';
 
-export default function FeedbackIndex({ auth }) {
+export default function FeedbackIndex({ auth, layout }) {
     const courses = [
         {
             id: 1,
@@ -20,8 +23,23 @@ export default function FeedbackIndex({ auth }) {
         },
     ];
 
+        // Determine which layout to use
+        const getLayout = () => {
+            switch (layout) {
+                case 'StudentLayout':
+                    return StudentLayout;
+                case 'TeacherLayout':
+                    return TeacherLayout;
+                case 'AdministratorLayout':
+                    return AdministratorLayout;
+                default:
+                    return AuthenticatedLayout; // fallback
+            }
+        };
+
+    const LayoutComponent = getLayout();
     return (
-        <AuthenticatedLayout
+        <LayoutComponent
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Provide Your Feedback!
@@ -63,6 +81,6 @@ export default function FeedbackIndex({ auth }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </LayoutComponent>
     );
 }

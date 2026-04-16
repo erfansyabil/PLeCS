@@ -1,7 +1,10 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
 import TeacherLayout from '@/Layouts/TeacherLayout';
+import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link} from '@inertiajs/react';
 
-export default function ViewAllTopicsIndex({ auth, layout }) {
+export default function LearningContentIndex({ auth, layout }) {
     const courses = [
         {
             id: 1,
@@ -25,15 +28,31 @@ export default function ViewAllTopicsIndex({ auth, layout }) {
         },
     ];
 
+        // Determine which layout to use
+        const getLayout = () => {
+            switch (layout) {
+                case 'StudentLayout':
+                    return StudentLayout;
+                case 'TeacherLayout':
+                    return TeacherLayout;
+                case 'AdministratorLayout':
+                    return AdministratorLayout;
+                default:
+                    return AuthenticatedLayout; // fallback
+            }
+        };
+  
+
+    const LayoutComponent = getLayout();
     return (
-        <TeacherLayout
+        <LayoutComponent
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    View All Topics
+                    Learning Content
                 </h2>
             }
         >
-            <Head title="View All Topics" />
+            <Head title="Learning Content" />
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
@@ -56,7 +75,7 @@ export default function ViewAllTopicsIndex({ auth, layout }) {
                                             {course.description}
                                         </p>
                                         <Link
-                                            href={route('learning-content.show', course.id)}
+                                            href={route('student.learning-content.show', course.id)}
                                             className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
                                         >
                                             View Course
@@ -68,6 +87,6 @@ export default function ViewAllTopicsIndex({ auth, layout }) {
                     </div>
                 </div>
             </div>
-        </TeacherLayout>
+        </LayoutComponent>
     );
 }

@@ -1,4 +1,3 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';

@@ -1,10 +1,7 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
-import TeacherLayout from '@/Layouts/TeacherLayout';
-import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head, Link} from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
-export default function FeedbackIndex({ auth, layout }) {
+export default function AssessmentIndex({ auth }) {
     const courses = [
         {
             id: 1,
@@ -17,42 +14,32 @@ export default function FeedbackIndex({ auth, layout }) {
             description: 'Understand security threats, vulnerabilities, and basic protection methods.',
         },
         {
+            id: 3,
+            title: 'Multimedia Design',
+            description: 'Explore design principles, animation, and media tools.',
+        },
+        {
             id: 4,
             title: 'Web Development',
             description: 'Build websites using HTML, CSS, JavaScript, and backend basics.',
         },
     ];
 
-        // Determine which layout to use
-        const getLayout = () => {
-            switch (layout) {
-                case 'StudentLayout':
-                    return StudentLayout;
-                case 'TeacherLayout':
-                    return TeacherLayout;
-                case 'AdministratorLayout':
-                    return AdministratorLayout;
-                default:
-                    return AuthenticatedLayout; // fallback
-            }
-        };
-
-    const LayoutComponent = getLayout();
     return (
-        <LayoutComponent
+        <StudentLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Provide Your Feedback!
+                    Assessment
                 </h2>
             }
         >
-            <Head title="Learning Content" />
+            <Head title="Assessment" />
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
-                                Here you can provide feedback on a course you have completed!
+                                Welcome to the Assessment module. Here you attempt a quiz to enhance your understanding!
                             </p>
 
                             {/* Grid of Course Cards */}
@@ -69,10 +56,10 @@ export default function FeedbackIndex({ auth, layout }) {
                                             {course.description}
                                         </p>
                                         <Link
-                                            href={route('feedback.form', { course: course.id })}
-                                            className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+                                            href={route('student.assessment.show', 1)} // assuming 1 is a placeholder course ID
+                                            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                                         >
-                                            Give Feedback
+                                            Start Quiz
                                         </Link>
                                     </div>
                                 ))}
@@ -81,6 +68,6 @@ export default function FeedbackIndex({ auth, layout }) {
                     </div>
                 </div>
             </div>
-        </LayoutComponent>
+        </StudentLayout>
     );
 }

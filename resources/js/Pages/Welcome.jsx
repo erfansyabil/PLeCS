@@ -23,7 +23,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
     return (
         <>
-            <Head title="Welcome" />
+            <Head title="PLeCS - Welcome" />
             <div className="bg-gray-300 text-black min-h-screen">
                 <img
                     id="background"

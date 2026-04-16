@@ -25,7 +25,7 @@ class LearningContentController extends Controller
      */
     public function index(Request $request)
     {
-        return Inertia::render('LearningContent/index', [
+        return Inertia::render('Student/LearningContent/index', [
             'layout' => $this->layoutForRole($request->user()->role),
         ]);
     }
@@ -35,7 +35,7 @@ class LearningContentController extends Controller
      */
     public function content(Request $request, int $id)
     {
-        return Inertia::render('LearningContent/content', [
+        return Inertia::render('Student/LearningContent/content', [
             'courseId' => $id,
             'layout' => $this->layoutForRole($request->user()->role),
         ]);
@@ -46,7 +46,7 @@ class LearningContentController extends Controller
      */
     public function topic(Request $request, int $id)
     {
-        return Inertia::render('LearningContent/topic', [
+        return Inertia::render('Student/LearningContent/topic', [
             'topicId' => $id,
             'layout' => $this->layoutForRole($request->user()->role),
         ]);

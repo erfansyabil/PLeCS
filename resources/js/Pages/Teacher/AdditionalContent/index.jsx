@@ -1,7 +1,7 @@
-import StudentLayout from '@/Layouts/StudentLayout';
-import { Head, Link } from '@inertiajs/react';
+import TeacherLayout from '@/Layouts/TeacherLayout';
+import { Head, Link} from '@inertiajs/react';
 
-export default function AssessmentIndex({ auth }) {
+export default function ManageAdditionalContentIndex({ auth }) {
     const courses = [
         {
             id: 1,
@@ -26,20 +26,20 @@ export default function AssessmentIndex({ auth }) {
     ];
 
     return (
-        <StudentLayout
+        <TeacherLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Assessment
+                    Additional Content Management
                 </h2>
             }
         >
-            <Head title="Assessment" />
+            <Head title="Manage Additional Content" />
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
-                                Welcome to the Assessment module. Here you attempt a quiz to enhance your understanding!
+                                This is where you can view, add, update and delete additional content for the students.
                             </p>
 
                             {/* Grid of Course Cards */}
@@ -56,10 +56,10 @@ export default function AssessmentIndex({ auth }) {
                                             {course.description}
                                         </p>
                                         <Link
-                                            href={route('quiz.show', 1)} // assuming 1 is a placeholder course ID
-                                            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                            href={route('teacher.additional-content.show', course.id)}
+                                            className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
                                         >
-                                            Start Quiz
+                                            View Course
                                         </Link>
                                     </div>
                                 ))}
@@ -68,6 +68,6 @@ export default function AssessmentIndex({ auth }) {
                     </div>
                 </div>
             </div>
-        </StudentLayout>
+        </TeacherLayout>
     );
 }

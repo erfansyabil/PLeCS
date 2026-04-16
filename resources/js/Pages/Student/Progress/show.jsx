@@ -1,4 +1,4 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StudentLayout from '@/Layouts/StudentLayout';
 import { Head } from '@inertiajs/react';
 
 export default function ProgressShow({ auth, courseId }) {
@@ -38,18 +38,18 @@ export default function ProgressShow({ auth, courseId }) {
 
     if (!course) {
         return (
-            <AuthenticatedLayout>
+            <StudentLayout>
                 <Head title="Course Not Found" />
                 <div className="p-6 text-gray-900 dark:text-white">
                     <h2 className="text-xl font-semibold mb-4">Course Not Found</h2>
                     <p>The course you are looking for does not exist.</p>
                 </div>
-            </AuthenticatedLayout>
+            </StudentLayout>
         );
     }
 
     return (
-        <AuthenticatedLayout
+        <StudentLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     {course.title} - Progress Details
@@ -91,6 +91,6 @@ export default function ProgressShow({ auth, courseId }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </StudentLayout>
     );
 }

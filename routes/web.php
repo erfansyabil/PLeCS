@@ -1,12 +1,18 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LearningContentController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Auth\GoogleController;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -17,133 +23,148 @@ Route::get('/', function () {
     ]);
 });
 
-//Google Authentication routes
+// Google Authentication
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Dashboard - DashboardController handles role-based redirect
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Profile - shared across all roles (UC001)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Learning Content module routes - accessible to students, teachers, and administrators
-    Route::get('/learning-content', [\App\Http\Controllers\LearningContentController::class, 'index'])
-        ->middleware(['auth', 'verified'])
-        ->name('learning-content.index');
 
-    Route::get('/learning-content/{id}', [\App\Http\Controllers\LearningContentController::class, 'content'])
-        ->middleware(['auth', 'verified'])
-        ->name('learning-content.show');
+    /*
+    |----------------------------------------------------------------------
+    | Student Routes
+    |----------------------------------------------------------------------
+    */
 
-    Route::get('/learning-content/topic/{id}', [\App\Http\Controllers\LearningContentController::class, 'topic'])
-        ->middleware(['auth', 'verified'])
-        ->name('learning-content.topic.show');
-    
-    // Manage Additional Content module route - accessible to teachers and administrators only
-    Route::get('/manage-additional-content', function () {
-        return Inertia::render('AdditionalContent/index');
-        })->middleware(['auth', 'verified', 'role:teacher,administrator'])->name('manage-additional-content.index');
+    Route::prefix('student')->name('student.')->group(function () {
 
-    Route::get('/manage-additional-content/{id}', function ($id) {
-        return Inertia::render('AdditionalContent/content', ['courseId' => $id]);
-        })->middleware(['auth', 'verified'])->name('manage-additional-content.show');
+        // UC002: Access Personalized Learning Content
+        // UC003: View Topics (student view)
+        Route::get('/learning-content', [LearningContentController::class, 'index'])
+            ->name('learning-content.index');
+        Route::get('/learning-content/{id}', [LearningContentController::class, 'content'])
+            ->name('learning-content.show');
+        Route::get('/learning-content/topic/{id}', [LearningContentController::class, 'topic'])
+            ->name('learning-content.topic.show');
 
-    Route::get('/manage-additional-content/topic/{id}', function ($id) {
-        return Inertia::render('AdditionalContent/topic', ['topicId' => $id]);
-        })->middleware(['auth', 'verified'])->name('manage-additional-content.topic.show');
+        // UC010: Enroll in Courses
+        Route::get('/enrollment', function () {
+            return Inertia::render('Student/Enrollment/index');
+        })->name('enrollment.index');
 
+        // UC008: Manage Learning Path
+        Route::get('/learning-path', function () {
+            return Inertia::render('Student/LearningPath/index');
+        })->name('learning-path.index');
 
-    // View Topics module route
-    // Route::get('/view-topics', function () {
-    //     return Inertia::render('Topics/index');
-    //     })->middleware(['auth', 'verified'])->name('view-topics.index');
+        // UC007: Attempt Gamified Quizzes
+        Route::get('/assessment', function () {
+            return Inertia::render('Student/Assessment/index');
+        })->name('assessment.index');
+        Route::get('/assessment/{courseId}', function ($courseId) {
+            return Inertia::render('Student/Assessment/quiz', ['courseId' => $courseId]);
+        })->name('assessment.show');
 
-    // Route::get('/view-topics/{id}', function ($id) {
-    //     return Inertia::render('Topics/show', ['topicId' => $id]);
-    //     })->middleware(['auth', 'verified'])->name('view-topics.show');
+        // UC011: View Performance Analytics
+        Route::get('/progress', function () {
+            return Inertia::render('Student/Progress/index');
+        })->name('progress.index');
+        Route::get('/progress/{id}', function ($id) {
+            return Inertia::render('Student/Progress/show', ['courseId' => $id]);
+        })->name('progress.show');
 
+        // UC012: Provide Feedback on Learning Modules
+        Route::get('/feedback', function () {
+            return Inertia::render('Student/Feedback/index');
+        })->name('feedback.index');
+        Route::get('/feedback/form', function () {
+            return Inertia::render('Student/Feedback/form');
+        })->name('feedback.form');
 
-    // Manage Learning Content module route (for administrators)
-    Route::get('/manage-learning-content', function () {
-        return Inertia::render('ManageLearningContent/index');
-        })->middleware(['auth', 'verified'])->name('manage-learning-content.index');
-
-    Route::get('/manage-learning-content/{id}', function ($id) {
-        return Inertia::render('ManageLearningContent/show', ['contentId' => $id]);
-        })->middleware(['auth', 'verified'])->name('manage-learning-content.show');
-
-
-    // Manage Quizzes and Coding Exercises module route (for administrators)
-    Route::get('/manage-quizzes-coding', function () {
-        return Inertia::render('ManageQuizzesCoding/index');
-        })->middleware(['auth', 'verified'])->name('manage-quizzes-coding.index');
-
-    Route::get('/manage-quizzes-coding/{id}', function ($id) {
-        return Inertia::render('ManageQuizzesCoding/show', ['quizId' => $id]);
-        })->middleware(['auth', 'verified'])->name('manage-quizzes-coding.show');
+    });
 
 
-    // Assessment module route
-    Route::get('/assessment', function () {
-        return Inertia::render('Assessment/index');
-        })->middleware(['auth', 'verified'])->name('assessment.index');
+    /*
+    |----------------------------------------------------------------------
+    | Teacher Routes
+    |----------------------------------------------------------------------
+    */
 
-    Route::get('/quiz/{course}', function ($course) {
-        return Inertia::render('Assessment/quiz', [
-        'courseId' => $course,
-        ]);})->name('quiz.show');
+    Route::prefix('teacher')->name('teacher.')->middleware('role:teacher')->group(function () {
 
-    Route::get('/feedback', function (Request $request) {
-        $user = $request->user();
+        // UC003: View Topics (teacher view)
+        Route::get('/topics', function () {
+            return Inertia::render('teacher/Topics/index');
+        })->name('topics.index');
+        Route::get('/topics/{id}', function ($id) {
+            return Inertia::render('teacher/Topics/show', ['topicId' => $id]);
+        })->name('topics.show');
 
-        // Determine which layout to use based on role
-        $layout = match($user->role) {
-            'student' => 'StudentLayout',
-            'teacher' => 'TeacherLayout',
-            'administrator' => 'AdministratorLayout',
-            default => 'AuthenticatedLayout', // fallback
-        };
+        // UC005: Manage Additional Materials
+        Route::get('/additional-content', function () {
+            return Inertia::render('teacher/AdditionalContent/index');
+        })->name('additional-content.index');
+        Route::get('/additional-content/{id}', function ($id) {
+            return Inertia::render('teacher/AdditionalContent/show', ['contentId' => $id]);
+        })->name('additional-content.show');
 
-        return Inertia::render('Feedback/index', [
-            'layout' => $layout,
-        ]);
-        })->middleware(['auth', 'verified'])->name('feedback.index');
-    
-    Route::get('/teacher-feedback', function () {
-        return Inertia::render('Feedback/index', ['layout' => 'TeacherLayout']);
-        })->middleware(['auth', 'verified'])->name('teacher-feedback.index');
-    
-    Route::get('/feedback/form', function (Request $request) {
-        $user = $request->user();
+        // UC013: Provide Feedback and Guidance
+        Route::get('/guidance', function () {
+            return Inertia::render('teacher/Guidance/index');
+        })->name('guidance.index');
 
-        // Determine which layout to use based on role
-        $layout = match($user->role) {
-            'student' => 'StudentLayout',
-            'teacher' => 'TeacherLayout',
-            'administrator' => 'AdministratorLayout',
-            default => 'AuthenticatedLayout', // fallback
-        };
-
-        return Inertia::render('Feedback/form', [
-            'layout' => $layout,
-        ]);
-        })->middleware(['auth', 'verified'])->name('feedback.form');
+    });
 
 
-    Route::get('/progress', function () {
-        return Inertia::render('Progress/index');
-        })->middleware(['auth', 'verified'])->name('progress.index');
+    /*
+    |----------------------------------------------------------------------
+    | Administrator Routes
+    |----------------------------------------------------------------------
+    */
 
-    Route::get('/progress/{id}', function ($id) {
-        // You can pass more data as needed
-        return Inertia::render('Progress/show', ['courseId' => $id]);
-        })->middleware(['auth', 'verified'])->name('progress.show');
+    Route::prefix('admin')->name('admin.')->middleware('role:administrator')->group(function () {
+
+        // UC003: View Topics (admin view)
+        Route::get('/topics', function () {
+            return Inertia::render('admin/Topics/index');
+        })->name('topics.index');
+        Route::get('/topics/{id}', function ($id) {
+            return Inertia::render('admin/Topics/show', ['topicId' => $id]);
+        })->name('topics.show');
+
+        // UC004: Manage Learning Content
+        Route::get('/learning-content', function () {
+            return Inertia::render('admin/LearningContent/index');
+        })->name('learning-content.index');
+        Route::get('/learning-content/{id}', function ($id) {
+            return Inertia::render('admin/LearningContent/show', ['contentId' => $id]);
+        })->name('learning-content.show');
+
+        // UC009: Manage Quizzes and Coding Exercises
+        Route::get('/quizzes', function () {
+            return Inertia::render('admin/Quizzes/index');
+        })->name('quizzes.index');
+        Route::get('/quizzes/{id}', function ($id) {
+            return Inertia::render('admin/Quizzes/show', ['quizId' => $id]);
+        })->name('quizzes.show');
+
+    });
+
 });
-
-
 
 require __DIR__.'/auth.php';

@@ -1,7 +1,7 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import ApplicationLogo from '@/Components/shared/ApplicationLogo';
+import Dropdown from '@/Components/ui/Dropdown';
+import NavLink from '@/Components/nav/NavLink';
+import ResponsiveNavLink from '@/Components/nav/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -31,8 +31,11 @@ export default function AdministratorLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    href={route('manage-learning-content.index')}
-                                    active={route().current('manage-learning-content.index')}
+                                    href={route('learning-content.index')}
+                                    active={
+                                        route().current('learning-content.index') ||
+                                        route().current('learning-content.show')
+                                    }
                                 >
                                     Manage Learning Content
                                 </NavLink>

@@ -1,7 +1,7 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import ApplicationLogo from '@/Components/shared/ApplicationLogo';
+import Dropdown from '@/Components/ui/Dropdown';
+import NavLink from '@/Components/nav/NavLink';
+import ResponsiveNavLink from '@/Components/nav/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -31,26 +31,36 @@ export default function StudentLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    href={route('learning-content.index')}
-                                    active={route().current('learning-content.index')}
+                                    href={route('student.enrollment.index')}
+                                    active={route().current('student.enrollment.index')}
+                                >
+                                    Enrollment
+                                </NavLink>
+                                <NavLink
+                                    href={route('student.learning-content.index')}
+                                    active={
+                                        route().current('student.learning-content.index') ||
+                                        route().current('student.learning-content.show') ||
+                                        route().current('student.learning-content.topic.show')
+                                    }
                                 >
                                     Learning Content
                                 </NavLink>
                                 <NavLink
-                                    href={route('assessment.index')}
-                                    active={route().current('assessment.index')}
+                                    href={route('student.assessment.index')}
+                                    active={route().current('student.assessment.index')}
                                 >
                                     Assessment
                                 </NavLink>
                                 <NavLink
-                                    href={route('progress.index')}
-                                    active={route().current('progress.index')}
+                                    href={route('student.progress.index')}
+                                    active={route().current('student.progress.index')}
                                 >
                                     Progress
                                 </NavLink>
                                 <NavLink
-                                    href={route('feedback.index')}
-                                    active={route().current('feedback.index')}
+                                    href={route('student.feedback.index')}
+                                    active={route().current('student.feedback.index')}
                                 >
                                     Feedback
                                 </NavLink>
@@ -159,26 +169,30 @@ export default function StudentLayout({ header, children }) {
                             Dashboard
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('learning-content.index')}
-                            active={route().current('learning-content.index')}
+                            href={route('student.learning-content.index')}
+                            active={
+                                route().current('student.learning-content.index') ||
+                                route().current('student.learning-content.show') ||
+                                route().current('student.learning-content.topic.show')
+                            }
                         >
                             Learning Content
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('assessment.index')}
-                            active={route().current('assessment.index')}
+                            href={route('student.assessment.index')}
+                            active={route().current('student.assessment.index')}
                         >
                             Assessment
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('progress.index')}
-                            active={route().current('progress.index')}
+                            href={route('student.progress.index')}
+                            active={route().current('student.progress.index')}
                         >
                             Progress
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('feedback.index')}
-                            active={route().current('feedback.index')}
+                            href={route('student.feedback.index')}
+                            active={route().current('student.feedback.index')}
                         >
                             Feedback
                         </ResponsiveNavLink>

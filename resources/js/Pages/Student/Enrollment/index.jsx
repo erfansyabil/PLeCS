@@ -1,10 +1,7 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
-import TeacherLayout from '@/Layouts/TeacherLayout';
-import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link} from '@inertiajs/react';
 
-export default function LearningContentIndex({ auth, layout }) {
+export default function EnrollmentIndex({ auth, layout }) {
     const courses = [
         {
             id: 1,
@@ -28,37 +25,21 @@ export default function LearningContentIndex({ auth, layout }) {
         },
     ];
 
-        // Determine which layout to use
-        const getLayout = () => {
-            switch (layout) {
-                case 'StudentLayout':
-                    return StudentLayout;
-                case 'TeacherLayout':
-                    return TeacherLayout;
-                case 'AdministratorLayout':
-                    return AdministratorLayout;
-                default:
-                    return AuthenticatedLayout; // fallback
-            }
-        };
-  
-
-    const LayoutComponent = getLayout();
     return (
-        <LayoutComponent
+        <StudentLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Learning Content
+                    Enrollment
                 </h2>
             }
         >
-            <Head title="Learning Content" />
+            <Head title="Enrollment" />
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
-                                Welcome to the Learning Content module. Here you can browse, add, and manage your learning materials.
+                                Welcome to the Enrollment module. Here you can browse, add, and manage your enrollments.
                             </p>
 
                             {/* Grid of Course Cards */}
@@ -74,12 +55,12 @@ export default function LearningContentIndex({ auth, layout }) {
                                         <p className="text-gray-600 dark:text-gray-300 text-sm">
                                             {course.description}
                                         </p>
-                                        <Link
-                                            href={route('learning-content.show', course.id)}
+                                        {/* <Link
+                                            href={route('student.enrollment.show', course.id)}
                                             className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
                                         >
                                             View Course
-                                        </Link>
+                                        </Link> */}
                                     </div>
                                 ))}
                             </div>
@@ -87,6 +68,6 @@ export default function LearningContentIndex({ auth, layout }) {
                     </div>
                 </div>
             </div>
-        </LayoutComponent>
+        </StudentLayout>
     );
 }

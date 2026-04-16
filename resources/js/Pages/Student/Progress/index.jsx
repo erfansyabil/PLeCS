@@ -56,7 +56,7 @@ export default function ProgressIndex({ auth }) {
                                             {course.description}
                                         </p>
                                         <Link
-                                            href={route('progress.show',  course.id)}
+                                            href={route('student.progress.show',  course.id)}
                                             className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
                                         >
                                             View Progress

@@ -31,23 +31,23 @@ export default function AdministratorLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    href={route('learning-content.index')}
+                                    href={route('admin.learning-content.index')}
                                     active={
-                                        route().current('learning-content.index') ||
-                                        route().current('learning-content.show')
+                                        route().current('admin.learning-content.index') ||
+                                        route().current('admin.learning-content.show')
                                     }
                                 >
                                     Manage Learning Content
                                 </NavLink>
                                 <NavLink
-                                    href={route('manage-quizzes-coding.index')}
-                                    active={route().current('manage-quizzes-coding.index')}
+                                    href={route('admin.quizzes.index')}
+                                    active={route().current('admin.quizzes.index')}
                                 >
                                     Manage Quizzes and Coding Exercises
                                 </NavLink>
                                 <NavLink
-                                    href={route('view-topics.index')}
-                                    active={route().current('view-topics.index')}
+                                    href={route('admin.topics.index')}
+                                    active={route().current('admin.topics.index')}
                                 >
                                     View Topics
                                 </NavLink>
@@ -156,28 +156,25 @@ export default function AdministratorLayout({ header, children }) {
                             Dashboard
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('learning-content.index')}
-                            active={route().current('learning-content.index')}
+                            href={route('admin.learning-content.index')}
+                            active={
+                            route().current('admin.learning-content.index') ||
+                            route().current('admin.learning-content.show')
+                            }
                         >
-                            Learning Content
+                            Manage Additional Learning Content
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('assessment.index')}
-                            active={route().current('assessment.index')}
+                            href={route('admin.quizzes.index')}
+                            active={route().current('admin.quizzes.index')}
                         >
-                            Assessment
+                            Manage Quizzes and Coding Exercises
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('progress.index')}
-                            active={route().current('progress.index')}
+                            href={route('admin.topics.index')}
+                            active={route().current('admin.topics.index')}
                         >
-                            Progress
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('feedback.index')}
-                            active={route().current('feedback.index')}
-                        >
-                            Feedback
+                            View Topics
                         </ResponsiveNavLink>
                     </div>
 

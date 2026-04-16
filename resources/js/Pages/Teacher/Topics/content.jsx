@@ -1,7 +1,7 @@
-import AdministratorLayout from '@/Layouts/AdministratorLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function AdditionalLearningContentContent({ auth, courseId, layout }) {
+export default function ViewTopicsContent({ auth, courseId, layout }) {
     const courses = [
         {
             id: 1,
@@ -59,19 +59,19 @@ export default function AdditionalLearningContentContent({ auth, courseId, layou
     if (!course) {
         
         return (
-            <AdministratorLayout>
+            <TeacherLayout>
                 <Head title="Course Not Found" />
                 <div className="p-6 text-gray-900 dark:text-white">
                     <h2 className="text-xl font-semibold mb-4">Course Not Found</h2>
                     <p>The course you are looking for does not exist.</p>
                 </div>
-            </AdministratorLayout>
+            </TeacherLayout>
         );
     }
 
     return (
 
-        <AdministratorLayout
+        <TeacherLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     {course.title}
@@ -102,6 +102,6 @@ export default function AdditionalLearningContentContent({ auth, courseId, layou
                     </div>
                 </div>
             </div>
-        </AdministratorLayout>
+        </TeacherLayout>
     );
 }

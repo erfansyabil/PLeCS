@@ -1,7 +1,7 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function AdditionalLearningContentContent({ auth, courseId, layout }) {
+export default function ViewTopicsContent({ auth, courseId, layout }) {
     const courses = [
         {
             id: 1,
@@ -90,7 +90,7 @@ export default function AdditionalLearningContentContent({ auth, courseId, layou
                                 {course.topics.map((topic) => (
                                     <li key={topic.id}>
                                         <Link
-                                            href={route('learning-content.topic.show', topic.id)}
+                                            href={route('admin.topics.show', topic.id)}
                                             className="text-black-900 hover:underline"
                                         >
                                             {topic.title}

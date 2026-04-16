@@ -1,7 +1,7 @@
-import AdministratorLayout from '@/Layouts/AdministratorLayout';
+import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head } from '@inertiajs/react';
 
-export default function AdditionalLearningContentTopicPage({ auth, topicId, layout }) {
+export default function TopicPage({ auth, topicId, layout }) {
 
     // You can fetch or map topicId to topic content here
     // Example:
@@ -50,19 +50,20 @@ export default function AdditionalLearningContentTopicPage({ auth, topicId, layo
     const topic = topics[topicId];
 
     if (!topic) {
+    const LayoutComponent = getLayout();
         return (
-            <AdministratorLayout>
+            <TeacherLayout>
                 <Head title="Topic Not Found" />
                 <div className="p-6 text-gray-900 dark:text-white">
                     <h2 className="text-xl font-semibold mb-4">Topic Not Found</h2>
                     <p>The topic you are looking for does not exist.</p>
                 </div>
-            </AdministratorLayout>
+            </TeacherLayout>
         );
     }
 
     return (
-        <AdministratorLayout
+        <TeacherLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     {topic.title}
@@ -80,6 +81,6 @@ export default function AdditionalLearningContentTopicPage({ auth, topicId, layo
                     </div>
                 </div>
             </div>
-        </AdministratorLayout>
+        </TeacherLayout>
     );
 }

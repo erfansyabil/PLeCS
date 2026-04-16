@@ -31,20 +31,23 @@ export default function TeacherLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    href={route('manage-additional-content.index')}
-                                    active={route().current('manage-additional-content.index')}
+                                    href={route('teacher.additional-content.index')}
+                                    active={route().current('teacher.additional-content.index')}
                                 >
                                     Manage Additional Learning Content
                                 </NavLink>
                                 <NavLink
-                                    href={route('learning-content.index')}
-                                    active={route().current('learning-content.index')}
+                                    href={route('teacher.topics.index')}
+                                    active={
+                                        route().current('teacher.topics.index') ||
+                                        route().current('teacher.topics.show')
+                                    }
                                 >
                                     View Topics
                                 </NavLink>
                                 <NavLink
-                                    href={route('feedback.index')}
-                                    active={route().current('feedback.index')}
+                                    href={route('teacher.guidance.index')}
+                                    active={route().current('teacher.guidance.index')}
                                 >
                                     Provide Feedback & Guidance
                                 </NavLink>
@@ -153,28 +156,22 @@ export default function TeacherLayout({ header, children }) {
                             Dashboard
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('learning-content.index')}
-                            active={route().current('learning-content.index')}
+                            href={route('teacher.additional-content.index')}
+                            active={route().current('teacher.additional-content.index')}
                         >
-                            Learning Content
+                            Manage Additional Learning Content
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('assessment.index')}
-                            active={route().current('assessment.index')}
+                            href={route('teacher.topics.index')}
+                            active={route().current('teacher.topics.index')}
                         >
-                            Assessment
+                            View Topics
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route('progress.index')}
-                            active={route().current('progress.index')}
+                            href={route('teacher.guidance.index')}
+                            active={route().current('teacher.guidance.index')}
                         >
-                            Progress
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('feedback.index')}
-                            active={route().current('feedback.index')}
-                        >
-                            Feedback
+                            Provide Feedback & Guidance
                         </ResponsiveNavLink>
                     </div>
 

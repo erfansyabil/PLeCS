@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearningContentController;
+use App\Http\Controllers\AdditionalLearningContentController;
+use App\Http\Controllers\QuizController;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -109,23 +111,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC003: View Topics (teacher view)
         Route::get('/topics', function () {
-            return Inertia::render('teacher/Topics/index');
+            return Inertia::render('Teacher/Topics/index');
         })->name('topics.index');
         Route::get('/topics/{id}', function ($id) {
-            return Inertia::render('teacher/Topics/show', ['topicId' => $id]);
+            return Inertia::render('Teacher/Topics/show', ['topicId' => $id]);
         })->name('topics.show');
 
         // UC005: Manage Additional Materials
-        Route::get('/additional-content', function () {
-            return Inertia::render('teacher/AdditionalContent/index');
-        })->name('additional-content.index');
-        Route::get('/additional-content/{id}', function ($id) {
-            return Inertia::render('teacher/AdditionalContent/show', ['contentId' => $id]);
-        })->name('additional-content.show');
+        Route::resource('additional-content', AdditionalLearningContentController::class);
 
         // UC013: Provide Feedback and Guidance
         Route::get('/guidance', function () {
-            return Inertia::render('teacher/Guidance/index');
+            return Inertia::render('Teacher/FeedbackAndGuidance/index');
         })->name('guidance.index');
 
     });
@@ -141,27 +138,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC003: View Topics (admin view)
         Route::get('/topics', function () {
-            return Inertia::render('admin/Topics/index');
+            return Inertia::render('Admin/Topics/index');
         })->name('topics.index');
         Route::get('/topics/{id}', function ($id) {
-            return Inertia::render('admin/Topics/show', ['topicId' => $id]);
+            return Inertia::render('Admin/Topics/show', ['topicId' => $id]);
         })->name('topics.show');
 
         // UC004: Manage Learning Content
-        Route::get('/learning-content', function () {
-            return Inertia::render('admin/LearningContent/index');
-        })->name('learning-content.index');
-        Route::get('/learning-content/{id}', function ($id) {
-            return Inertia::render('admin/LearningContent/show', ['contentId' => $id]);
-        })->name('learning-content.show');
+        Route::resource('learning-content', LearningContentController::class);
 
         // UC009: Manage Quizzes and Coding Exercises
-        Route::get('/quizzes', function () {
-            return Inertia::render('admin/Quizzes/index');
-        })->name('quizzes.index');
-        Route::get('/quizzes/{id}', function ($id) {
-            return Inertia::render('admin/Quizzes/show', ['quizId' => $id]);
-        })->name('quizzes.show');
+        Route::resource('quizzes', QuizController::class);
 
     });
 

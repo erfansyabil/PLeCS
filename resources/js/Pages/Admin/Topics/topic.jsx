@@ -1,7 +1,7 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head } from '@inertiajs/react';
 
-export default function AdditionalLearningContentTopicPage({ auth, topicId, layout }) {
+export default function TopicPage({ auth, topicId, layout }) {
 
     // You can fetch or map topicId to topic content here
     // Example:

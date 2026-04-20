@@ -1,53 +1,28 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head } from '@inertiajs/react';
 
-export default function AdditionalLearningContentTopicPage({ auth, topicId, layout }) {
+export default function TopicPage({ topic }) {
 
-    // You can fetch or map topicId to topic content here
-    // Example:
-    const topics = {
-        1: {
-            title: 'What is AI?',
-            content: (
-                <>
-                    <p>
-                        <strong>Artificial Intelligence (AI)</strong> is a field of computer science focused on creating systems capable of performing tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, perception, understanding language, and even recognizing emotions.
-                    </p>
-                    <p className="mt-4">
-                        AI systems are designed to analyze large amounts of data, recognize patterns, and make decisions or predictions based on that data. There are two main types of AI:
-                    </p>
-                    <ul className="list-disc list-inside mt-2">
-                        <li>
-                            <strong>Narrow AI:</strong> Also known as Weak AI, this type is designed to perform a specific task, such as voice assistants (e.g., Siri, Alexa), recommendation systems, or image recognition.
-                        </li>
-                        <li>
-                            <strong>General AI:</strong> Also known as Strong AI, this type would have the ability to understand, learn, and apply knowledge in different contexts, similar to human intelligence. General AI does not yet exist.
-                        </li>
-                    </ul>
-                    <p className="mt-4">
-                        <strong>Examples of AI in daily life:</strong>
-                    </p>
-                    <ul className="list-disc list-inside mt-2">
-                        <li>Voice assistants like Siri and Google Assistant</li>
-                        <li>Self-driving cars</li>
-                        <li>Spam filters in email</li>
-                        <li>Product recommendations on e-commerce sites</li>
-                        <li>Facial recognition in smartphones</li>
-                    </ul>
-                    <p className="mt-4">
-                        AI is powered by techniques such as <strong>machine learning</strong> (where computers learn from data) and <strong>deep learning</strong> (which uses neural networks inspired by the human brain). As technology advances, AI is expected to play an even greater role in healthcare, education, business, and many other fields.
-                    </p>
-                </>
-            ),
-        },
-        2: {
-            title: 'History of AI',
-            content: 'The history of AI began in ...',
-        },
-        // Add more topics as needed
+    const getYouTubeEmbedUrl = (url) => {
+        if (!url) {
+            return null;
+        }
+
+        const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (!match) {
+            return null;
+        }
+
+        return `https://www.youtube.com/embed/${match[1]}`;
     };
 
-    const topic = topics[topicId];
+    const pdfUrl = topic?.resource_path ? `/storage/${topic.resource_path}` : null;
+    const youtubeEmbedUrl = getYouTubeEmbedUrl(topic?.resource_url);
+    const attachments = [...(topic?.attachments ?? [])].sort((left, right) => {
+        const leftOrder = Number(left.sort_order ?? 0);
+        const rightOrder = Number(right.sort_order ?? 0);
+        return leftOrder - rightOrder || left.id - right.id;
+    });
 
     if (!topic) {
         return (
@@ -75,7 +50,84 @@ export default function AdditionalLearningContentTopicPage({ auth, topicId, layo
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <h3 className="text-lg font-bold mb-4">{topic.title}</h3>
-                            <p>{topic.content}</p>
+                            <div
+                                className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
+                                dangerouslySetInnerHTML={{ __html: topic.content || '<p>No content available yet.</p>' }}
+                            />
+
+                            {topic.resource_type === 'pdf' && pdfUrl && (
+                                <div className="mt-6">
+                                    <h4 className="font-semibold mb-2">PDF Resource</h4>
+                                    <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                        <iframe
+                                            src={pdfUrl}
+                                            title="Topic PDF"
+                                            className="w-full h-[640px]"
+                                        />
+                                    </div>
+                                    <a
+                                        href={pdfUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                    >
+                                        Open PDF in new tab
+                                    </a>
+                                </div>
+                            )}
+
+                            {topic.resource_type === 'youtube' && youtubeEmbedUrl && (
+                                <div className="mt-6">
+                                    <h4 className="font-semibold mb-2">Video Resource</h4>
+                                    <div className="aspect-video">
+                                        <iframe
+                                            src={youtubeEmbedUrl}
+                                            title="Topic video"
+                                            className="w-full h-full rounded"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {attachments.length > 0 && (
+                                <div className="mt-8 space-y-6">
+                                    <h4 className="font-semibold">Attachments</h4>
+                                    {attachments.map((attachment) => {
+                                        const attachmentUrl = `/storage/${attachment.file_path}`;
+
+                                        return (
+                                            <div key={attachment.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
+                                                <div className="mb-3">
+                                                    <p className="font-semibold">{attachment.title || 'Attachment'}</p>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-300">
+                                                        {attachment.type.toUpperCase()} · Order {attachment.sort_order ?? 0}
+                                                    </p>
+                                                </div>
+
+                                                {attachment.type === 'image' && (
+                                                    <img
+                                                        src={attachmentUrl}
+                                                        alt={attachment.title || 'Attachment image'}
+                                                        className="max-h-[640px] w-full object-contain rounded"
+                                                    />
+                                                )}
+
+                                                {attachment.type === 'pdf' && (
+                                                    <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                        <iframe
+                                                            src={attachmentUrl}
+                                                            title={attachment.title || 'Attachment PDF'}
+                                                            className="w-full h-[640px]"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

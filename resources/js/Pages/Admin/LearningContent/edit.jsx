@@ -1,20 +1,27 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
+import RichTextEditor from '@/Components/RichTextEditor';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Edit({ content, courses = [] }) {
     const materialData = content;
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         title: materialData.title,
         description: materialData.description,
         content: materialData.content || '',
         type: materialData.type,
         parent_id: materialData.parent_id || '',
+        resource_type: materialData.resource_type || 'none',
+        resource_url: materialData.resource_url || '',
+        resource_file: null,
+        _method: 'put',
     });
 
     const submit = (e) => {
         e.preventDefault();
-        put(route('admin.learning-content.update', materialData.id));
+        post(route('admin.learning-content.update', materialData.id), {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -75,7 +82,16 @@ export default function Edit({ content, courses = [] }) {
                                 <select
                                     id="type"
                                     value={data.type}
-                                    onChange={(e) => setData('type', e.target.value)}
+                                    onChange={(e) => {
+                                        const nextType = e.target.value;
+                                        setData('type', nextType);
+                                        if (nextType === 'course') {
+                                            setData('parent_id', '');
+                                            setData('resource_type', 'none');
+                                            setData('resource_url', '');
+                                            setData('resource_file', null);
+                                        }
+                                    }}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                                 >
                                     <option value="course">Course</option>
@@ -83,6 +99,34 @@ export default function Edit({ content, courses = [] }) {
                                 </select>
                                 {errors.type && <div className="text-red-500 text-sm mt-1">{errors.type}</div>}
                             </div>
+
+                            {data.type === 'topic' && (
+                                <div className="mb-4">
+                                    <label htmlFor="resource_type" className="block text-sm font-medium mb-2">
+                                        Topic Resource Type
+                                    </label>
+                                    <select
+                                        id="resource_type"
+                                        value={data.resource_type}
+                                        onChange={(e) => {
+                                            const nextResourceType = e.target.value;
+                                            setData('resource_type', nextResourceType);
+                                            if (nextResourceType !== 'youtube') {
+                                                setData('resource_url', '');
+                                            }
+                                            if (nextResourceType !== 'pdf') {
+                                                setData('resource_file', null);
+                                            }
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                        <option value="none">No media resource</option>
+                                        <option value="pdf">PDF file</option>
+                                        <option value="youtube">YouTube link</option>
+                                    </select>
+                                    {errors.resource_type && <div className="text-red-500 text-sm mt-1">{errors.resource_type}</div>}
+                                </div>
+                            )}
 
                             {data.type === 'topic' && (
                                 <div className="mb-4">
@@ -105,16 +149,49 @@ export default function Edit({ content, courses = [] }) {
                                 </div>
                             )}
 
+                            {data.type === 'topic' && data.resource_type === 'youtube' && (
+                                <div className="mb-4">
+                                    <label htmlFor="resource_url" className="block text-sm font-medium mb-2">
+                                        YouTube URL
+                                    </label>
+                                    <input
+                                        type="url"
+                                        id="resource_url"
+                                        value={data.resource_url}
+                                        onChange={(e) => setData('resource_url', e.target.value)}
+                                        placeholder="https://www.youtube.com/watch?v=..."
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        required
+                                    />
+                                    {errors.resource_url && <div className="text-red-500 text-sm mt-1">{errors.resource_url}</div>}
+                                </div>
+                            )}
+
+                            {data.type === 'topic' && data.resource_type === 'pdf' && (
+                                <div className="mb-4">
+                                    <label htmlFor="resource_file" className="block text-sm font-medium mb-2">
+                                        PDF File
+                                    </label>
+                                    <input
+                                        type="file"
+                                        id="resource_file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setData('resource_file', e.target.files?.[0] ?? null)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    />
+                                    <p className="text-xs mt-1 text-gray-500 dark:text-gray-300">Upload a new file only if you want to replace the current PDF.</p>
+                                    {errors.resource_file && <div className="text-red-500 text-sm mt-1">{errors.resource_file}</div>}
+                                </div>
+                            )}
+
                             <div className="mb-6">
                                 <label htmlFor="content" className="block text-sm font-medium mb-2">
                                     Content
                                 </label>
-                                <textarea
-                                    id="content"
+                                <RichTextEditor
                                     value={data.content}
-                                    onChange={(e) => setData('content', e.target.value)}
-                                    rows="6"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    onChange={(value) => setData('content', value)}
+                                    placeholder="Update formatted topic content here..."
                                 />
                                 {errors.content && <div className="text-red-500 text-sm mt-1">{errors.content}</div>}
                             </div>

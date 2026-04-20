@@ -4,6 +4,27 @@ import { Head, Link } from '@inertiajs/react';
 export default function Show({ content, topics = [] }) {
     const materialData = content;
 
+    const getYouTubeEmbedUrl = (url) => {
+        if (!url) {
+            return null;
+        }
+
+        const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (!match) {
+            return null;
+        }
+
+        return `https://www.youtube.com/embed/${match[1]}`;
+    };
+
+    const pdfUrl = materialData.resource_path ? `/storage/${materialData.resource_path}` : null;
+    const youtubeEmbedUrl = getYouTubeEmbedUrl(materialData.resource_url);
+    const attachments = [...(materialData.attachments ?? [])].sort((left, right) => {
+        const leftOrder = Number(left.sort_order ?? 0);
+        const rightOrder = Number(right.sort_order ?? 0);
+        return leftOrder - rightOrder || left.id - right.id;
+    });
+
     return (
         <AdministratorLayout
             header={
@@ -42,16 +63,109 @@ export default function Show({ content, topics = [] }) {
                                 {materialData.content && (
                                     <div className="mb-6">
                                         <strong>Content:</strong>
-                                        <p className="mt-2 whitespace-pre-line">{materialData.content}</p>
+                                        <div
+                                            className="mt-2 rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
+                                            dangerouslySetInnerHTML={{ __html: materialData.content }}
+                                        />
+                                    </div>
+                                )}
+
+                                {materialData.type === 'topic' && materialData.resource_type !== 'none' && (
+                                    <div className="mb-6">
+                                        <strong>Media Resource:</strong>
+
+                                        {materialData.resource_type === 'pdf' && pdfUrl && (
+                                            <div className="mt-2">
+                                                <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                    <iframe
+                                                        src={pdfUrl}
+                                                        title="Topic PDF"
+                                                        className="w-full h-[640px]"
+                                                    />
+                                                </div>
+                                                <a
+                                                    href={pdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-block mt-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                                >
+                                                    Open PDF in new tab
+                                                </a>
+                                            </div>
+                                        )}
+
+                                        {materialData.resource_type === 'youtube' && youtubeEmbedUrl && (
+                                            <div className="mt-3">
+                                                <div className="aspect-video">
+                                                    <iframe
+                                                        src={youtubeEmbedUrl}
+                                                        title="YouTube video"
+                                                        className="w-full h-full rounded"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {attachments.length > 0 && (
+                                    <div className="mb-6">
+                                        <strong>Attachments:</strong>
+                                        <div className="mt-3 space-y-6">
+                                            {attachments.map((attachment) => {
+                                                const attachmentUrl = `/storage/${attachment.file_path}`;
+
+                                                return (
+                                                    <div key={attachment.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div>
+                                                                <p className="font-semibold">{attachment.title || 'Attachment'}</p>
+                                                                <p className="text-sm text-gray-500 dark:text-gray-300">
+                                                                    {attachment.type.toUpperCase()} · Order {attachment.sort_order ?? 0}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {attachment.type === 'image' && (
+                                                            <img
+                                                                src={attachmentUrl}
+                                                                alt={attachment.title || 'Attachment image'}
+                                                                className="max-h-[640px] w-full object-contain rounded"
+                                                            />
+                                                        )}
+
+                                                        {attachment.type === 'pdf' && (
+                                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                                <iframe
+                                                                    src={attachmentUrl}
+                                                                    title={attachment.title || 'Attachment PDF'}
+                                                                    className="w-full h-[640px]"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
 
                                 {topics.length > 0 && (
                                     <div className="mb-6">
                                         <strong>Topics:</strong>
-                                        <ul className="list-disc list-inside mt-2">
+                                        <ul className="mt-2 space-y-2">
                                             {topics.map((topic) => (
-                                                <li key={topic.id}>{topic.title}</li>
+                                                <li key={topic.id} className="flex items-center justify-between rounded border border-gray-200 dark:border-gray-500 px-3 py-2">
+                                                    <span>{topic.title}</span>
+                                                    <Link
+                                                        href={route('admin.learning-content.show', topic.id)}
+                                                        className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                </li>
                                             ))}
                                         </ul>
                                     </div>

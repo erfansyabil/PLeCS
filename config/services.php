@@ -41,4 +41,9 @@ return [
     'redirect'      => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'huggingface' => [
+        'space_url' => env('HUGGINGFACE_SPACE_URL'),
+        'api_token' => env('HUGGINGFACE_API_TOKEN'),
+    ],
+
 ];

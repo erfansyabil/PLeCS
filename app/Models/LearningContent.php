@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\LearningContentAttachment;
 
 class LearningContent extends Model
 {
@@ -14,6 +15,9 @@ class LearningContent extends Model
         'content',
         'type',
         'parent_id',
+        'resource_type',
+        'resource_url',
+        'resource_path',
     ];
 
     public function parent(): BelongsTo
@@ -24,5 +28,10 @@ class LearningContent extends Model
     public function children(): HasMany
     {
         return $this->hasMany(LearningContent::class, 'parent_id');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(LearningContentAttachment::class)->orderBy('sort_order')->orderBy('id');
     }
 }

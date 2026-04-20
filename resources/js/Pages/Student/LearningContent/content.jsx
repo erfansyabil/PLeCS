@@ -4,57 +4,7 @@ import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function LearningContentContent({ auth, courseId, layout }) {
-    const courses = [
-        {
-            id: 1,
-            title: 'Introduction to AI',
-            description: 'Learn the basics of Artificial Intelligence and its real-world applications.',
-            topics: [
-                { id: 1, title:'What is AI?'},
-                { id: 2, title:'History of AI'},
-                { id: 3, title:'Types of AI'},
-                { id: 4, title:'Applications of AI'},
-                { id: 5, title:'Future of AI'},
-            ],
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Essentials',
-            description: 'Understand security threats, vulnerabilities, and basic protection methods.',
-            topics: [
-                'Introduction to Cybersecurity',
-                'Common Threats',
-                'Vulnerabilities',
-                'Protection Methods',
-                'Best Practices',
-            ],
-        },
-        {
-            id: 3,
-            title: 'Multimedia Design',
-            description: 'Explore design principles, animation, and media tools.',
-            topics: [
-                'Design Principles',
-                'Color Theory',
-                'Animation Basics',
-                'Media Tools Overview',
-                'Project Workflow',
-            ],
-        },
-        {
-            id: 4,
-            title: 'Web Development',
-            description: 'Build websites using HTML, CSS, JavaScript, and backend basics.',
-            topics: [
-                'HTML & CSS Basics',
-                'JavaScript Fundamentals',
-                'Responsive Design',
-                'Backend Introduction',
-                'Deployment',
-            ],
-        },
-    ];
+export default function LearningContentContent({ course, topics = [], layout }) {
 
         // Determine which layout to use
         const getLayout = () => {
@@ -70,11 +20,8 @@ export default function LearningContentContent({ auth, courseId, layout }) {
             }
         };
 
-    // Find the course by ID (courseId is a string, so use ==)
-    const course = courses.find(c => c.id == courseId);
-
     if (!course) {
-        
+        const LayoutComponent = getLayout();
         return (
             <LayoutComponent>
                 <Head title="Course Not Found" />
@@ -105,7 +52,7 @@ export default function LearningContentContent({ auth, courseId, layout }) {
                             <p className="mb-4">{course.description}</p>
                             <h4 className="font-semibold mb-2">Topics:</h4>
                             <ul className="list-disc list-inside">
-                                {course.topics.map((topic) => (
+                                {topics.map((topic) => (
                                     <li key={topic.id}>
                                         <Link
                                             href={route('student.learning-content.topic.show', topic.id)}
@@ -115,6 +62,8 @@ export default function LearningContentContent({ auth, courseId, layout }) {
                                         </Link>
                                     </li>
                                 ))}
+
+                                {topics.length === 0 && <li>No topics available yet.</li>}
                             </ul>
                         </div>
                     </div>

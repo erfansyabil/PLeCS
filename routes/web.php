@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearningContentController;
+use App\Http\Controllers\LearningPathController;
 use App\Http\Controllers\AdditionalLearningContentController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -37,6 +38,9 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 */
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::post('/api/recommendations', [LearningPathController::class, 'recommend'])
+        ->name('recommendations.store');
 
     // Dashboard - DashboardController handles role-based redirect
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -146,6 +150,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);
+        Route::post('/learning-content/editor-image', [LearningContentController::class, 'uploadEditorImage'])
+            ->name('learning-content.editor-image');
 
         // UC009: Manage Quizzes and Coding Exercises
         Route::resource('quizzes', QuizController::class);

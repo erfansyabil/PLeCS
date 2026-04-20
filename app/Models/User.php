@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -121,5 +123,21 @@ class User extends Authenticatable
     public function hasAnyRole(array $roles)
     {
         return in_array($this->role, $roles);
+    }
+
+    /**
+     * All generated learning paths for this user.
+     */
+    public function learningPaths(): HasMany
+    {
+        return $this->hasMany(LearningPath::class);
+    }
+
+    /**
+     * Latest generated learning path for this user.
+     */
+    public function latestLearningPath(): HasOne
+    {
+        return $this->hasOne(LearningPath::class)->latestOfMany();
     }
 }

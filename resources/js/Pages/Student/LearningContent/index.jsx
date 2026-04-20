@@ -4,29 +4,7 @@ import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link} from '@inertiajs/react';
 
-export default function LearningContentIndex({ auth, layout }) {
-    const courses = [
-        {
-            id: 1,
-            title: 'Introduction to AI',
-            description: 'Learn the basics of Artificial Intelligence and its real-world applications.',
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Essentials',
-            description: 'Understand security threats, vulnerabilities, and basic protection methods.',
-        },
-        {
-            id: 3,
-            title: 'Multimedia Design',
-            description: 'Explore design principles, animation, and media tools.',
-        },
-        {
-            id: 4,
-            title: 'Web Development',
-            description: 'Build websites using HTML, CSS, JavaScript, and backend basics.',
-        },
-    ];
+export default function LearningContentIndex({ layout, contents = [] }) {
 
         // Determine which layout to use
         const getLayout = () => {
@@ -63,7 +41,7 @@ export default function LearningContentIndex({ auth, layout }) {
 
                             {/* Grid of Course Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {courses.map((course) => (
+                                {contents.map((course) => (
                                     <div
                                         key={course.id}
                                         className="rounded-xl shadow-md bg-white dark:bg-gray-500 border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition"
@@ -82,6 +60,12 @@ export default function LearningContentIndex({ auth, layout }) {
                                         </Link>
                                     </div>
                                 ))}
+
+                                {contents.length === 0 && (
+                                    <div className="col-span-full text-sm text-gray-600 dark:text-gray-300">
+                                        No courses available yet.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

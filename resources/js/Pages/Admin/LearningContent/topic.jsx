@@ -1,5 +1,6 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head } from '@inertiajs/react';
+import { useMemo } from 'react';
 
 export default function TopicPage({ topic }) {
 
@@ -8,13 +9,101 @@ export default function TopicPage({ topic }) {
             return null;
         }
 
-        const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
         if (!match) {
             return null;
         }
 
         return `https://www.youtube.com/embed/${match[1]}`;
     };
+
+    const renderedContent = useMemo(() => {
+        if (!topic?.content) {
+            return '<p>No content available yet.</p>';
+        }
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(topic.content, 'text/html');
+        const youtubeUrlPattern = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)[^\s<]+|youtu\.be\/[^\s<]+)/gi;
+        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+
+        while (walker.nextNode()) {
+            textNodes.push(walker.currentNode);
+        }
+
+        textNodes.forEach((textNode) => {
+            const parentTag = textNode.parentElement?.tagName;
+            if (parentTag === 'A' || parentTag === 'SCRIPT' || parentTag === 'STYLE' || parentTag === 'IFRAME' || parentTag === 'CODE' || parentTag === 'PRE') {
+                return;
+            }
+
+            const text = textNode.textContent ?? '';
+            const matches = [...text.matchAll(youtubeUrlPattern)];
+            if (matches.length === 0) {
+                return;
+            }
+
+            const fragment = doc.createDocumentFragment();
+            let cursor = 0;
+
+            matches.forEach((match) => {
+                const matchedUrl = match[0];
+                const matchIndex = match.index ?? 0;
+
+                if (matchIndex > cursor) {
+                    fragment.appendChild(doc.createTextNode(text.slice(cursor, matchIndex)));
+                }
+
+                const embedUrl = getYouTubeEmbedUrl(matchedUrl);
+                if (embedUrl) {
+                    const iframe = doc.createElement('iframe');
+                    iframe.setAttribute('src', embedUrl);
+                    iframe.setAttribute('title', 'Embedded YouTube video');
+                    iframe.setAttribute('class', 'w-full aspect-video my-4 rounded');
+                    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                    iframe.setAttribute('allowfullscreen', '');
+                    fragment.appendChild(iframe);
+                } else {
+                    fragment.appendChild(doc.createTextNode(matchedUrl));
+                }
+
+                cursor = matchIndex + matchedUrl.length;
+            });
+
+            if (cursor < text.length) {
+                fragment.appendChild(doc.createTextNode(text.slice(cursor)));
+            }
+
+            textNode.replaceWith(fragment);
+        });
+
+        const anchors = doc.querySelectorAll('a[href]');
+
+        anchors.forEach((anchor) => {
+            const href = anchor.getAttribute('href');
+            const embedUrl = getYouTubeEmbedUrl(href ?? '');
+
+            if (!embedUrl) {
+                return;
+            }
+
+            const wrapper = doc.createElement('div');
+            wrapper.className = 'aspect-video my-4';
+
+            const iframe = doc.createElement('iframe');
+            iframe.setAttribute('src', embedUrl);
+            iframe.setAttribute('title', 'Embedded YouTube video');
+            iframe.setAttribute('class', 'w-full h-full rounded');
+            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+            iframe.setAttribute('allowfullscreen', '');
+
+            wrapper.appendChild(iframe);
+            anchor.replaceWith(wrapper);
+        });
+
+        return doc.body.innerHTML;
+    }, [topic?.content]);
 
     const pdfUrl = topic?.resource_path ? `/storage/${topic.resource_path}` : null;
     const youtubeEmbedUrl = getYouTubeEmbedUrl(topic?.resource_url);
@@ -52,7 +141,7 @@ export default function TopicPage({ topic }) {
                             <h3 className="text-lg font-bold mb-4">{topic.title}</h3>
                             <div
                                 className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
-                                dangerouslySetInnerHTML={{ __html: topic.content || '<p>No content available yet.</p>' }}
+                                dangerouslySetInnerHTML={{ __html: renderedContent }}
                             />
 
                             {topic.resource_type === 'pdf' && pdfUrl && (

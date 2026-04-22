@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Models\LearningContent;
 use App\Models\LearningContentAttachment;
+use App\Models\LearningContentBlock;
 
 class LearningContentController extends Controller
 {
@@ -38,8 +39,99 @@ class LearningContentController extends Controller
             'resource_type' => 'none',
             'resource_url' => null,
             'resource_path' => null,
+            'blocks' => [],
             'created_at' => now()->toDateString(),
         ];
+    }
+
+    /**
+     * Persist ordered topic blocks and handle file uploads/replacements.
+     */
+    private function syncTopicBlocks(Request $request, LearningContent $topic): void
+    {
+        $incomingBlocks = $request->input('blocks', []);
+        $existingPaths = $topic->blocks()
+            ->whereNotNull('file_path')
+            ->pluck('file_path')
+            ->all();
+
+        $keptPaths = [];
+        $normalizedBlocks = [];
+
+        foreach ($incomingBlocks as $index => $blockData) {
+            $type = $blockData['type'] ?? 'text';
+            $sortOrder = (int) ($blockData['sort_order'] ?? ($index + 1) * 10);
+            $payload = [
+                'type' => $type,
+                'title' => $blockData['title'] ?? null,
+                'content' => null,
+                'url' => null,
+                'file_path' => null,
+                'sort_order' => $sortOrder,
+            ];
+
+            if ($type === 'text') {
+                $payload['content'] = $blockData['content'] ?? null;
+            }
+
+            if ($type === 'youtube') {
+                $payload['url'] = $blockData['url'] ?? null;
+            }
+
+            if (in_array($type, ['pdf', 'image'], true)) {
+                if ($request->hasFile("blocks.$index.file")) {
+                    $payload['file_path'] = $request->file("blocks.$index.file")->store('learning-content/blocks', 'public');
+                } else {
+                    $payload['file_path'] = $blockData['existing_file_path'] ?? null;
+                    if ($payload['file_path']) {
+                        $keptPaths[] = $payload['file_path'];
+                    }
+                }
+
+                if (!$payload['file_path']) {
+                    continue;
+                }
+            }
+
+            $normalizedBlocks[] = $payload;
+        }
+
+        $topic->blocks()->delete();
+
+        foreach ($normalizedBlocks as $blockPayload) {
+            $topic->blocks()->create($blockPayload);
+        }
+
+        $pathsToDelete = array_diff($existingPaths, $keptPaths);
+        foreach ($pathsToDelete as $filePath) {
+            Storage::disk('public')->delete($filePath);
+        }
+    }
+
+    /**
+     * Delete media files for this content and all nested topic children.
+     */
+    private function deleteLearningContentAssets(LearningContent $learningContent): void
+    {
+        $learningContent->loadMissing(['attachments', 'blocks', 'children.attachments', 'children.blocks']);
+
+        if ($learningContent->resource_path) {
+            Storage::disk('public')->delete($learningContent->resource_path);
+        }
+
+        foreach ($learningContent->attachments as $attachment) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        foreach ($learningContent->blocks as $block) {
+            if ($block->file_path) {
+                Storage::disk('public')->delete($block->file_path);
+            }
+        }
+
+        foreach ($learningContent->children as $child) {
+            $this->deleteLearningContentAssets($child);
+        }
     }
 
     /**
@@ -118,13 +210,19 @@ class LearningContentController extends Controller
     public function topic(Request $request, int $id)
     {
         if ($request->user()->role === 'administrator') {
-            $topic = LearningContent::with(['attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id')])->findOrFail($id);
+            $topic = LearningContent::with([
+                'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            ])->findOrFail($id);
             return Inertia::render('Admin/LearningContent/topic', [
                 'topic' => $topic,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
         } elseif ($request->user()->role === 'student') {
-            $topic = LearningContent::with(['attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id')])->findOrFail($id);
+            $topic = LearningContent::with([
+                'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            ])->findOrFail($id);
             return Inertia::render('Student/LearningContent/topic', [
                 'topic' => $topic,
                 'layout' => $this->layoutForRole($request->user()->role),
@@ -164,6 +262,14 @@ class LearningContentController extends Controller
             'resource_type' => 'nullable|in:none,pdf,youtube',
             'resource_url' => 'nullable|url|required_if:resource_type,youtube',
             'resource_file' => 'nullable|file|mimetypes:application/pdf|max:10240|required_if:resource_type,pdf',
+            'blocks' => 'nullable|array',
+            'blocks.*.type' => 'required_with:blocks|in:text,youtube,pdf,image',
+            'blocks.*.title' => 'nullable|string|max:255',
+            'blocks.*.content' => 'nullable|string',
+            'blocks.*.url' => 'nullable|url',
+            'blocks.*.file' => 'nullable|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
+            'blocks.*.existing_file_path' => 'nullable|string',
+            'blocks.*.sort_order' => 'nullable|integer|min:0',
             'attachments' => 'nullable|array',
             'attachments.*.title' => 'nullable|string|max:255',
             'attachments.*.type' => 'required_with:attachments|in:pdf,image',
@@ -196,6 +302,10 @@ class LearningContentController extends Controller
 
         $topic = LearningContent::create($payload);
         if ($payload['type'] === 'topic' && $topic) {
+            if ($request->has('blocks')) {
+                $this->syncTopicBlocks($request, $topic);
+            }
+
             foreach ($request->input('attachments', []) as $index => $attachmentData) {
                 if (!$request->hasFile("attachments.$index.file")) {
                     continue;
@@ -222,7 +332,10 @@ class LearningContentController extends Controller
     public function show(Request $request, int $id)
     {
         if ($request->user()->role === 'administrator') {
-            $learningContent = LearningContent::with(['attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id')])->find($id);
+            $learningContent = LearningContent::with([
+                'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            ])->find($id);
             $topics = $learningContent?->children ?? [];
 
             return Inertia::render('Admin/LearningContent/show', [
@@ -241,7 +354,10 @@ class LearningContentController extends Controller
     public function edit(Request $request, int $id)
     {
         $courses = LearningContent::where('type', 'course')->get();
-        $learningContent = LearningContent::with(['attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id')])->find($id);
+        $learningContent = LearningContent::with([
+            'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+        ])->find($id);
 
         return Inertia::render('Admin/LearningContent/edit', [
             'layout' => $this->layoutForRole($request->user()->role),
@@ -264,6 +380,14 @@ class LearningContentController extends Controller
             'resource_type' => 'nullable|in:none,pdf,youtube',
             'resource_url' => 'nullable|url|required_if:resource_type,youtube',
             'resource_file' => 'nullable|file|mimetypes:application/pdf|max:10240|required_if:resource_type,pdf',
+            'blocks' => 'nullable|array',
+            'blocks.*.type' => 'required_with:blocks|in:text,youtube,pdf,image',
+            'blocks.*.title' => 'nullable|string|max:255',
+            'blocks.*.content' => 'nullable|string',
+            'blocks.*.url' => 'nullable|url',
+            'blocks.*.file' => 'nullable|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
+            'blocks.*.existing_file_path' => 'nullable|string',
+            'blocks.*.sort_order' => 'nullable|integer|min:0',
             'attachments' => 'nullable|array',
             'attachments.*.title' => 'nullable|string|max:255',
             'attachments.*.type' => 'required_with:attachments|in:pdf,image',
@@ -321,6 +445,16 @@ class LearningContentController extends Controller
 
             $learningContent->update($payload);
 
+            if ($payload['type'] === 'topic' && $request->has('blocks')) {
+                $this->syncTopicBlocks($request, $learningContent);
+            } elseif ($payload['type'] !== 'topic') {
+                $existingBlockPaths = $learningContent->blocks()->whereNotNull('file_path')->pluck('file_path')->all();
+                $learningContent->blocks()->delete();
+                foreach ($existingBlockPaths as $filePath) {
+                    Storage::disk('public')->delete($filePath);
+                }
+            }
+
             if ($request->has('attachments')) {
                 foreach ($learningContent->attachments as $existingAttachment) {
                     Storage::disk('public')->delete($existingAttachment->file_path);
@@ -353,15 +487,9 @@ class LearningContentController extends Controller
      */
     public function destroy(Request $request, int $id)
     {
-        $learningContent = LearningContent::with('attachments')->find($id);
+        $learningContent = LearningContent::with(['attachments', 'blocks'])->find($id);
         if ($learningContent) {
-            if ($learningContent->resource_path) {
-                Storage::disk('public')->delete($learningContent->resource_path);
-            }
-
-            foreach ($learningContent->attachments as $attachment) {
-                Storage::disk('public')->delete($attachment->file_path);
-            }
+            $this->deleteLearningContentAssets($learningContent);
 
             $learningContent->delete();
         }

@@ -5,6 +5,73 @@ import { Head, Link, useForm } from '@inertiajs/react';
 export default function Edit({ content, courses = [] }) {
     const materialData = content;
 
+    const mapBlocksFromContent = () => {
+        const existingBlocks = Array.isArray(materialData.blocks) ? materialData.blocks : [];
+        if (existingBlocks.length > 0) {
+            return existingBlocks.map((block, index) => ({
+                type: block.type,
+                title: block.title || '',
+                content: block.content || '',
+                url: block.url || '',
+                file: null,
+                existing_file_path: block.file_path || '',
+                sort_order: block.sort_order ?? (index + 1) * 10,
+            }));
+        }
+
+        const legacyBlocks = [];
+
+        if (materialData.content) {
+            legacyBlocks.push({
+                type: 'text',
+                title: '',
+                content: materialData.content,
+                url: '',
+                file: null,
+                existing_file_path: '',
+                sort_order: 10,
+            });
+        }
+
+        if (materialData.resource_type === 'youtube' && materialData.resource_url) {
+            legacyBlocks.push({
+                type: 'youtube',
+                title: 'Video Resource',
+                content: '',
+                url: materialData.resource_url,
+                file: null,
+                existing_file_path: '',
+                sort_order: 20,
+            });
+        }
+
+        if (materialData.resource_type === 'pdf' && materialData.resource_path) {
+            legacyBlocks.push({
+                type: 'pdf',
+                title: 'PDF Resource',
+                content: '',
+                url: '',
+                file: null,
+                existing_file_path: materialData.resource_path,
+                sort_order: 20,
+            });
+        }
+
+        if (legacyBlocks.length > 0) {
+            return legacyBlocks;
+        }
+
+        return [{
+            type: 'text',
+            title: '',
+            content: '',
+            url: '',
+            file: null,
+            existing_file_path: '',
+            sort_order: 10,
+        }];
+    };
+
     const { data, setData, post, processing, errors } = useForm({
         title: materialData.title,
         description: materialData.description,
@@ -14,8 +81,51 @@ export default function Edit({ content, courses = [] }) {
         resource_type: materialData.resource_type || 'none',
         resource_url: materialData.resource_url || '',
         resource_file: null,
+        blocks: materialData.type === 'topic' ? mapBlocksFromContent() : [],
         _method: 'put',
     });
+
+    const updateBlock = (index, field, value) => {
+        const nextBlocks = [...data.blocks];
+        nextBlocks[index] = {
+            ...nextBlocks[index],
+            [field]: value,
+        };
+        setData('blocks', nextBlocks);
+    };
+
+    const updateBlockType = (index, type) => {
+        const nextBlocks = [...data.blocks];
+        nextBlocks[index] = {
+            type,
+            title: nextBlocks[index]?.title ?? '',
+            content: '',
+            url: '',
+            file: null,
+            existing_file_path: '',
+            sort_order: nextBlocks[index]?.sort_order ?? (index + 1) * 10,
+        };
+        setData('blocks', nextBlocks);
+    };
+
+    const addBlock = () => {
+        setData('blocks', [
+            ...data.blocks,
+            {
+                type: 'text',
+                title: '',
+                content: '',
+                url: '',
+                file: null,
+                existing_file_path: '',
+                sort_order: (data.blocks.length + 1) * 10,
+            },
+        ]);
+    };
+
+    const removeBlock = (index) => {
+        setData('blocks', data.blocks.filter((_, currentIndex) => currentIndex !== index));
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -90,6 +200,19 @@ export default function Edit({ content, courses = [] }) {
                                             setData('resource_type', 'none');
                                             setData('resource_url', '');
                                             setData('resource_file', null);
+                                            setData('blocks', []);
+                                        }
+
+                                        if (nextType === 'topic' && data.blocks.length === 0) {
+                                            setData('blocks', [{
+                                                type: 'text',
+                                                title: '',
+                                                content: '',
+                                                url: '',
+                                                file: null,
+                                                existing_file_path: '',
+                                                sort_order: 10,
+                                            }]);
                                         }
                                     }}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
@@ -99,34 +222,6 @@ export default function Edit({ content, courses = [] }) {
                                 </select>
                                 {errors.type && <div className="text-red-500 text-sm mt-1">{errors.type}</div>}
                             </div>
-
-                            {data.type === 'topic' && (
-                                <div className="mb-4">
-                                    <label htmlFor="resource_type" className="block text-sm font-medium mb-2">
-                                        Topic Resource Type
-                                    </label>
-                                    <select
-                                        id="resource_type"
-                                        value={data.resource_type}
-                                        onChange={(e) => {
-                                            const nextResourceType = e.target.value;
-                                            setData('resource_type', nextResourceType);
-                                            if (nextResourceType !== 'youtube') {
-                                                setData('resource_url', '');
-                                            }
-                                            if (nextResourceType !== 'pdf') {
-                                                setData('resource_file', null);
-                                            }
-                                        }}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                    >
-                                        <option value="none">No media resource</option>
-                                        <option value="pdf">PDF file</option>
-                                        <option value="youtube">YouTube link</option>
-                                    </select>
-                                    {errors.resource_type && <div className="text-red-500 text-sm mt-1">{errors.resource_type}</div>}
-                                </div>
-                            )}
 
                             {data.type === 'topic' && (
                                 <div className="mb-4">
@@ -149,52 +244,135 @@ export default function Edit({ content, courses = [] }) {
                                 </div>
                             )}
 
-                            {data.type === 'topic' && data.resource_type === 'youtube' && (
-                                <div className="mb-4">
-                                    <label htmlFor="resource_url" className="block text-sm font-medium mb-2">
-                                        YouTube URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        id="resource_url"
-                                        value={data.resource_url}
-                                        onChange={(e) => setData('resource_url', e.target.value)}
-                                        placeholder="https://www.youtube.com/watch?v=..."
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                        required
-                                    />
-                                    {errors.resource_url && <div className="text-red-500 text-sm mt-1">{errors.resource_url}</div>}
+                            {data.type === 'topic' && (
+                                <div className="mb-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium">
+                                            Ordered Topic Blocks
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={addBlock}
+                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                        >
+                                            Add Block
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-300 mb-3">
+                                        Use sort order to control final page flow.
+                                    </p>
+
+                                    <div className="space-y-4">
+                                        {data.blocks.map((block, index) => (
+                                            <div key={index} className="rounded-lg border border-gray-200 dark:border-gray-500 p-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-2">Type</label>
+                                                        <select
+                                                            value={block.type}
+                                                            onChange={(e) => updateBlockType(index, e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                        >
+                                                            <option value="text">Text</option>
+                                                            <option value="youtube">YouTube</option>
+                                                            <option value="pdf">PDF</option>
+                                                            <option value="image">Image</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-2">Title (Optional)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={block.title}
+                                                            onChange={(e) => updateBlock(index, 'title', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-2">Sort Order</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={block.sort_order}
+                                                            onChange={(e) => updateBlock(index, 'sort_order', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {block.type === 'text' && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-2">Text Content</label>
+                                                        <RichTextEditor
+                                                            value={block.content}
+                                                            onChange={(value) => updateBlock(index, 'content', value)}
+                                                            placeholder="Write text for this block..."
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {block.type === 'youtube' && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-2">YouTube URL</label>
+                                                        <input
+                                                            type="url"
+                                                            value={block.url}
+                                                            onChange={(e) => updateBlock(index, 'url', e.target.value)}
+                                                            placeholder="https://www.youtube.com/watch?v=..."
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {(block.type === 'pdf' || block.type === 'image') && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-2">
+                                                            {block.type === 'pdf' ? 'PDF File' : 'Image File'}
+                                                        </label>
+                                                        <input
+                                                            type="file"
+                                                            accept={block.type === 'pdf' ? 'application/pdf' : 'image/*'}
+                                                            onChange={(e) => updateBlock(index, 'file', e.target.files?.[0] ?? null)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                        />
+                                                        {block.existing_file_path && (
+                                                            <p className="text-xs mt-1 text-gray-500 dark:text-gray-300">
+                                                                Existing file will be kept if you do not upload a replacement.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <div className="mt-3 flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeBlock(index)}
+                                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
+                                                    >
+                                                        Remove Block
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {errors.blocks && <div className="text-red-500 text-sm mt-2">{errors.blocks}</div>}
                                 </div>
                             )}
 
-                            {data.type === 'topic' && data.resource_type === 'pdf' && (
-                                <div className="mb-4">
-                                    <label htmlFor="resource_file" className="block text-sm font-medium mb-2">
-                                        PDF File
+                            {data.type === 'course' && (
+                                <div className="mb-6">
+                                    <label htmlFor="content" className="block text-sm font-medium mb-2">
+                                        Content
                                     </label>
-                                    <input
-                                        type="file"
-                                        id="resource_file"
-                                        accept="application/pdf"
-                                        onChange={(e) => setData('resource_file', e.target.files?.[0] ?? null)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    <RichTextEditor
+                                        value={data.content}
+                                        onChange={(value) => setData('content', value)}
+                                        placeholder="Update formatted course content here..."
                                     />
-                                    <p className="text-xs mt-1 text-gray-500 dark:text-gray-300">Upload a new file only if you want to replace the current PDF.</p>
-                                    {errors.resource_file && <div className="text-red-500 text-sm mt-1">{errors.resource_file}</div>}
+                                    {errors.content && <div className="text-red-500 text-sm mt-1">{errors.content}</div>}
                                 </div>
                             )}
-
-                            <div className="mb-6">
-                                <label htmlFor="content" className="block text-sm font-medium mb-2">
-                                    Content
-                                </label>
-                                <RichTextEditor
-                                    value={data.content}
-                                    onChange={(value) => setData('content', value)}
-                                    placeholder="Update formatted topic content here..."
-                                />
-                                {errors.content && <div className="text-red-500 text-sm mt-1">{errors.content}</div>}
-                            </div>
 
                             <div className="flex space-x-4">
                                 <button

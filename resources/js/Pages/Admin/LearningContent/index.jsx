@@ -1,5 +1,5 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 
 export default function LearningContentIndex({contents}) {
     const placeholderContents = [
@@ -32,6 +32,16 @@ export default function LearningContentIndex({contents}) {
     const materialsList = Array.isArray(contents) && contents.length > 0
         ? contents
         : placeholderContents;
+
+    const deleteCourse = (courseId) => {
+        if (!confirm('Are you sure you want to delete this course? This will also delete all topics under it.')) {
+            return;
+        }
+
+        router.delete(route('admin.learning-content.destroy', courseId), {
+            preserveScroll: true,
+        });
+    };
 
     return (
         <AdministratorLayout
@@ -125,11 +135,7 @@ export default function LearningContentIndex({contents}) {
                                                                     </Link>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => {
-                                                                    if (confirm('Are you sure you want to delete this material?')) {
-                                                                        console.log('Delete material', material.id);
-                                                                    }
-                                                                }}
+                                                                onClick={() => deleteCourse(material.id)}
                                                                 className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                                             >
                                                                 Delete

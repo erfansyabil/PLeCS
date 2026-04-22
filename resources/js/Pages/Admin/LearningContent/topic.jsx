@@ -107,11 +107,28 @@ export default function TopicPage({ topic }) {
 
     const pdfUrl = topic?.resource_path ? `/storage/${topic.resource_path}` : null;
     const youtubeEmbedUrl = getYouTubeEmbedUrl(topic?.resource_url);
+    const blocks = [...(topic?.blocks ?? [])].sort((left, right) => {
+        const leftOrder = Number(left.sort_order ?? 0);
+        const rightOrder = Number(right.sort_order ?? 0);
+        return leftOrder - rightOrder || left.id - right.id;
+    });
     const attachments = [...(topic?.attachments ?? [])].sort((left, right) => {
         const leftOrder = Number(left.sort_order ?? 0);
         const rightOrder = Number(right.sort_order ?? 0);
         return leftOrder - rightOrder || left.id - right.id;
     });
+
+    const getBlockFileUrl = (path) => {
+        if (!path) {
+            return null;
+        }
+
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+
+        return `/storage/${path}`;
+    };
 
     if (!topic) {
         return (
@@ -139,45 +156,106 @@ export default function TopicPage({ topic }) {
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <h3 className="text-lg font-bold mb-4">{topic.title}</h3>
-                            <div
-                                className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
-                                dangerouslySetInnerHTML={{ __html: renderedContent }}
-                            />
+                            {blocks.length > 0 ? (
+                                <div className="space-y-6">
+                                    {blocks.map((block) => {
+                                        const blockFileUrl = getBlockFileUrl(block.file_path);
+                                        const blockVideoUrl = getYouTubeEmbedUrl(block.url);
 
-                            {topic.resource_type === 'pdf' && pdfUrl && (
-                                <div className="mt-6">
-                                    <h4 className="font-semibold mb-2">PDF Resource</h4>
-                                    <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                        <iframe
-                                            src={pdfUrl}
-                                            title="Topic PDF"
-                                            className="w-full h-[640px]"
-                                        />
-                                    </div>
-                                    <a
-                                        href={pdfUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
-                                    >
-                                        Open PDF in new tab
-                                    </a>
-                                </div>
-                            )}
+                                        return (
+                                            <div key={block.id} className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4">
+                                                {block.title && <h4 className="font-semibold mb-3">{block.title}</h4>}
 
-                            {topic.resource_type === 'youtube' && youtubeEmbedUrl && (
-                                <div className="mt-6">
-                                    <h4 className="font-semibold mb-2">Video Resource</h4>
-                                    <div className="aspect-video">
-                                        <iframe
-                                            src={youtubeEmbedUrl}
-                                            title="Topic video"
-                                            className="w-full h-full rounded"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </div>
+                                                {block.type === 'text' && (
+                                                    <div dangerouslySetInnerHTML={{ __html: block.content || '<p>No content provided.</p>' }} />
+                                                )}
+
+                                                {block.type === 'youtube' && blockVideoUrl && (
+                                                    <div className="aspect-video">
+                                                        <iframe
+                                                            src={blockVideoUrl}
+                                                            title={block.title || 'Topic video'}
+                                                            className="w-full h-full rounded"
+                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                            allowFullScreen
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {block.type === 'pdf' && blockFileUrl && (
+                                                    <div>
+                                                        <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                            <iframe
+                                                                src={blockFileUrl}
+                                                                title={block.title || 'Topic PDF'}
+                                                                className="w-full h-[640px]"
+                                                            />
+                                                        </div>
+                                                        <a
+                                                            href={blockFileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                                        >
+                                                            Open PDF in new tab
+                                                        </a>
+                                                    </div>
+                                                )}
+
+                                                {block.type === 'image' && blockFileUrl && (
+                                                    <img
+                                                        src={blockFileUrl}
+                                                        alt={block.title || 'Topic image'}
+                                                        className="max-h-[640px] w-full object-contain rounded"
+                                                    />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
+                            ) : (
+                                <>
+                                    <div
+                                        className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
+                                        dangerouslySetInnerHTML={{ __html: renderedContent }}
+                                    />
+
+                                    {topic.resource_type === 'pdf' && pdfUrl && (
+                                        <div className="mt-6">
+                                            <h4 className="font-semibold mb-2">PDF Resource</h4>
+                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                <iframe
+                                                    src={pdfUrl}
+                                                    title="Topic PDF"
+                                                    className="w-full h-[640px]"
+                                                />
+                                            </div>
+                                            <a
+                                                href={pdfUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                            >
+                                                Open PDF in new tab
+                                            </a>
+                                        </div>
+                                    )}
+
+                                    {topic.resource_type === 'youtube' && youtubeEmbedUrl && (
+                                        <div className="mt-6">
+                                            <h4 className="font-semibold mb-2">Video Resource</h4>
+                                            <div className="aspect-video">
+                                                <iframe
+                                                    src={youtubeEmbedUrl}
+                                                    title="Topic video"
+                                                    className="w-full h-full rounded"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                             {attachments.length > 0 && (

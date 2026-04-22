@@ -1,8 +1,26 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 
 export default function Show({ content, topics = [] }) {
     const materialData = content;
+
+    const deleteCourse = () => {
+        if (!confirm('Are you sure you want to delete this course? This will also delete all topics under it.')) {
+            return;
+        }
+
+        router.delete(route('admin.learning-content.destroy', materialData.id));
+    };
+
+    const deleteTopic = (topicId) => {
+        if (!confirm('Are you sure you want to delete this topic?')) {
+            return;
+        }
+
+        router.delete(route('admin.learning-content.destroy', topicId), {
+            preserveScroll: true,
+        });
+    };
 
     const getYouTubeEmbedUrl = (url) => {
         if (!url) {
@@ -19,11 +37,28 @@ export default function Show({ content, topics = [] }) {
 
     const pdfUrl = materialData.resource_path ? `/storage/${materialData.resource_path}` : null;
     const youtubeEmbedUrl = getYouTubeEmbedUrl(materialData.resource_url);
+    const blocks = [...(materialData.blocks ?? [])].sort((left, right) => {
+        const leftOrder = Number(left.sort_order ?? 0);
+        const rightOrder = Number(right.sort_order ?? 0);
+        return leftOrder - rightOrder || left.id - right.id;
+    });
     const attachments = [...(materialData.attachments ?? [])].sort((left, right) => {
         const leftOrder = Number(left.sort_order ?? 0);
         const rightOrder = Number(right.sort_order ?? 0);
         return leftOrder - rightOrder || left.id - right.id;
     });
+
+    const getBlockFileUrl = (path) => {
+        if (!path) {
+            return null;
+        }
+
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+
+        return `/storage/${path}`;
+    };
 
     return (
         <AdministratorLayout
@@ -60,7 +95,62 @@ export default function Show({ content, topics = [] }) {
                                     </div>
                                 </div>
 
-                                {materialData.content && (
+                                {blocks.length > 0 && (
+                                    <div className="mb-6">
+                                        <strong>Ordered Topic Blocks:</strong>
+                                        <div className="mt-3 space-y-4">
+                                            {blocks.map((block) => {
+                                                const blockFileUrl = getBlockFileUrl(block.file_path);
+                                                const blockVideoUrl = getYouTubeEmbedUrl(block.url);
+
+                                                return (
+                                                    <div key={block.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
+                                                        <div className="mb-2 text-sm text-gray-500 dark:text-gray-300">
+                                                            {block.type.toUpperCase()} · Order {block.sort_order ?? 0}
+                                                        </div>
+                                                        {block.title && <p className="font-semibold mb-3">{block.title}</p>}
+
+                                                        {block.type === 'text' && (
+                                                            <div dangerouslySetInnerHTML={{ __html: block.content || '<p>No content provided.</p>' }} />
+                                                        )}
+
+                                                        {block.type === 'youtube' && blockVideoUrl && (
+                                                            <div className="aspect-video">
+                                                                <iframe
+                                                                    src={blockVideoUrl}
+                                                                    title={block.title || 'YouTube video'}
+                                                                    className="w-full h-full rounded"
+                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                    allowFullScreen
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {block.type === 'pdf' && blockFileUrl && (
+                                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                                <iframe
+                                                                    src={blockFileUrl}
+                                                                    title={block.title || 'PDF block'}
+                                                                    className="w-full h-[640px]"
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {block.type === 'image' && blockFileUrl && (
+                                                            <img
+                                                                src={blockFileUrl}
+                                                                alt={block.title || 'Image block'}
+                                                                className="max-h-[640px] w-full object-contain rounded"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {blocks.length === 0 && materialData.content && (
                                     <div className="mb-6">
                                         <strong>Content:</strong>
                                         <div
@@ -70,7 +160,7 @@ export default function Show({ content, topics = [] }) {
                                     </div>
                                 )}
 
-                                {materialData.type === 'topic' && materialData.resource_type !== 'none' && (
+                                {blocks.length === 0 && materialData.type === 'topic' && materialData.resource_type !== 'none' && (
                                     <div className="mb-6">
                                         <strong>Media Resource:</strong>
 
@@ -165,6 +255,13 @@ export default function Show({ content, topics = [] }) {
                                                     >
                                                         View
                                                     </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteTopic(topic.id)}
+                                                        className="text-sm text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                    >
+                                                        Delete
+                                                    </button>
                                                 </li>
                                             ))}
                                         </ul>
@@ -179,6 +276,13 @@ export default function Show({ content, topics = [] }) {
                                 >
                                     Edit
                                 </Link>
+                                <button
+                                    type="button"
+                                    onClick={materialData.type === 'course' ? deleteCourse : () => deleteTopic(materialData.id)}
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                    {materialData.type === 'course' ? 'Delete Course' : 'Delete Topic'}
+                                </button>
                                 <Link
                                     href={route('admin.learning-content.index')}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"

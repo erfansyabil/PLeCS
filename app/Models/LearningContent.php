@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\LearningContentAttachment;
+use App\Models\LearningContentBlock;
 
 class LearningContent extends Model
 {
@@ -33,5 +34,10 @@ class LearningContent extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(LearningContentAttachment::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(LearningContentBlock::class)->orderBy('sort_order')->orderBy('id');
     }
 }

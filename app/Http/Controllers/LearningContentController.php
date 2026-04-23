@@ -166,13 +166,18 @@ class LearningContentController extends Controller
                 'layout' => $this->layoutForRole($request->user()->role),
                 'contents' => $contents,
             ]);
-        } elseif ($request->user()->role === 'student') {
-            $contents = LearningContent::where('type', 'course')
+        } elseif ($request->user()->role === 'student' || $request->user()->role === 'teacher') {
+            $contentsQuery = LearningContent::where('type', 'course')
                 ->whereNull('parent_id')
-                ->orderBy('title')
-                ->get();
+                ->orderBy('title');
 
-            return Inertia::render('Student/LearningContent/index', [
+            if ($request->user()->role === 'teacher') {
+                $contentsQuery->withCount('children');
+            }
+
+            $contents = $contentsQuery->get();
+
+            return Inertia::render($request->user()->role === 'teacher' ? 'Teacher/Topics/index' : 'Student/LearningContent/index', [
                 'layout' => $this->layoutForRole($request->user()->role),
                 'contents' => $contents,
             ]);
@@ -194,11 +199,11 @@ class LearningContentController extends Controller
                 'topics' => $topics,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
-        } elseif ($request->user()->role === 'student') {
+        } elseif ($request->user()->role === 'student' || $request->user()->role === 'teacher') {
             $content = LearningContent::findOrFail($id);
             $topics = $content->children()->orderBy('title')->get();
 
-            return Inertia::render('Student/LearningContent/content', [
+            return Inertia::render($request->user()->role === 'teacher' ? 'Teacher/Topics/content' : 'Student/LearningContent/content', [
                 'course' => $content,
                 'topics' => $topics,
                 'layout' => $this->layoutForRole($request->user()->role),
@@ -222,12 +227,12 @@ class LearningContentController extends Controller
                 'topic' => $topic,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
-        } elseif ($request->user()->role === 'student') {
+        } elseif ($request->user()->role === 'student' || $request->user()->role === 'teacher') {
             $topic = LearningContent::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
             ])->findOrFail($id);
-            return Inertia::render('Student/LearningContent/topic', [
+            return Inertia::render($request->user()->role === 'teacher' ? 'Teacher/Topics/topic' : 'Student/LearningContent/topic', [
                 'topic' => $topic,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);

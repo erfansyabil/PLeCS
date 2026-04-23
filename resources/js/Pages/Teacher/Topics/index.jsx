@@ -1,29 +1,8 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import { Head, Link} from '@inertiajs/react';
 
-export default function ViewTopicsIndex({ auth, layout }) {
-    const courses = [
-        {
-            id: 1,
-            title: 'Introduction to AI',
-            description: 'Learn the basics of Artificial Intelligence and its real-world applications.',
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Essentials',
-            description: 'Understand security threats, vulnerabilities, and basic protection methods.',
-        },
-        {
-            id: 3,
-            title: 'Multimedia Design',
-            description: 'Explore design principles, animation, and media tools.',
-        },
-        {
-            id: 4,
-            title: 'Web Development',
-            description: 'Build websites using HTML, CSS, JavaScript, and backend basics.',
-        },
-    ];
+export default function ViewTopicsIndex({ contents = [] }) {
+    const courses = Array.isArray(contents) ? contents : [];
 
     return (
         <TeacherLayout
@@ -42,28 +21,36 @@ export default function ViewTopicsIndex({ auth, layout }) {
                                 Welcome to the View Topics module. Here you can view all the learning topics.
                             </p>
 
-                            {/* Grid of Course Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {courses.map((course) => (
-                                    <div
-                                        key={course.id}
-                                        className="rounded-xl shadow-md bg-white dark:bg-gray-500 border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition"
-                                    >
-                                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                                            {course.title}
-                                        </h3>
-                                        <p className="text-gray-600 dark:text-gray-300 text-sm">
-                                            {course.description}
-                                        </p>
-                                        <Link
-                                            href={route('teacher.topics.show', course.id)}
-                                            className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+                            {courses.length === 0 ? (
+                                <p className="text-sm text-gray-600 dark:text-gray-300">No courses available yet.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {courses.map((course) => (
+                                        <div
+                                            key={course.id}
+                                            className="rounded-xl shadow-md bg-white dark:bg-gray-500 border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition"
                                         >
-                                            View Course
-                                        </Link>
-                                    </div>
-                                ))}
-                            </div>
+                                            <div className="mb-2 flex items-start justify-between gap-3">
+                                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                                    {course.title}
+                                                </h3>
+                                                <span className="inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200">
+                                                    {course.children_count ?? 0} Topic{(course.children_count ?? 0) === 1 ? '' : 's'}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-600 dark:text-gray-300 text-sm">
+                                                {course.description || 'No description'}
+                                            </p>
+                                            <Link
+                                                href={route('teacher.topics.show', course.id)}
+                                                className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+                                            >
+                                                View Topics
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -40,7 +40,8 @@ export default function TeacherLayout({ header, children }) {
                                     href={route('teacher.topics.index')}
                                     active={
                                         route().current('teacher.topics.index') ||
-                                        route().current('teacher.topics.show')
+                                        route().current('teacher.topics.show') ||
+                                        route().current('teacher.topics.topic')
                                     }
                                 >
                                     View Topics

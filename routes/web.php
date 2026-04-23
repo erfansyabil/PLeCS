@@ -114,12 +114,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('teacher')->name('teacher.')->middleware('role:teacher')->group(function () {
 
         // UC003: View Topics (teacher view)
-        Route::get('/topics', function () {
-            return Inertia::render('Teacher/Topics/index');
-        })->name('topics.index');
-        Route::get('/topics/{id}', function ($id) {
-            return Inertia::render('Teacher/Topics/show', ['topicId' => $id]);
-        })->name('topics.show');
+        Route::get('/topics', [LearningContentController::class, 'index'])
+            ->name('topics.index');
+        Route::get('/topics/topic/{id}', [LearningContentController::class, 'topic'])
+            ->whereNumber('id')
+            ->name('topics.topic');
+        Route::get('/topics/{id}', [LearningContentController::class, 'content'])
+            ->whereNumber('id')
+            ->name('topics.show');
 
         // UC005: Manage Additional Materials
         Route::resource('additional-content', AdditionalLearningContentController::class);

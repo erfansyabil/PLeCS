@@ -1,3 +1,3 @@
-import TopicPage from './topic';
+import ViewTopicsContent from './content';
 
-export default TopicPage;
+export default ViewTopicsContent;

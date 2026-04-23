@@ -106,7 +106,7 @@ export default function Show({ content, topics = [] }) {
                                                 return (
                                                     <div key={block.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
                                                         <div className="mb-2 text-sm text-gray-500 dark:text-gray-300">
-                                                            {block.type.toUpperCase()} · Order {block.sort_order ?? 0}
+                                                            {/* {block.type.toUpperCase()} · Order {block.sort_order ?? 0} */}
                                                         </div>
                                                         {block.title && <p className="font-semibold mb-3">{block.title}</p>}
 

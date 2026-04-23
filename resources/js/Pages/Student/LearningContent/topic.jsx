@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useMemo } from 'react';
 
 export default function TopicPage({ topic, layout }) {
@@ -20,6 +20,24 @@ export default function TopicPage({ topic, layout }) {
                     return AuthenticatedLayout; // fallback
             }
         };
+
+    const getBackHref = () => {
+        const parentId = topic?.parent_id;
+
+        if (layout === 'TeacherLayout') {
+            return parentId ? route('teacher.topics.show', parentId) : route('teacher.topics.index');
+        }
+
+        if (layout === 'AdministratorLayout') {
+            return parentId ? route('admin.learning-content.show', parentId) : route('admin.learning-content.index');
+        }
+
+        if (layout === 'StudentLayout') {
+            return parentId ? route('student.learning-content.show', parentId) : route('student.learning-content.index');
+        }
+
+        return route('dashboard');
+    };
 
     const getYouTubeEmbedUrl = (url) => {
         if (!url) {
@@ -164,9 +182,17 @@ export default function TopicPage({ topic, layout }) {
     return (
         <LayoutComponent
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {topic.title}
-                </h2>
+                <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                        {topic.title}
+                    </h2>
+                    <Link
+                        href={getBackHref()}
+                        className="rounded bg-gray-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                    >
+                        Back
+                    </Link>
+                </div>
             }
         >
             <Head title={topic.title} />

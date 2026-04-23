@@ -2,36 +2,7 @@ import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 export default function LearningContentIndex({contents}) {
-    const placeholderContents = [
-        {
-            id: 1,
-            title: 'AI Ethics Guidelines',
-            description: 'Comprehensive guidelines for ethical AI development and deployment.',
-            type: 'Document',
-            url: 'https://example.com/ai-ethics.pdf',
-            created_at: '2024-01-15',
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Best Practices Video',
-            description: 'Video tutorial on implementing security best practices.',
-            type: 'Video',
-            url: 'https://example.com/cybersecurity-video',
-            created_at: '2024-01-20',
-        },
-        {
-            id: 3,
-            title: 'Web Development Resources',
-            description: 'Curated list of useful resources for web development learning.',
-            type: 'Link',
-            url: 'https://example.com/web-dev-resources',
-            created_at: '2024-01-25',
-        },
-    ];
-
-    const materialsList = Array.isArray(contents) && contents.length > 0
-        ? contents
-        : placeholderContents;
+    const materialsList = Array.isArray(contents) ? contents : [];
 
     const deleteCourse = (courseId) => {
         if (!confirm('Are you sure you want to delete this course? This will also delete all topics under it.')) {

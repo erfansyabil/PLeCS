@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Models\LearningContent;
 use App\Models\LearningContentAttachment;
@@ -157,7 +158,10 @@ class LearningContentController extends Controller
     public function index(Request $request)
     {
         if ($request->user()->role === 'administrator') {
-            $contents = LearningContent::whereNull('parent_id')->get(); // courses
+            $contents = LearningContent::where('type', 'course')
+                ->whereNull('parent_id')
+                ->orderBy('title')
+                ->get();
             return Inertia::render('Admin/LearningContent/index', [
                 'layout' => $this->layoutForRole($request->user()->role),
                 'contents' => $contents,
@@ -258,7 +262,13 @@ class LearningContentController extends Controller
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'type' => 'required|in:course,topic',
-            'parent_id' => 'nullable|exists:learning_contents,id',
+            'parent_id' => [
+                'required_if:type,topic',
+                'nullable',
+                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
+                    ->where('type', 'course')
+                    ->whereNull('parent_id')),
+            ],
             'resource_type' => 'nullable|in:none,pdf,youtube',
             'resource_url' => 'nullable|url|required_if:resource_type,youtube',
             'resource_file' => 'nullable|file|mimetypes:application/pdf|max:10240|required_if:resource_type,pdf',
@@ -371,12 +381,24 @@ class LearningContentController extends Controller
      */
     public function update(Request $request, int $id)
     {
+        $learningContent = LearningContent::findOrFail($id);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'content' => 'nullable|string',
-            'type' => 'required|in:course,topic',
-            'parent_id' => 'nullable|exists:learning_contents,id',
+            'type' => [
+                'required',
+                Rule::in([$learningContent->type]),
+            ],
+            'parent_id' => [
+                'required_if:type,topic',
+                'nullable',
+                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
+                    ->where('type', 'course')
+                    ->whereNull('parent_id')
+                    ->where('id', '!=', $id)),
+            ],
             'resource_type' => 'nullable|in:none,pdf,youtube',
             'resource_url' => 'nullable|url|required_if:resource_type,youtube',
             'resource_file' => 'nullable|file|mimetypes:application/pdf|max:10240|required_if:resource_type,pdf',
@@ -393,9 +415,10 @@ class LearningContentController extends Controller
             'attachments.*.type' => 'required_with:attachments|in:pdf,image',
             'attachments.*.file' => 'required_with:attachments|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
             'attachments.*.sort_order' => 'nullable|integer|min:0',
+        ], [
+            'type.in' => 'Type cannot be changed after creation. Create a new course or topic instead.',
         ]);
 
-        $learningContent = LearningContent::find($id);
         if ($learningContent) {
             $payload = [
                 'title' => $validated['title'],

@@ -192,34 +192,15 @@ export default function Edit({ content, courses = [] }) {
                                 <select
                                     id="type"
                                     value={data.type}
-                                    onChange={(e) => {
-                                        const nextType = e.target.value;
-                                        setData('type', nextType);
-                                        if (nextType === 'course') {
-                                            setData('parent_id', '');
-                                            setData('resource_type', 'none');
-                                            setData('resource_url', '');
-                                            setData('resource_file', null);
-                                            setData('blocks', []);
-                                        }
-
-                                        if (nextType === 'topic' && data.blocks.length === 0) {
-                                            setData('blocks', [{
-                                                type: 'text',
-                                                title: '',
-                                                content: '',
-                                                url: '',
-                                                file: null,
-                                                existing_file_path: '',
-                                                sort_order: 10,
-                                            }]);
-                                        }
-                                    }}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    disabled
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                                 >
                                     <option value="course">Course</option>
                                     <option value="topic">Topic</option>
                                 </select>
+                                <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
+                                    Type is fixed after creation. Create a new item to add a course or topic.
+                                </p>
                                 {errors.type && <div className="text-red-500 text-sm mt-1">{errors.type}</div>}
                             </div>
 

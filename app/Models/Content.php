@@ -6,50 +6,50 @@ use Database\Factories\ContentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Content extends Model
 {
     /** @use HasFactory<ContentFactory> */
     use HasFactory;
 
-    protected $table = 'contents';
+    protected $table = 'learning_contents';
 
-    protected $primaryKey = 'contentID';
+    protected $primaryKey = 'id';
 
     public $incrementing = true;
 
     protected $keyType = 'int';
 
     protected $fillable = [
-        'topicID',
-        'uploadedBy',
         'title',
-        'format',
-        'filePath',
-        'sizeMB',
-        'isLowBandwidth',
-        'isSupplementary',
+        'description',
+        'content',
+        'type',
+        'parent_id',
+        'resource_type',
+        'resource_url',
+        'resource_path',
     ];
 
     protected $casts = [
-        'sizeMB' => 'float',
-        'isLowBandwidth' => 'boolean',
-        'isSupplementary' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * Topic this content belongs to.
+     * Parent content relationship (for topics under courses, lessons under topics, etc.).
      */
-    public function topic(): BelongsTo
+    public function parent(): BelongsTo
     {
-        return $this->belongsTo('App\\Models\\Topic', 'topicID', 'topicID');
+        return $this->belongsTo(Content::class, 'parent_id', 'id');
     }
 
     /**
-     * User who uploaded this content.
+     * Child content relationship.
      */
-    public function uploader(): BelongsTo
+    public function children(): HasMany
     {
-        return $this->belongsTo(User::class, 'uploadedBy', 'id');
+        return $this->hasMany(Content::class, 'parent_id', 'id');
     }
 }

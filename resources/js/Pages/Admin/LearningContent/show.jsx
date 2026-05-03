@@ -247,21 +247,23 @@ export default function Show({ content, topics = [] }) {
                                         <strong>Topics:</strong>
                                         <ul className="mt-2 space-y-2">
                                             {topics.map((topic) => (
-                                                <li key={topic.id} className="flex items-center justify-between rounded border border-gray-200 dark:border-gray-500 px-3 py-2">
-                                                    <span>{topic.title}</span>
-                                                    <Link
-                                                        href={route('admin.learning-content.show', topic.id)}
-                                                        className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
-                                                    >
-                                                        View
-                                                    </Link>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => deleteTopic(topic.id)}
-                                                        className="text-sm text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                <li key={topic.id} className="flex items-center justify-between gap-4 rounded border border-gray-200 px-3 py-2 dark:border-gray-500">
+                                                    <span className="min-w-0 flex-1 truncate">{topic.title}</span>
+                                                    <div className="flex items-center gap-3 shrink-0">
+                                                        <Link
+                                                            href={route('admin.learning-content.show', topic.id)}
+                                                            className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                                        >
+                                                            View
+                                                        </Link>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteTopic(topic.id)}
+                                                            className="text-sm text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </li>
                                             ))}
                                         </ul>

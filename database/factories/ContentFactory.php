@@ -2,8 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Topic;
-use App\Models\User;
+use App\Models\Content;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,22 +17,88 @@ class ContentFactory extends Factory
      */
     public function definition(): array
     {
-        $format = fake()->randomElement(['Video', 'PDF', 'Article', 'Image']);
-
         return [
-            'topicID' => Topic::factory(),
-            'uploadedBy' => User::factory()->teacher(),
-            'title' => fake()->sentence(5),
-            'format' => $format,
-            'filePath' => fake()->optional()->passthrough(match ($format) {
-                'Video' => 'https://cdn.example.com/videos/'.fake()->uuid().'.mp4',
-                'PDF' => 'https://cdn.example.com/docs/'.fake()->uuid().'.pdf',
-                'Article' => 'https://example.com/articles/'.fake()->slug(),
-                default => 'https://cdn.example.com/images/'.fake()->uuid().'.jpg',
-            }),
-            'sizeMB' => fake()->randomFloat(2, 0.10, 200.00),
-            'isLowBandwidth' => fake()->boolean(25),
-            'isSupplementary' => fake()->boolean(40),
+            'title' => fake()->sentence(4),
+            'description' => fake()->optional()->paragraph(),
+            'content' => fake()->optional()->paragraphs(asText: true),
+            'type' => fake()->randomElement(['course', 'topic', 'content']),
+            'parent_id' => null,
+            'resource_type' => 'none',
+            'resource_url' => null,
+            'resource_path' => null,
         ];
+    }
+
+    /**
+     * Set the content type to course.
+     */
+    public function course(): self
+    {
+        return $this->state([
+            'type' => 'course',
+            'parent_id' => null,
+        ]);
+    }
+
+    /**
+     * Set the content type to topic.
+     */
+    public function topic(?int $parentId = null): self
+    {
+        return $this->state([
+            'type' => 'topic',
+            'parent_id' => $parentId,
+        ]);
+    }
+
+    /**
+     * Set the content type to content.
+     */
+    public function content(?int $parentId = null): self
+    {
+        return $this->state([
+            'type' => 'content',
+            'parent_id' => $parentId,
+        ]);
+    }
+
+    /**
+     * Set a custom title.
+     */
+    public function withTitle(string $title): self
+    {
+        return $this->state([
+            'title' => $title,
+        ]);
+    }
+
+    /**
+     * Set a custom description.
+     */
+    public function withDescription(string $description): self
+    {
+        return $this->state([
+            'description' => $description,
+        ]);
+    }
+
+    /**
+     * Set custom content.
+     */
+    public function withContent(?string $content): self
+    {
+        return $this->state([
+            'content' => $content,
+        ]);
+    }
+
+    /**
+     * Set a parent content.
+     */
+    public function withParent(int $parentId): self
+    {
+        return $this->state([
+            'parent_id' => $parentId,
+        ]);
     }
 }

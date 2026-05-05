@@ -17,7 +17,7 @@ export default function Show({ content, topics = [] }) {
             return;
         }
 
-        router.delete(route('admin.learning-content.destroy', topicId), {
+        router.delete(route('admin.learning-content.topic.destroy', topicId), {
             preserveScroll: true,
         });
     };
@@ -271,7 +271,9 @@ export default function Show({ content, topics = [] }) {
 
                             <div className="flex space-x-4">
                                 <Link
-                                    href={route('admin.learning-content.edit', materialData.id)}
+                                    href={materialData.type === 'topic'
+                                        ? route('admin.learning-content.topic.edit', materialData.id)
+                                        : route('admin.learning-content.edit', materialData.id)}
                                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                                 >
                                     Edit

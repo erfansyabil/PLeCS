@@ -152,6 +152,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);
+        Route::get('/learning-content/topic/{id}', [LearningContentController::class, 'topic'])
+            ->name('learning-content.topic.show');
+        Route::get('/learning-content/topic/{id}/edit', [LearningContentController::class, 'edit'])
+            ->name('learning-content.topic.edit');
+        Route::delete('/learning-content/topic/{id}', [LearningContentController::class, 'destroy'])
+            ->name('learning-content.topic.destroy');
         Route::post('/learning-content/editor-image', [LearningContentController::class, 'uploadEditorImage'])
             ->name('learning-content.editor-image');
 

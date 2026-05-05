@@ -8,7 +8,7 @@ export default function Create({ courses = [] }) {
         description: '',
         content: '',
         type: 'course',
-        parent_id: '',
+        course_id: '',
         resource_type: 'none',
         resource_url: '',
         resource_file: null,
@@ -114,7 +114,7 @@ export default function Create({ courses = [] }) {
                                 </p>
                                 <p className="text-sm text-blue-700 dark:text-blue-100">
                                     Example: Asas Sains Komputer Tingkatan 1 can have 4 topics, while Tingkatan 2 can have 3 topics.
-                                    Create the course first, then add its topics by selecting Type = Topic and choosing the parent course.
+                                    Create the course first, then add its topics by selecting Type = Topic and choosing the course.
                                 </p>
                             </div>
 
@@ -126,7 +126,7 @@ export default function Create({ courses = [] }) {
                                             <div key={course.id} className="px-3 py-2 text-sm flex justify-between">
                                                 <span>{course.title}</span>
                                                 <span className="text-gray-500 dark:text-gray-300">
-                                                    {course.children_count ?? 0} topic{(course.children_count ?? 0) === 1 ? '' : 's'}
+                                                    {course.topics_count ?? 0} topic{(course.topics_count ?? 0) === 1 ? '' : 's'}
                                                 </span>
                                             </div>
                                         ))}
@@ -174,7 +174,7 @@ export default function Create({ courses = [] }) {
                                         const nextType = e.target.value;
                                         setData('type', nextType);
                                         if (nextType === 'course') {
-                                            setData('parent_id', '');
+                                            setData('course_id', '');
                                             setData('resource_type', 'none');
                                             setData('resource_url', '');
                                             setData('resource_file', null);
@@ -202,24 +202,24 @@ export default function Create({ courses = [] }) {
 
                             {data.type === 'topic' && (
                                 <div className="mb-4">
-                                    <label htmlFor="parent_id" className="block text-sm font-medium mb-2">
-                                        Parent Course
+                                    <label htmlFor="course_id" className="block text-sm font-medium mb-2">
+                                        Course
                                     </label>
                                     <select
-                                        id="parent_id"
-                                        value={data.parent_id}
-                                        onChange={(e) => setData('parent_id', e.target.value)}
+                                        id="course_id"
+                                        value={data.course_id}
+                                        onChange={(e) => setData('course_id', e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                                         required
                                     >
                                         <option value="">Select a course</option>
                                         {sortedCourses.map((course) => (
                                             <option key={course.id} value={course.id}>
-                                                {course.title} ({course.children_count ?? 0} topic{(course.children_count ?? 0) === 1 ? '' : 's'})
+                                                {course.title} ({course.topics_count ?? 0} topic{(course.topics_count ?? 0) === 1 ? '' : 's'})
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.parent_id && <div className="text-red-500 text-sm mt-1">{errors.parent_id}</div>}
+                                    {errors.course_id && <div className="text-red-500 text-sm mt-1">{errors.course_id}</div>}
                                 </div>
                             )}
 

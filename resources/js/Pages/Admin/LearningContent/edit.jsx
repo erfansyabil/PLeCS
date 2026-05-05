@@ -77,7 +77,7 @@ export default function Edit({ content, courses = [] }) {
         description: materialData.description,
         content: materialData.content || '',
         type: materialData.type,
-        parent_id: materialData.parent_id || '',
+        course_id: materialData.course_id || '',
         resource_type: materialData.resource_type || 'none',
         resource_url: materialData.resource_url || '',
         resource_file: null,
@@ -206,13 +206,13 @@ export default function Edit({ content, courses = [] }) {
 
                             {data.type === 'topic' && (
                                 <div className="mb-4">
-                                    <label htmlFor="parent_id" className="block text-sm font-medium mb-2">
-                                        Parent Course
+                                    <label htmlFor="course_id" className="block text-sm font-medium mb-2">
+                                        Course
                                     </label>
                                     <select
-                                        id="parent_id"
-                                        value={data.parent_id}
-                                        onChange={(e) => setData('parent_id', e.target.value)}
+                                        id="course_id"
+                                        value={data.course_id}
+                                        onChange={(e) => setData('course_id', e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                                         required
                                     >
@@ -221,7 +221,7 @@ export default function Edit({ content, courses = [] }) {
                                             <option key={course.id} value={course.id}>{course.title}</option>
                                         ))}
                                     </select>
-                                    {errors.parent_id && <div className="text-red-500 text-sm mt-1">{errors.parent_id}</div>}
+                                    {errors.course_id && <div className="text-red-500 text-sm mt-1">{errors.course_id}</div>}
                                 </div>
                             )}
 
@@ -364,7 +364,9 @@ export default function Edit({ content, courses = [] }) {
                                     {processing ? 'Updating...' : 'Update Material'}
                                 </button>
                                 <Link
-                                    href={route('admin.learning-content.show', materialData.id)}
+                                    href={materialData.type === 'topic'
+                                        ? route('admin.learning-content.topic.show', materialData.id)
+                                        : route('admin.learning-content.show', materialData.id)}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                                 >
                                     Cancel

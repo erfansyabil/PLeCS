@@ -24,32 +24,42 @@ class Content extends Model
         'topicID',
         'uploadedBy',
         'title',
-        'format',
-        'filePath',
-        'sizeMB',
-        'isLowBandwidth',
-        'isSupplementary',
+        'description',
+        'content',
+        'type',
+        'course_id',
+        'resource_type',
+        'resource_url',
+        'resource_path',
     ];
 
     protected $casts = [
-        'sizeMB' => 'float',
-        'isLowBandwidth' => 'boolean',
-        'isSupplementary' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'course_id' => 'integer',
     ];
 
-    /**
-     * Topic this content belongs to.
-     */
-    public function topic(): BelongsTo
+    protected $appends = [
+        'type',
+    ];
+
+    public function course(): BelongsTo
     {
-        return $this->belongsTo('App\\Models\\Topic', 'topicID', 'topicID');
+        return $this->belongsTo(Course::class, 'course_id', 'courseID');
     }
 
-    /**
-     * User who uploaded this content.
-     */
-    public function uploader(): BelongsTo
+    public function attachments(): HasMany
     {
-        return $this->belongsTo(User::class, 'uploadedBy', 'id');
+        return $this->hasMany(LearningContentAttachment::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(LearningContentBlock::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function getTypeAttribute(): string
+    {
+        return 'topic';
     }
 }

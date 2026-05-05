@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Models\Course;
 use App\Models\LearningContent;
 use App\Models\LearningContentAttachment;
 use App\Models\LearningContentBlock;
@@ -36,13 +37,55 @@ class LearningContentController extends Controller
             'description' => 'This is placeholder learning content while persistence is being implemented.',
             'content' => 'No content has been saved for this item yet.',
             'type' => 'course',
-            'parent_id' => null,
+            'course_id' => null,
             'resource_type' => 'none',
             'resource_url' => null,
             'resource_path' => null,
             'blocks' => [],
             'created_at' => now()->toDateString(),
         ];
+    }
+
+    /**
+     * Determine whether the current route is topic-specific.
+     */
+    private function isTopicRoute(Request $request): bool
+    {
+        return $request->routeIs('admin.learning-content.topic.*', 'student.learning-content.topic.*');
+    }
+
+    /**
+     * Delete media files for a single topic.
+     */
+    private function deleteTopicAssets(LearningContent $topic): void
+    {
+        $topic->loadMissing(['attachments', 'blocks']);
+
+        if ($topic->resource_path) {
+            Storage::disk('public')->delete($topic->resource_path);
+        }
+
+        foreach ($topic->attachments as $attachment) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        foreach ($topic->blocks as $block) {
+            if ($block->file_path) {
+                Storage::disk('public')->delete($block->file_path);
+            }
+        }
+    }
+
+    /**
+     * Delete media files for a course and all linked topics.
+     */
+    private function deleteCourseAssets(Course $course): void
+    {
+        $course->loadMissing(['topics.attachments', 'topics.blocks']);
+
+        foreach ($course->topics as $topic) {
+            $this->deleteTopicAssets($topic);
+        }
     }
 
     /**
@@ -110,32 +153,6 @@ class LearningContentController extends Controller
     }
 
     /**
-     * Delete media files for this content and all nested topic children.
-     */
-    private function deleteLearningContentAssets(LearningContent $learningContent): void
-    {
-        $learningContent->loadMissing(['attachments', 'blocks', 'children.attachments', 'children.blocks']);
-
-        if ($learningContent->resource_path) {
-            Storage::disk('public')->delete($learningContent->resource_path);
-        }
-
-        foreach ($learningContent->attachments as $attachment) {
-            Storage::disk('public')->delete($attachment->file_path);
-        }
-
-        foreach ($learningContent->blocks as $block) {
-            if ($block->file_path) {
-                Storage::disk('public')->delete($block->file_path);
-            }
-        }
-
-        foreach ($learningContent->children as $child) {
-            $this->deleteLearningContentAssets($child);
-        }
-    }
-
-    /**
      * Upload an inline image for the rich text editor.
      */
     public function uploadEditorImage(Request $request)
@@ -158,24 +175,18 @@ class LearningContentController extends Controller
     public function index(Request $request)
     {
         if ($request->user()->role === 'administrator') {
-            $contents = LearningContent::where('type', 'course')
-                ->whereNull('parent_id')
-                ->orderBy('title')
+            $contents = Course::withCount('topics')
+                ->orderBy('courseName')
                 ->get();
             return Inertia::render('Admin/LearningContent/index', [
                 'layout' => $this->layoutForRole($request->user()->role),
                 'contents' => $contents,
             ]);
-        } elseif ($request->user()->role === 'student' || $request->user()->role === 'teacher') {
-            $contentsQuery = LearningContent::where('type', 'course')
+        } elseif ($request->user()->role === 'student') {
+            $contents = LearningContent::where('type', 'course')
                 ->whereNull('parent_id')
-                ->orderBy('title');
-
-            if ($request->user()->role === 'teacher') {
-                $contentsQuery->withCount('children');
-            }
-
-            $contents = $contentsQuery->get();
+                ->orderBy('title')
+                ->get();
 
             return Inertia::render($request->user()->role === 'teacher' ? 'Teacher/Topics/index' : 'Student/LearningContent/index', [
                 'layout' => $this->layoutForRole($request->user()->role),
@@ -192,14 +203,14 @@ class LearningContentController extends Controller
     public function content(Request $request, int $id)
     {
         if ($request->user()->role === 'administrator') {
-            $content = LearningContent::findOrFail($id);
-            $topics = $content->children()->orderBy('title')->get();
+            $content = Course::withCount('topics')->findOrFail($id);
+            $topics = $content->topics()->orderBy('title')->get();
             return Inertia::render('Admin/LearningContent/show', [
                 'content' => $content,
                 'topics' => $topics,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
-        } elseif ($request->user()->role === 'student' || $request->user()->role === 'teacher') {
+        } elseif ($request->user()->role === 'student') {
             $content = LearningContent::findOrFail($id);
             $topics = $content->children()->orderBy('title')->get();
 
@@ -222,15 +233,18 @@ class LearningContentController extends Controller
             $topic = LearningContent::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'course',
             ])->findOrFail($id);
-            return Inertia::render('Admin/LearningContent/topic', [
-                'topic' => $topic,
+            return Inertia::render('Admin/LearningContent/show', [
+                'content' => $topic,
+                'topics' => [],
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
         } elseif ($request->user()->role === 'student' || $request->user()->role === 'teacher') {
             $topic = LearningContent::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'course',
             ])->findOrFail($id);
             return Inertia::render($request->user()->role === 'teacher' ? 'Teacher/Topics/topic' : 'Student/LearningContent/topic', [
                 'topic' => $topic,
@@ -246,9 +260,8 @@ class LearningContentController extends Controller
      */
     public function create(Request $request)
     {
-        $courses = LearningContent::where('type', 'course')
-            ->withCount('children')
-            ->orderBy('title')
+        $courses = Course::withCount('topics')
+            ->orderBy('courseName')
             ->get();
 
         return Inertia::render('Admin/LearningContent/create', [
@@ -267,12 +280,10 @@ class LearningContentController extends Controller
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'type' => 'required|in:course,topic',
-            'parent_id' => [
+            'course_id' => [
                 'required_if:type,topic',
                 'nullable',
-                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
-                    ->where('type', 'course')
-                    ->whereNull('parent_id')),
+                Rule::exists('courses', 'courseID'),
             ],
             'resource_type' => 'nullable|in:none,pdf,youtube',
             'resource_url' => 'nullable|url|required_if:resource_type,youtube',
@@ -292,31 +303,35 @@ class LearningContentController extends Controller
             'attachments.*.sort_order' => 'nullable|integer|min:0',
         ]);
 
-        $payload = [
+        if ($validated['type'] === 'course') {
+            Course::query()->create([
+                'courseName' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'content' => $validated['content'] ?? null,
+                'difficultyLevel' => 'Beginner',
+                'isActive' => true,
+            ]);
+
+            return redirect()->route('admin.learning-content.index');
+        }
+
+        $topic = LearningContent::query()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'content' => $validated['content'] ?? null,
-            'type' => $validated['type'],
-            'parent_id' => $validated['type'] === 'topic' ? ($validated['parent_id'] ?? null) : null,
-            'resource_type' => 'none',
-            'resource_url' => null,
+            'course_id' => $validated['course_id'],
+            'resource_type' => $validated['resource_type'] ?? 'none',
+            'resource_url' => $validated['resource_type'] === 'youtube' ? ($validated['resource_url'] ?? null) : null,
             'resource_path' => null,
-        ];
+        ]);
 
-        if ($payload['type'] === 'topic') {
-            $payload['resource_type'] = $validated['resource_type'] ?? 'none';
-
-            if ($payload['resource_type'] === 'youtube') {
-                $payload['resource_url'] = $validated['resource_url'];
-            }
-
-            if ($payload['resource_type'] === 'pdf' && $request->hasFile('resource_file')) {
-                $payload['resource_path'] = $request->file('resource_file')->store('learning-content/pdfs', 'public');
-            }
+        if ($validated['resource_type'] === 'pdf' && $request->hasFile('resource_file')) {
+            $topic->update([
+                'resource_path' => $request->file('resource_file')->store('learning-content/pdfs', 'public'),
+            ]);
         }
 
-        $topic = LearningContent::create($payload);
-        if ($payload['type'] === 'topic' && $topic) {
+        if ($topic) {
             if ($request->has('blocks')) {
                 $this->syncTopicBlocks($request, $topic);
             }
@@ -347,11 +362,10 @@ class LearningContentController extends Controller
     public function show(Request $request, int $id)
     {
         if ($request->user()->role === 'administrator') {
-            $learningContent = LearningContent::with([
-                'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-                'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-            ])->find($id);
-            $topics = $learningContent?->children ?? [];
+            $learningContent = Course::withCount('topics')->find($id);
+            $topics = $learningContent
+                ? $learningContent->topics()->orderBy('title')->get()
+                : [];
 
             return Inertia::render('Admin/LearningContent/show', [
                 'content' => $learningContent ?? $this->placeholderContent($id),
@@ -368,15 +382,18 @@ class LearningContentController extends Controller
      */
     public function edit(Request $request, int $id)
     {
-        $courses = LearningContent::where('type', 'course')->get();
-        $learningContent = LearningContent::with([
-            'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-            'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-        ])->find($id);
+        $courses = Course::withCount('topics')->orderBy('courseName')->get();
+        $learningContent = $this->isTopicRoute($request)
+            ? LearningContent::with([
+                'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'course',
+            ])->findOrFail($id)
+            : Course::findOrFail($id);
 
         return Inertia::render('Admin/LearningContent/edit', [
             'layout' => $this->layoutForRole($request->user()->role),
-            'content' => $learningContent ?? $this->placeholderContent($id),
+            'content' => $learningContent,
             'courses' => $courses,
         ]);
     }
@@ -386,23 +403,18 @@ class LearningContentController extends Controller
      */
     public function update(Request $request, int $id)
     {
-        $learningContent = LearningContent::findOrFail($id);
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'type' => [
                 'required',
-                Rule::in([$learningContent->type]),
+                Rule::in(['course', 'topic']),
             ],
-            'parent_id' => [
+            'course_id' => [
                 'required_if:type,topic',
                 'nullable',
-                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
-                    ->where('type', 'course')
-                    ->whereNull('parent_id')
-                    ->where('id', '!=', $id)),
+                Rule::exists('courses', 'courseID'),
             ],
             'resource_type' => 'nullable|in:none,pdf,youtube',
             'resource_url' => 'nullable|url|required_if:resource_type,youtube',
@@ -424,86 +436,79 @@ class LearningContentController extends Controller
             'type.in' => 'Type cannot be changed after creation. Create a new course or topic instead.',
         ]);
 
-        if ($learningContent) {
-            $payload = [
-                'title' => $validated['title'],
+        if ($validated['type'] === 'course') {
+            $course = Course::findOrFail($id);
+            $course->update([
+                'courseName' => $validated['title'],
                 'description' => $validated['description'] ?? null,
                 'content' => $validated['content'] ?? null,
-                'type' => $validated['type'],
-                'parent_id' => $validated['type'] === 'topic' ? ($validated['parent_id'] ?? null) : null,
-                'resource_type' => 'none',
-                'resource_url' => null,
-            ];
+            ]);
 
-            if ($payload['type'] === 'topic') {
-                $payload['resource_type'] = $validated['resource_type'] ?? 'none';
+            return redirect()->route('admin.learning-content.index');
+        }
 
-                if ($payload['resource_type'] === 'youtube') {
-                    $payload['resource_url'] = $validated['resource_url'];
-                    if ($learningContent->resource_path) {
-                        Storage::disk('public')->delete($learningContent->resource_path);
-                        $payload['resource_path'] = null;
-                    }
+        $topic = LearningContent::with(['attachments', 'blocks'])->findOrFail($id);
+
+        $payload = [
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'content' => $validated['content'] ?? null,
+            'course_id' => $validated['course_id'] ?? null,
+            'resource_type' => $validated['resource_type'] ?? 'none',
+            'resource_url' => null,
+            'resource_path' => null,
+        ];
+
+        if ($payload['resource_type'] === 'youtube') {
+            $payload['resource_url'] = $validated['resource_url'];
+            if ($topic->resource_path) {
+                Storage::disk('public')->delete($topic->resource_path);
+            }
+        }
+
+        if ($payload['resource_type'] === 'pdf') {
+            if ($request->hasFile('resource_file')) {
+                if ($topic->resource_path) {
+                    Storage::disk('public')->delete($topic->resource_path);
                 }
-
-                if ($payload['resource_type'] === 'pdf') {
-                    if ($request->hasFile('resource_file')) {
-                        if ($learningContent->resource_path) {
-                            Storage::disk('public')->delete($learningContent->resource_path);
-                        }
-                        $payload['resource_path'] = $request->file('resource_file')->store('learning-content/pdfs', 'public');
-                    } else {
-                        $payload['resource_path'] = $learningContent->resource_path;
-                    }
-                }
-
-                if ($payload['resource_type'] === 'none') {
-                    if ($learningContent->resource_path) {
-                        Storage::disk('public')->delete($learningContent->resource_path);
-                    }
-                    $payload['resource_path'] = null;
-                    $payload['resource_url'] = null;
-                }
+                $payload['resource_path'] = $request->file('resource_file')->store('learning-content/pdfs', 'public');
             } else {
-                if ($learningContent->resource_path) {
-                    Storage::disk('public')->delete($learningContent->resource_path);
-                }
-                $payload['resource_path'] = null;
+                $payload['resource_path'] = $topic->resource_path;
+            }
+        }
+
+        if ($payload['resource_type'] === 'none') {
+            if ($topic->resource_path) {
+                Storage::disk('public')->delete($topic->resource_path);
+            }
+        }
+
+        $topic->update($payload);
+
+        if ($request->has('blocks')) {
+            $this->syncTopicBlocks($request, $topic);
+        }
+
+        if ($request->has('attachments')) {
+            foreach ($topic->attachments as $existingAttachment) {
+                Storage::disk('public')->delete($existingAttachment->file_path);
+                $existingAttachment->delete();
             }
 
-            $learningContent->update($payload);
-
-            if ($payload['type'] === 'topic' && $request->has('blocks')) {
-                $this->syncTopicBlocks($request, $learningContent);
-            } elseif ($payload['type'] !== 'topic') {
-                $existingBlockPaths = $learningContent->blocks()->whereNotNull('file_path')->pluck('file_path')->all();
-                $learningContent->blocks()->delete();
-                foreach ($existingBlockPaths as $filePath) {
-                    Storage::disk('public')->delete($filePath);
-                }
-            }
-
-            if ($request->has('attachments')) {
-                foreach ($learningContent->attachments as $existingAttachment) {
-                    Storage::disk('public')->delete($existingAttachment->file_path);
-                    $existingAttachment->delete();
+            foreach ($request->input('attachments', []) as $index => $attachmentData) {
+                if (!$request->hasFile("attachments.$index.file")) {
+                    continue;
                 }
 
-                foreach ($request->input('attachments', []) as $index => $attachmentData) {
-                    if (!$request->hasFile("attachments.$index.file")) {
-                        continue;
-                    }
+                $storedPath = $request->file("attachments.$index.file")->store('learning-content/attachments', 'public');
 
-                    $storedPath = $request->file("attachments.$index.file")->store('learning-content/attachments', 'public');
-
-                    LearningContentAttachment::create([
-                        'learning_content_id' => $learningContent->id,
-                        'title' => $attachmentData['title'] ?? null,
-                        'type' => $attachmentData['type'],
-                        'file_path' => $storedPath,
-                        'sort_order' => (int) ($attachmentData['sort_order'] ?? 0),
-                    ]);
-                }
+                LearningContentAttachment::create([
+                    'learning_content_id' => $topic->id,
+                    'title' => $attachmentData['title'] ?? null,
+                    'type' => $attachmentData['type'],
+                    'file_path' => $storedPath,
+                    'sort_order' => (int) ($attachmentData['sort_order'] ?? 0),
+                ]);
             }
         }
 
@@ -515,12 +520,22 @@ class LearningContentController extends Controller
      */
     public function destroy(Request $request, int $id)
     {
-        $learningContent = LearningContent::with(['attachments', 'blocks'])->find($id);
-        if ($learningContent) {
-            $this->deleteLearningContentAssets($learningContent);
+        if ($this->isTopicRoute($request)) {
+            $topic = LearningContent::with(['attachments', 'blocks'])->findOrFail($id);
+            $this->deleteTopicAssets($topic);
+            $topic->delete();
 
-            $learningContent->delete();
+            return redirect()->route('admin.learning-content.index');
         }
+
+        $course = Course::with(['topics.attachments', 'topics.blocks'])->findOrFail($id);
+        $this->deleteCourseAssets($course);
+
+        foreach ($course->topics as $topic) {
+            $topic->delete();
+        }
+
+        $course->delete();
 
         return redirect()->route('admin.learning-content.index');
     }

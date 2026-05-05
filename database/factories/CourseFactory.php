@@ -19,6 +19,7 @@ class CourseFactory extends Factory
         return [
             'courseName' => fake()->unique()->sentence(3),
             'description' => fake()->paragraph(),
+            'content' => fake()->optional()->paragraphs(asText: true),
             'difficultyLevel' => fake()->randomElement(['Beginner', 'Intermediate', 'Advanced']),
             'isActive' => fake()->boolean(90),
         ];

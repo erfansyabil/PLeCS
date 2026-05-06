@@ -202,13 +202,13 @@ class ContentSeeder extends Seeder
     }
 
     /**
-     * Create ordered blocks for a content node.
+     * Create ordered blocks for a topic node.
      */
-    private function seedBlocks(int $contentId, array $blocks): void
+    private function seedBlocks(int $topicId, array $blocks): void
     {
         foreach (array_values($blocks) as $index => $block) {
             LearningContentBlock::query()->create([
-                'learning_content_id' => $contentId,
+                'learning_content_id' => $topicId,
                 'type' => $block['type'] ?? 'text',
                 'title' => $block['title'] ?? null,
                 'content' => $block['content'] ?? null,

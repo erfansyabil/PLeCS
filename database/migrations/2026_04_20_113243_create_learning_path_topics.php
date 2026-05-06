@@ -39,6 +39,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('learning_path_topics');
+            Schema::disableForeignKeyConstraints();
+            Schema::dropIfExists('learning_path_topics');
+            Schema::enableForeignKeyConstraints();
     }
 };

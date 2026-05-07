@@ -34,7 +34,8 @@ export default function AdministratorLayout({ header, children }) {
                                     href={route('admin.learning-content.index')}
                                     active={
                                         route().current('admin.learning-content.index') ||
-                                        route().current('admin.learning-content.show')
+                                        route().current('admin.learning-content.show') ||
+                                        route().current('admin.learning-content.topic.show')
                                     }
                                 >
                                     Manage Learning Content
@@ -159,7 +160,8 @@ export default function AdministratorLayout({ header, children }) {
                             href={route('admin.learning-content.index')}
                             active={
                             route().current('admin.learning-content.index') ||
-                            route().current('admin.learning-content.show')
+                            route().current('admin.learning-content.show') ||
+                            route().current('admin.learning-content.topic.show')
                             }
                         >
                             Manage Additional Learning Content

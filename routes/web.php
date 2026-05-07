@@ -65,7 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('learning-content.index');
         Route::get('/learning-content/{id}', [LearningContentController::class, 'content'])
             ->name('learning-content.show');
-        Route::get('/learning-content/topic/{id}', [LearningContentController::class, 'topic'])
+        Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])
             ->name('learning-content.topic.show');
 
         // UC010: Enroll in Courses
@@ -117,9 +117,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/topics', function () {
             return Inertia::render('Teacher/Topics/index');
         })->name('topics.index');
-        Route::get('/topics/{id}', function ($id) {
-            return Inertia::render('Teacher/Topics/show', ['topicId' => $id]);
+        Route::get('/topics/{course}', function ($course) {
+            return Inertia::render('Teacher/Topics/content', ['courseId' => $course]);
         })->name('topics.show');
+        Route::get('/topics/{course}/{topic}', function ($course, $topic) {
+            abort_unless((int)$topic !== 0, 404);
+            return Inertia::render('Teacher/Topics/show', ['topicId' => $topic, 'courseId' => $course]);
+        })->name('topics.topic.show');
 
         // UC005: Manage Additional Materials
         Route::resource('additional-content', AdditionalLearningContentController::class);
@@ -144,9 +148,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/topics', function () {
             return Inertia::render('Admin/Topics/index');
         })->name('topics.index');
-        Route::get('/topics/{id}', function ($id) {
-            return Inertia::render('Admin/Topics/show', ['topicId' => $id]);
+        Route::get('/topics/{course}', function ($course) {
+            return Inertia::render('Admin/Topics/content', ['courseId' => $course]);
         })->name('topics.show');
+        Route::get('/topics/{course}/{topic}', function ($course, $topic) {
+            abort_unless((int)$topic !== 0, 404);
+            return Inertia::render('Admin/Topics/show', ['topicId' => $topic, 'courseId' => $course]);
+        })->name('topics.topic.show');
+
+        // Admin: view a topic under a specific learning-content (course)
+        Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])
+            ->name('learning-content.topic.show');
 
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);

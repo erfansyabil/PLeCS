@@ -35,7 +35,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={
                                         route().current('learning-content.index') ||
                                         route().current('learning-content.show') ||
-                                        route().current('learning-content.topic.show')
+                                        route().current('learning-content.topic.show') ||
+                                        route().current('student.learning-content.index') ||
+                                        route().current('student.learning-content.show') ||
+                                        route().current('student.learning-content.topic.show') ||
+                                        route().current('admin.learning-content.index') ||
+                                        route().current('admin.learning-content.show') ||
+                                        route().current('admin.learning-content.topic.show')
                                     }
                                 >
                                     Learning Content
@@ -164,7 +170,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('learning-content.index')}
-                            active={route().current('learning-content.index')}
+                            active={
+                                route().current('learning-content.index') ||
+                                route().current('student.learning-content.index') ||
+                                route().current('admin.learning-content.index')
+                            }
                         >
                             Learning Content
                         </ResponsiveNavLink>

@@ -55,7 +55,7 @@ export default function LearningContentContent({ course, topics = [], layout }) 
                                 {topics.map((topic) => (
                                     <li key={topic.id}>
                                         <Link
-                                            href={route('student.learning-content.topic.show', topic.id)}
+                                            href={route('student.learning-content.topic.show', [course.id, topic.id])}
                                             className="text-black-900 hover:underline"
                                         >
                                             {topic.title}

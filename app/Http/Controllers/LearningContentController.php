@@ -249,23 +249,33 @@ class LearningContentController extends Controller
     /**
      * Display a learning content topic page.
      */
-    public function topic(Request $request, int $id)
+    public function topic(Request $request, \App\Models\LearningContent $course, \App\Models\Topic $topic)
     {
         if ($request->user()->role === 'administrator') {
+            // Enforce that the topic belongs to the requested course
+            if ($topic->courseID !== $course->id) {
+                abort(404);
+            }
+
             $topic = Topic::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-            ])->findOrFail($id);
+            ])->findOrFail($topic->topicID);
 
             return Inertia::render('Admin/LearningContent/topic', [
                 'topic' => $topic,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
         } elseif ($request->user()->role === 'student') {
+            // Enforce that the topic belongs to the requested course
+            if ($topic->courseID !== $course->id) {
+                abort(404);
+            }
+
             $topic = Topic::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-            ])->findOrFail($id);
+            ])->findOrFail($topic->topicID);
 
             return Inertia::render('Student/LearningContent/topic', [
                 'topic' => $topic,

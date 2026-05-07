@@ -90,7 +90,7 @@ export default function ViewTopicsContent({ auth, courseId, layout }) {
                                 {course.topics.map((topic) => (
                                     <li key={topic.id}>
                                         <Link
-                                            href={route('learning-content.topic.show', topic.id)}
+                                            href={route('teacher.topics.topic.show', [course.id, topic.id])}
                                             className="text-black-900 hover:underline"
                                         >
                                             {topic.title}

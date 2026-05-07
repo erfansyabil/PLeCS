@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Course;
+use App\Models\Topic;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class TopicFactory extends Factory
 {
+    protected $model = Topic::class;
+
     /**
      * Define the model's default state.
      *
@@ -18,7 +20,7 @@ class TopicFactory extends Factory
     public function definition(): array
     {
         return [
-            'courseID' => Course::factory(),
+            'courseID' => fake()->numberBetween(1, 20),
             'name' => fake()->sentence(4),
             'description' => fake()->paragraph(),
             'prerequisites' => fake()->optional()->randomElement(['1', '1,2', '2,3']),
@@ -26,5 +28,12 @@ class TopicFactory extends Factory
             'orderIndex' => fake()->numberBetween(1, 20),
             'isActive' => fake()->boolean(90),
         ];
+    }
+
+    public function forCourse(int $courseId): self
+    {
+        return $this->state(fn () => [
+            'courseID' => $courseId,
+        ]);
     }
 }

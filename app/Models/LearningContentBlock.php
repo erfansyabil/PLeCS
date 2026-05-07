@@ -12,6 +12,7 @@ class LearningContentBlock extends Model
 
     protected $fillable = [
         'learning_content_id',
+        'topic_id',
         'type',
         'title',
         'content',
@@ -27,5 +28,10 @@ class LearningContentBlock extends Model
     public function learningContent(): BelongsTo
     {
         return $this->belongsTo(LearningContent::class);
+    }
+
+    public function topic(): BelongsTo
+    {
+        return $this->belongsTo(Topic::class, 'topic_id', 'topicID');
     }
 }

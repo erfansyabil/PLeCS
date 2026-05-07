@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use App\Models\Content;
 use App\Models\LearningContentAttachment;
 use App\Models\LearningContentBlock;
+use App\Models\Topic;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ContentSeeder extends Seeder
 {
@@ -13,8 +15,8 @@ class ContentSeeder extends Seeder
      * Seed content records with customizable hierarchical structure.
      *
      * Structure:
-     * - Subject/Course (type: 'course')
-     *   - Topics (type: 'topic', parent_id: course.id)
+    * - Subject/Course (learning_contents.type = 'course')
+    *   - Topics (topics.courseID = course.id)
      *     - Blocks: text, youtube, pdf, image
      *     - Attachments: pdf, image
      */
@@ -180,24 +182,36 @@ class ContentSeeder extends Seeder
             ->withDescription($courseDescription)
             ->create();
 
+        // Keep a mirrored legacy course row so topics.courseID FK remains valid.
+        DB::table('courses')->updateOrInsert(
+            ['courseID' => $course->id],
+            [
+                'courseName' => $course->title,
+                'description' => $course->description,
+                'difficultyLevel' => 'Beginner',
+                'isActive' => true,
+                'created_at' => $course->created_at ?? now(),
+                'updated_at' => now(),
+            ]
+        );
+
         // Create topics directly under the course with blocks and attachments.
-        foreach ($topics as $topicData) {
-            $topic = Content::factory()
-                ->topic($course->id)
-                ->state([
-                    'resource_type' => $topicData['resource_type'] ?? 'none',
-                    'resource_url' => $topicData['resource_url'] ?? null,
-                    'resource_path' => $topicData['resource_path'] ?? null,
-                ])
-                ->withTitle($topicData['title'])
-                ->withDescription($topicData['description'])
-                ->create();
+        foreach (array_values($topics) as $index => $topicData) {
+            $topic = Topic::query()->create([
+                'courseID' => $course->id,
+                'name' => $topicData['title'],
+                'description' => $topicData['description'],
+                'prerequisites' => null,
+                'difficultyLevel' => 'Beginner',
+                'orderIndex' => $index + 1,
+                'isActive' => true,
+            ]);
 
             // Seed blocks directly on this topic
-            $this->seedBlocks($topic->id, $topicData['blocks'] ?? []);
+            $this->seedBlocks($topic->topicID, $topicData['blocks'] ?? []);
 
             // Seed attachments directly on this topic
-            $this->seedAttachments($topic->id, $topicData['attachments'] ?? []);
+            $this->seedAttachments($topic->topicID, $topicData['attachments'] ?? []);
         }
     }
 
@@ -208,7 +222,8 @@ class ContentSeeder extends Seeder
     {
         foreach (array_values($blocks) as $index => $block) {
             LearningContentBlock::query()->create([
-                'learning_content_id' => $topicId,
+                'learning_content_id' => null,
+                'topic_id' => $topicId,
                 'type' => $block['type'] ?? 'text',
                 'title' => $block['title'] ?? null,
                 'content' => $block['content'] ?? null,
@@ -226,7 +241,8 @@ class ContentSeeder extends Seeder
     {
         foreach (array_values($attachments) as $index => $attachment) {
             LearningContentAttachment::query()->create([
-                'learning_content_id' => $topicId,
+                'learning_content_id' => null,
+                'topic_id' => $topicId,
                 'title' => $attachment['title'] ?? null,
                 'type' => $attachment['type'] ?? 'pdf',
                 'file_path' => $attachment['file_path'] ?? '',

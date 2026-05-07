@@ -12,6 +12,7 @@ class LearningContentAttachment extends Model
 
     protected $fillable = [
         'learning_content_id',
+        'topic_id',
         'title',
         'type',
         'file_path',
@@ -25,5 +26,10 @@ class LearningContentAttachment extends Model
     public function learningContent(): BelongsTo
     {
         return $this->belongsTo(LearningContent::class);
+    }
+
+    public function topic(): BelongsTo
+    {
+        return $this->belongsTo(Topic::class, 'topic_id', 'topicID');
     }
 }

@@ -97,7 +97,7 @@ export default function Show({ content, topics = [] }) {
 
                                 {blocks.length > 0 && (
                                     <div className="mb-6">
-                                        <strong>Ordered Topic Blocks:</strong>
+                                        {/* <strong>Ordered Topic Blocks:</strong> */}
                                         <div className="mt-3 space-y-4">
                                             {blocks.map((block) => {
                                                 const blockFileUrl = getBlockFileUrl(block.file_path);
@@ -105,9 +105,9 @@ export default function Show({ content, topics = [] }) {
 
                                                 return (
                                                     <div key={block.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
-                                                        <div className="mb-2 text-sm text-gray-500 dark:text-gray-300">
+                                                        {/* <div className="mb-2 text-sm text-gray-500 dark:text-gray-300">
                                                             {block.type.toUpperCase()} · Order {block.sort_order ?? 0}
-                                                        </div>
+                                                        </div> */}
                                                         {block.title && <p className="font-semibold mb-3">{block.title}</p>}
 
                                                         {block.type === 'text' && (

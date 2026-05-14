@@ -8,7 +8,8 @@ export default function Create({ courses = [] }) {
         description: '',
         content: '',
         type: 'course',
-        course_id: '',
+        difficultyLevel: 'Beginner',
+        parent_id: '',
         resource_type: 'none',
         resource_url: '',
         resource_file: null,
@@ -25,22 +26,6 @@ export default function Create({ courses = [] }) {
         existing_file_path: '',
         sort_order: sortOrder,
     });
-
-    const emptyAttachment = () => ({
-        title: '',
-        type: 'pdf',
-        file: null,
-        sort_order: 0,
-    });
-
-    const updateAttachment = (index, field, value) => {
-        const nextAttachments = [...data.attachments];
-        nextAttachments[index] = {
-            ...nextAttachments[index],
-            [field]: value,
-        };
-        setData('attachments', nextAttachments);
-    };
 
     const updateBlock = (index, field, value) => {
         const nextBlocks = [...data.blocks];
@@ -67,14 +52,6 @@ export default function Create({ courses = [] }) {
 
     const removeBlock = (index) => {
         setData('blocks', data.blocks.filter((_, currentIndex) => currentIndex !== index));
-    };
-
-    const addAttachment = () => {
-        setData('attachments', [...data.attachments, emptyAttachment()]);
-    };
-
-    const removeAttachment = (index) => {
-        setData('attachments', data.attachments.filter((_, currentIndex) => currentIndex !== index));
     };
 
     const submit = (e) => {
@@ -199,6 +176,25 @@ export default function Create({ courses = [] }) {
                                 </select>
                                 {errors.type && <div className="text-red-500 text-sm mt-1">{errors.type}</div>}
                             </div>
+
+                            {data.type === 'course' && (
+                                <div className="mb-4">
+                                    <label htmlFor="difficultyLevel" className="block text-sm font-medium mb-2">
+                                        Difficulty Level
+                                    </label>
+                                    <select
+                                        id="difficultyLevel"
+                                        value={data.difficultyLevel}
+                                        onChange={(e) => setData('difficultyLevel', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                        <option value="Beginner">Beginner</option>
+                                        <option value="Intermediate">Intermediate</option>
+                                        <option value="Advanced">Advanced</option>
+                                    </select>
+                                    {errors.difficultyLevel && <div className="text-red-500 text-sm mt-1">{errors.difficultyLevel}</div>}
+                                </div>
+                            )}
 
                             {data.type === 'topic' && (
                                 <div className="mb-4">
@@ -331,88 +327,6 @@ export default function Create({ courses = [] }) {
                                     </div>
 
                                     {errors.blocks && <div className="text-red-500 text-sm mt-2">{errors.blocks}</div>}
-                                </div>
-                            )}
-
-                            {data.type === 'topic' && (
-                                <div className="mb-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label className="block text-sm font-medium">
-                                            Additional Files
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={addAttachment}
-                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
-                                        >
-                                            Add File
-                                        </button>
-                                    </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-300 mb-3">
-                                        Add multiple PDF or image files and sort them by number. Lower numbers show first.
-                                    </p>
-
-                                    <div className="space-y-4">
-                                        {data.attachments.map((attachment, index) => (
-                                            <div key={index} className="rounded-lg border border-gray-200 dark:border-gray-500 p-4">
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-2">Title</label>
-                                                        <input
-                                                            type="text"
-                                                            value={attachment.title}
-                                                            onChange={(e) => updateAttachment(index, 'title', e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-2">Type</label>
-                                                        <select
-                                                            value={attachment.type}
-                                                            onChange={(e) => updateAttachment(index, 'type', e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                                        >
-                                                            <option value="pdf">PDF</option>
-                                                            <option value="image">Image</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-2">Sort Order</label>
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={attachment.sort_order}
-                                                            onChange={(e) => updateAttachment(index, 'sort_order', e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-4">
-                                                    <label className="block text-sm font-medium mb-2">File</label>
-                                                    <input
-                                                        type="file"
-                                                        accept="application/pdf,image/*"
-                                                        onChange={(e) => updateAttachment(index, 'file', e.target.files?.[0] ?? null)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="mt-3 flex justify-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeAttachment(index)}
-                                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {errors.attachments && <div className="text-red-500 text-sm mt-2">{errors.attachments}</div>}
                                 </div>
                             )}
 

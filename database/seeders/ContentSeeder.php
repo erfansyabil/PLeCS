@@ -7,7 +7,6 @@ use App\Models\LearningContent;
 use App\Models\LearningContentAttachment;
 use App\Models\LearningContentBlock;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class ContentSeeder extends Seeder
 {
@@ -22,14 +21,67 @@ class ContentSeeder extends Seeder
      */
     public function run(): void
     {
-        $courseId = DB::table('courses')->insertGetId([
-            'courseName' => 'Introduction to Programming',
-            'description' => 'Foundational programming concepts and problem solving.',
-            'difficultyLevel' => 'Beginner',
-            'isActive' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ], 'courseID');
+        // Add or edit courses here.
+        $this->seedCourse('Asas Sains Komputer Tingkatan 1', 'Pengenalan kepada konsep asas sains komputer.', [
+            [
+                'title' => 'Bab 1: Konsep Asas Sains Komputer',
+                'description' => 'Pengenalan kepada komputer, data, dan sistem maklumat.',
+                'resource_type' => 'none',
+                'resource_url' => null,
+                'resource_path' => null,
+                'blocks' => [
+                    [
+                        'type' => 'text',
+                        'title' => 'Apa itu Sains Komputer?',
+                        'content' => 'Sains komputer ialah bidang yang mengkaji pengiraan, algoritma, data, dan sistem komputer.',
+                        'url' => null,
+                        'file_path' => null,
+                    ],
+                    [
+                        'type' => 'youtube',
+                        'title' => 'Video Pengenalan',
+                        'content' => null,
+                        'url' => 'https://www.youtube.com/watch?v=wccpYAEHBJY   ',
+                        'file_path' => null,
+                    ],
+                ],
+                'attachments' => [
+                    [
+                        'title' => 'Nota Ringkas PDF',
+                        'type' => 'pdf',
+                        'file_path' => 'docs/asas-sains-komputer.pdf',
+                    ],
+                    [
+                        'title' => 'Rajah Konsep',
+                        'type' => 'image',
+                        'file_path' => 'images/asas-sains-komputer.png',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Bab 2: Perwakilan Data',
+                'description' => 'Bagaimana data diwakili dan disimpan dalam komputer.',
+                'resource_type' => 'none',
+                'resource_url' => null,
+                'resource_path' => null,
+                'blocks' => [
+                    [
+                        'type' => 'text',
+                        'title' => 'Penerangan Data',
+                        'content' => 'Komputer menyimpan data dalam bentuk binari seperti nombor, teks, imej, dan bunyi.',
+                        'url' => null,
+                        'file_path' => null,
+                    ],
+                ],
+                'attachments' => [
+                    [
+                        'title' => 'Carta Perwakilan Data',
+                        'type' => 'image',
+                        'file_path' => 'images/perwakilan-data.jpg',
+                    ],
+                ],
+            ],
+        ], 'Beginner');
 
         $this->seedCourse('Asas Sains Komputer Tingkatan 2', 'Pengenalan lanjutan kepada konsep sains komputer.', [
             [
@@ -97,7 +149,7 @@ class ContentSeeder extends Seeder
                     ],
                 ],
             ],
-        ]);
+        ], 'Intermediate');
     }
 
     /**
@@ -120,26 +172,46 @@ class ContentSeeder extends Seeder
      *     ]
      * ])
      */
-    private function seedCourse(string $courseTitle, string $courseDescription, array $topics): void
+    private function seedCourse(string $courseTitle, string $courseDescription, array $topics, string $difficulty = 'Beginner'): void
     {
-        $course = Course::query()->create([
-            'courseName' => $courseTitle,
-            'description' => $courseDescription,
-            'content' => null,
-            'difficultyLevel' => 'Beginner',
-            'isActive' => true,
-        ]);
+        $course = LearningContent::query()->updateOrCreate(
+            [
+                'type' => 'course',
+                'title' => $courseTitle,
+            ],
+            [
+                'description' => $courseDescription,
+                'content' => null,
+                'parent_id' => null,
+                'resource_type' => 'none',
+                'resource_url' => null,
+                'resource_path' => null,
+                'difficulty_level' => $difficulty,
+            ]
+        );
 
-        // Create topics directly under the course with blocks and attachments.
-        foreach ($topics as $topicData) {
-            $topic = LearningContent::query()->create([
-                'title' => $topicData['title'],
-                'description' => $topicData['description'] ?? null,
-                'content' => $topicData['content'] ?? null,
-                'course_id' => $course->courseID,
-                'resource_type' => $topicData['resource_type'] ?? 'none',
-                'resource_url' => $topicData['resource_url'] ?? null,
-                'resource_path' => $topicData['resource_path'] ?? null,
+        Course::query()->updateOrCreate(
+            ['courseID' => $course->id],
+            [
+                'courseName' => $course->title,
+                'description' => $course->description,
+                'difficultyLevel' => $difficulty,
+                'isActive' => true,
+            ]
+        );
+
+        $legacyCourse = Course::query()->findOrFail($course->id);
+        $legacyCourse->topics()->delete();
+
+        foreach (array_values($topics) as $index => $topicData) {
+            $topic = Topic::query()->create([
+                'courseID' => $course->id,
+                'name' => $topicData['title'],
+                'description' => $topicData['description'],
+                'prerequisites' => null,
+                'difficultyLevel' => $difficulty,
+                'orderIndex' => $index + 1,
+                'isActive' => true,
             ]);
 
             // Seed blocks directly on this topic

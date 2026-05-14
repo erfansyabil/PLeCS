@@ -1,36 +1,14 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 
-export default function AdditionalContentIndex({materials}) {
-    // Placeholder data since model isn't implemented yet
-    const placeholderMaterials = [
-        {
-            id: 1,
-            title: 'AI Ethics Guidelines',
-            description: 'Comprehensive guidelines for ethical AI development and deployment.',
-            type: 'Document',
-            url: 'https://example.com/ai-ethics.pdf',
-            created_at: '2024-01-15',
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Best Practices Video',
-            description: 'Video tutorial on implementing security best practices.',
-            type: 'Video',
-            url: 'https://example.com/cybersecurity-video',
-            created_at: '2024-01-20',
-        },
-        {
-            id: 3,
-            title: 'Web Development Resources',
-            description: 'Curated list of useful resources for web development learning.',
-            type: 'Link',
-            url: 'https://example.com/web-dev-resources',
-            created_at: '2024-01-25',
-        },
-    ];
+export default function AdditionalContentIndex({ materials = [] }) {
+    const removeMaterial = (materialId) => {
+        if (!confirm('Are you sure you want to delete this file?')) {
+            return;
+        }
 
-    const materialsList = materials || placeholderMaterials;
+        router.delete(route('teacher.additional-content.destroy', materialId));
+    };
 
     return (
         <TeacherLayout
@@ -55,17 +33,17 @@ export default function AdditionalContentIndex({materials}) {
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
-                                Manage additional learning materials for students. These materials provide supplementary resources to enhance their learning experience.
+                                Manage additional files for existing topics. Teachers can upload and maintain file resources only.
                             </p>
 
-                            {materialsList.length === 0 ? (
+                            {materials.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <p className="text-gray-500 dark:text-gray-400 mb-4">No additional materials found.</p>
+                                    <p className="text-gray-500 dark:text-gray-400 mb-4">No additional files found.</p>
                                     <Link
                                         href={route('teacher.additional-content.create')}
                                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                                     >
-                                        Add Your First Material
+                                        Add Your First File
                                     </Link>
                                 </div>
                             ) : (
@@ -74,10 +52,16 @@ export default function AdditionalContentIndex({materials}) {
                                         <thead className="bg-gray-50 dark:bg-gray-700">
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                    Title
+                                                    File
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                     Type
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Topic
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Sort
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                     Created
@@ -88,25 +72,31 @@ export default function AdditionalContentIndex({materials}) {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white dark:bg-gray-600 divide-y divide-gray-200 dark:divide-gray-700">
-                                            {materialsList.map((material) => (
+                                            {materials.map((material) => (
                                                 <tr key={material.id} className="hover:bg-gray-50 dark:hover:bg-gray-500">
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {material.title}
+                                                            {material.title || 'Untitled File'}
                                                         </div>
                                                         <div className="text-sm text-gray-500 dark:text-gray-300">
-                                                            {material.description.length > 50
-                                                                ? `${material.description.substring(0, 50)}...`
-                                                                : material.description}
+                                                            {material.course_title || 'Unknown Course'}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                            {material.type}
+                                                            {String(material.type || '').toUpperCase()}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                                        {new Date(material.created_at).toLocaleDateString()}
+                                                        {material.topic_title || 'Unknown Topic'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                                        {material.sort_order ?? 0}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                                        {material.created_at
+                                                            ? new Date(material.created_at).toLocaleDateString()
+                                                            : '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex justify-end space-x-2">
@@ -123,12 +113,7 @@ export default function AdditionalContentIndex({materials}) {
                                                                 Edit
                                                             </Link>
                                                             <button
-                                                                onClick={() => {
-                                                                    if (confirm('Are you sure you want to delete this material?')) {
-                                                                        // Handle delete - would use Inertia delete method
-                                                                        console.log('Delete material', material.id);
-                                                                    }
-                                                                }}
+                                                                onClick={() => removeMaterial(material.id)}
                                                                 className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                                             >
                                                                 Delete

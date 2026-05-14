@@ -83,12 +83,12 @@ class LearningPath extends Model
      */
     public function recommendations(): array
     {
-        $items = data_get($this->spaceResponse(), 'learning_path', []);
+        $items = data_get($this->path_data, 'resolved_recommendations', data_get($this->spaceResponse(), 'recommendations', data_get($this->spaceResponse(), 'learning_path', data_get($this->spaceResponse(), 'recommended_courses', []))));
 
         return collect(is_array($items) ? $items : [])
             ->map(function ($item) {
                 return [
-                    'topic' => (string) data_get($item, 'topic', ''),
+                    'topic' => (string) data_get($item, 'title', data_get($item, 'course_title', data_get($item, 'topic', ''))),
                     'difficulty' => (string) data_get($item, 'difficulty', ''),
                 ];
             })

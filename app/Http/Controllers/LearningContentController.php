@@ -153,6 +153,68 @@ class LearningContentController extends Controller
     }
 
     /**
+     * Ensure a legacy courses row exists for a learning_contents course id.
+     */
+    private function ensureLegacyCourseMirror(LearningContent $course): void
+    {
+        DB::table('courses')->updateOrInsert(
+            ['courseID' => $course->id],
+            [
+                'courseName' => $course->title,
+                'description' => $course->description,
+                'difficultyLevel' => $course->difficulty_level ?? 'Beginner',
+                'isActive' => true,
+                'created_at' => $course->created_at ?? now(),
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    /**
+     * Delete media files attached to a topic.
+     */
+    private function deleteTopicAssets(Topic $topic): void
+    {
+        $topic->loadMissing(['attachments', 'blocks']);
+
+        foreach ($topic->attachments as $attachment) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        foreach ($topic->blocks as $block) {
+            if ($block->file_path) {
+                Storage::disk('public')->delete($block->file_path);
+            }
+        }
+    }
+
+    /**
+     * Delete media files for this content and all nested topic children.
+     */
+    private function deleteLearningContentAssets(LearningContent $learningContent): void
+    {
+        $learningContent->loadMissing(['attachments', 'blocks', 'children.attachments', 'children.blocks']);
+
+        if ($learningContent->resource_path) {
+            Storage::disk('public')->delete($learningContent->resource_path);
+        }
+
+        foreach ($learningContent->attachments as $attachment) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        foreach ($learningContent->blocks as $block) {
+            if ($block->file_path) {
+                Storage::disk('public')->delete($block->file_path);
+            }
+        }
+
+        foreach ($learningContent->children as $child) {
+            $this->deleteLearningContentAssets($child);
+        }
+    }
+
+    /**
      * Upload an inline image for the rich text editor.
      */
     public function uploadEditorImage(Request $request)
@@ -280,7 +342,8 @@ class LearningContentController extends Controller
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'type' => 'required|in:course,topic',
-            'course_id' => [
+            'difficultyLevel' => 'required_if:type,course|nullable|in:Beginner,Intermediate,Advanced',
+            'parent_id' => [
                 'required_if:type,topic',
                 'nullable',
                 Rule::exists('courses', 'courseID'),
@@ -323,7 +386,11 @@ class LearningContentController extends Controller
             'resource_type' => $validated['resource_type'] ?? 'none',
             'resource_url' => $validated['resource_type'] === 'youtube' ? ($validated['resource_url'] ?? null) : null,
             'resource_path' => null,
+            'difficulty_level' => $validated['type'] === 'course' ? ($validated['difficultyLevel'] ?? 'Beginner') : null,
         ]);
+
+        if ($payload['type'] === 'topic') {
+            $payload['resource_type'] = $validated['resource_type'] ?? 'none';
 
         if ($validated['resource_type'] === 'pdf' && $request->hasFile('resource_file')) {
             $topic->update([
@@ -354,6 +421,7 @@ class LearningContentController extends Controller
         }
 
         return redirect()->route('admin.learning-content.index');
+    }
     }
 
     /**

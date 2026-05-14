@@ -7,6 +7,7 @@ use App\Http\Controllers\LearningPathController;
 use App\Http\Controllers\AdditionalLearningContentController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Models\Course;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -65,12 +66,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('learning-content.index');
         Route::get('/learning-content/{id}', [LearningContentController::class, 'content'])
             ->name('learning-content.show');
-        Route::get('/learning-content/topic/{id}', [LearningContentController::class, 'topic'])
+        Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])
+            ->whereNumber('course')
+            ->whereNumber('topic')
             ->name('learning-content.topic.show');
 
         // UC010: Enroll in Courses
         Route::get('/enrollment', function () {
-            return Inertia::render('Student/Enrollment/index');
+            $courses = Course::query()
+                ->where('isActive', true)
+                ->with(['topics' => function ($query) {
+                    $query->where('isActive', true)->orderBy('orderIndex')->orderBy('name');
+                }])
+                ->orderBy('courseName')
+                ->get()
+                ->map(function (Course $course) {
+                    return [
+                        'id' => $course->courseID,
+                        'title' => $course->courseName,
+                        'description' => (string) ($course->description ?? ''),
+                        'difficulty' => $course->difficultyLevel,
+                        'topics' => $course->topics->pluck('name')->filter()->values()->all(),
+                    ];
+                })
+                ->values()
+                ->all();
+
+            return Inertia::render('Student/Enrollment/index', [
+                'courses' => $courses,
+            ]);
         })->name('enrollment.index');
 
         // UC008: Manage Learning Path
@@ -149,6 +173,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/topics/{id}', function ($id) {
             return Inertia::render('Admin/Topics/show', ['topicId' => $id]);
         })->name('topics.show');
+        Route::get('/topics/{course}/{topic}', function ($course, $topic) {
+            abort_unless((int)$topic !== 0, 404);
+            return Inertia::render('Admin/Topics/show', ['topicId' => $topic, 'courseId' => $course]);
+        })->name('topics.topic.show');
+
+        // Admin: view a topic under a specific learning-content (course)
+        Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])
+            ->whereNumber('course')
+            ->whereNumber('topic')
+            ->name('learning-content.topic.show');
 
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);

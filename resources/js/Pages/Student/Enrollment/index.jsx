@@ -1,8 +1,8 @@
 import StudentLayout from '@/Layouts/StudentLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function EnrollmentIndex({ auth, layout }) {
+export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const [showRecommendations, setShowRecommendations] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export default function EnrollmentIndex({ auth, layout }) {
         career_goals: '',
     });
 
-    const allCourses = [
+    const fallbackCourses = [
         {
             id: 1,
             title: 'Introduction to Python Programming',
@@ -67,6 +67,14 @@ export default function EnrollmentIndex({ auth, layout }) {
         },
     ];
 
+    const allCourses = courses.length > 0
+        ? courses.map((course) => ({
+            ...course,
+            tags: Array.isArray(course.topics) ? course.topics : [],
+            form: [],
+        }))
+        : fallbackCourses;
+
     const surveyQuestions = {
         interests: [
             { value: 'programming', label: '💻 Programming' },
@@ -114,21 +122,50 @@ export default function EnrollmentIndex({ auth, layout }) {
             return [];
         }
 
-        const idRecommendations = Array.isArray(result.recommendations)
+        const recommendationItems = Array.isArray(result.recommendations)
             ? result.recommendations
-                .map((item) => item?.id)
-                .filter((id) => Number.isInteger(id))
             : [];
+
+        const directRecommendations = recommendationItems
+            .filter((item) => item && typeof item === 'object')
+            .map((item) => ({
+                id: item.id ?? item.course_id,
+                title: item.title ?? item.course_title ?? item.topic ?? '',
+                description: item.description ?? '',
+                difficulty: item.difficulty ?? '',
+                tags: Array.isArray(item.topics) ? item.topics : [],
+                enroll_url: item.enroll_url ?? null,
+                reason: item.reason ?? null,
+            }))
+            .filter((item) => item.title !== '');
+
+        if (directRecommendations.length > 0) {
+            return directRecommendations.map((item) => {
+                const matchedCourse = allCourses.find((course) => course.id === item.id);
+
+                if (matchedCourse) {
+                    return {
+                        ...matchedCourse,
+                        ...item,
+                        tags: item.tags.length > 0 ? item.tags : (matchedCourse.tags || []),
+                    };
+                }
+
+                return item;
+            });
+        }
+
+        const idRecommendations = recommendationItems
+            .map((item) => item?.id ?? item?.course_id)
+            .filter((id) => Number.isInteger(id));
 
         if (idRecommendations.length > 0) {
             return allCourses.filter((course) => idRecommendations.includes(course.id));
         }
 
-        const topicRecommendations = Array.isArray(result.recommendations)
-            ? result.recommendations
-                .map((item) => normalizeText(item?.topic))
-                .filter(Boolean)
-            : [];
+        const topicRecommendations = recommendationItems
+            .map((item) => normalizeText(item?.topic ?? item?.title ?? item?.course_title))
+            .filter(Boolean);
 
         if (topicRecommendations.length === 0) {
             return [];
@@ -395,7 +432,7 @@ export default function EnrollmentIndex({ auth, layout }) {
                                                 </div>
 
                                                 <div className="flex flex-wrap gap-2 mb-4">
-                                                    {course.tags.map((tag) => (
+                                                    {(course.tags || []).map((tag) => (
                                                         <span
                                                             key={tag}
                                                             className="inline-block px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded"
@@ -405,9 +442,18 @@ export default function EnrollmentIndex({ auth, layout }) {
                                                     ))}
                                                 </div>
 
-                                                <button className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
-                                                    Enroll Now
-                                                </button>
+                                                {course.enroll_url ? (
+                                                    <Link
+                                                        href={course.enroll_url}
+                                                        className="block w-full px-4 py-2 text-center text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+                                                    >
+                                                        Enroll Now
+                                                    </Link>
+                                                ) : (
+                                                    <button className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
+                                                        Enroll Now
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

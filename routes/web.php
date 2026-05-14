@@ -66,6 +66,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/learning-content/{id}', [LearningContentController::class, 'content'])
             ->name('learning-content.show');
         Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])
+            ->whereNumber('course')
+            ->whereNumber('topic')
             ->name('learning-content.topic.show');
 
         // UC010: Enroll in Courses
@@ -177,7 +179,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Admin: view a topic under a specific learning-content (course)
         Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])
+            ->whereNumber('course')
+            ->whereNumber('topic')
             ->name('learning-content.topic.show');
+
+        // Admin: explicit edit route for topics to avoid ID collisions with learning_contents
+        Route::get('/learning-content/topic/{topic}/edit', [LearningContentController::class, 'editTopic'])
+            ->whereNumber('topic')
+            ->name('learning-content.topic.edit');
 
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);

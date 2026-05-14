@@ -489,6 +489,30 @@ class LearningContentController extends Controller
     }
 
     /**
+     * Explicit editor for Topic records to avoid collisions with LearningContent IDs.
+     */
+    // (duplicate implementation removed — using the topic loader below)
+
+    /**
+     * Show the form for editing a topic by topicID.
+     */
+    public function editTopic(Request $request, \App\Models\Topic $topic)
+    {
+        $courses = LearningContent::where('type', 'course')->get();
+
+        $topic->load([
+            'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+        ]);
+
+        return Inertia::render('Admin/LearningContent/edit', [
+            'layout' => $this->layoutForRole($request->user()->role),
+            'content' => $topic,
+            'courses' => $courses,
+        ]);
+    }
+
+    /**
      * Update the specified learning content.
      */
     public function update(Request $request, int $id)

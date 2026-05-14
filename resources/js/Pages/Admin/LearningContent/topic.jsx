@@ -149,12 +149,20 @@ export default function TopicPage({ topic }) {
                     <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                         {topic.title}
                     </h2>
-                    <Link
-                        href={route('admin.learning-content.index')}
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Back to List
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={route('admin.learning-content.topic.edit', topic.id)}
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Edit
+                        </Link>
+                        <Link
+                            href={route('admin.learning-content.index')}
+                            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Back to List
+                        </Link>
+                    </div>
                 </div>
             }
         >

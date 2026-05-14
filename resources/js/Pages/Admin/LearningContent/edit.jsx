@@ -364,7 +364,11 @@ export default function Edit({ content, courses = [] }) {
                                     {processing ? 'Updating...' : 'Update Material'}
                                 </button>
                                 <Link
-                                    href={route('admin.learning-content.show', materialData.id)}
+                                    href={
+                                        materialData.type === 'topic' && materialData.parent_id
+                                            ? route('admin.learning-content.topic.show', [materialData.parent_id, materialData.id])
+                                            : route('admin.learning-content.show', materialData.id)
+                                    }
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                                 >
                                     Cancel

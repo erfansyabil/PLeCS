@@ -1,5 +1,5 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useMemo } from 'react';
 
 export default function TopicPage({ topic }) {
@@ -145,9 +145,17 @@ export default function TopicPage({ topic }) {
     return (
         <AdministratorLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {topic.title}
-                </h2>
+                <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                        {topic.title}
+                    </h2>
+                    <Link
+                        href={route('admin.learning-content.index')}
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Back to List
+                    </Link>
+                </div>
             }
         >
             <Head title={topic.title} />

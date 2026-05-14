@@ -251,7 +251,7 @@ export default function Show({ content, topics = [] }) {
                                                     <span className="min-w-0 flex-1 truncate">{topic.title}</span>
                                                     <div className="flex items-center gap-3 shrink-0">
                                                         <Link
-                                                            href={route('admin.learning-content.show', topic.id)}
+                                                            href={route('admin.learning-content.topic.show', [materialData.id, topic.id])}
                                                             className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
                                                         >
                                                             View

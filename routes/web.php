@@ -188,6 +188,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->whereNumber('topic')
             ->name('learning-content.topic.edit');
 
+            // Admin: explicit delete route for topics to avoid collisions with learning_contents
+            Route::delete('/learning-content/topic/{topic}', [LearningContentController::class, 'destroyTopic'])
+                ->whereNumber('topic')
+                ->name('learning-content.topic.destroy');
+
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);
         Route::post('/learning-content/editor-image', [LearningContentController::class, 'uploadEditorImage'])

@@ -17,7 +17,12 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->longText('content')->nullable();
             $table->string('type')->default('course'); // course, topic, etc.
+            $table->enum('difficulty_level', ['Beginner', 'Intermediate', 'Advanced'])
+                ->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('learning_contents')->onDelete('cascade'); // for topics under courses
+            $table->string('resource_type')->default('none');
+            $table->text('resource_url')->nullable();
+            $table->string('resource_path')->nullable();
             $table->timestamps();
         });
     }

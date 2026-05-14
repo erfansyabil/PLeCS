@@ -18,7 +18,7 @@ return new class extends Migration
                   ->onDelete('cascade')
                   ->comment('References User table - Student role only');
             $table->foreignId('courseID')
-                  ->constrained('courses', 'courseID')
+                  ->constrained('learning_contents', 'id')
                   ->onDelete('cascade');
             $table->string('pathName', 255);
             $table->enum('complexityLevel', ['Beginner', 'Intermediate', 'Advanced'])

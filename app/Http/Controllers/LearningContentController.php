@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -111,23 +110,7 @@ class LearningContentController extends Controller
         }
     }
 
-    /**
-     * Ensure a legacy courses row exists for a learning_contents course id.
-     */
-    private function ensureLegacyCourseMirror(LearningContent $course): void
-    {
-        DB::table('courses')->updateOrInsert(
-            ['courseID' => $course->id],
-            [
-                'courseName' => $course->title,
-                'description' => $course->description,
-                'difficultyLevel' => $course->difficulty_level ?? 'Beginner',
-                'isActive' => true,
-                'created_at' => $course->created_at ?? now(),
-                'updated_at' => now(),
-            ]
-        );
-    }
+    // Legacy course mirror removed: `courses` table is no longer maintained here.
 
     /**
      * Delete media files attached to a topic.
@@ -372,12 +355,10 @@ class LearningContentController extends Controller
 
         if ($payload['type'] === 'course') {
             $course = LearningContent::create($payload);
-            $this->ensureLegacyCourseMirror($course);
             return redirect()->route('admin.learning-content.index');
         }
 
         $course = LearningContent::where('type', 'course')->findOrFail((int) $validated['parent_id']);
-        $this->ensureLegacyCourseMirror($course);
 
         $topic = Topic::create([
             'courseID' => $course->id,
@@ -513,6 +494,20 @@ class LearningContentController extends Controller
     }
 
     /**
+     * Delete a Topic record and its media assets.
+     */
+    public function destroyTopic(Request $request, \App\Models\Topic $topic)
+    {
+        $this->deleteTopicAssets($topic);
+
+        $topic->attachments()->delete();
+        $topic->blocks()->delete();
+        $topic->delete();
+
+        return redirect()->route('admin.learning-content.index');
+    }
+
+    /**
      * Update the specified learning content.
      */
     public function update(Request $request, int $id)
@@ -640,11 +635,11 @@ class LearningContentController extends Controller
             }
 
             if ($payload['type'] === 'course') {
-                $this->ensureLegacyCourseMirror($learningContent);
+                // No-op: legacy `courses` mirror removed.
             }
         } else {
             $course = LearningContent::where('type', 'course')->findOrFail((int) $validated['parent_id']);
-            $this->ensureLegacyCourseMirror($course);
+            // No-op: legacy `courses` mirror removed.
 
             $topic->update([
                 'courseID' => $course->id,

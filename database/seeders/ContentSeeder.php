@@ -8,6 +8,7 @@ use App\Models\LearningContentBlock;
 use App\Models\Topic;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ContentSeeder extends Seeder
 {
@@ -209,18 +210,21 @@ class ContentSeeder extends Seeder
             ->withDescription($courseDescription)
             ->create();
 
-        // Keep a mirrored legacy course row so topics.courseID FK remains valid.
-        DB::table('courses')->updateOrInsert(
-            ['courseID' => $course->id],
-            [
-                'courseName' => $course->title,
-                'description' => $course->description,
-                'difficultyLevel' => 'Beginner',
-                'isActive' => true,
-                'created_at' => $course->created_at ?? now(),
-                'updated_at' => now(),
-            ]
-        );
+        // Maintain a mirrored `courses` row only when the `courses` table exists
+        // so that `topics.courseID` foreign keys remain valid during seeding.
+        if (Schema::hasTable('courses')) {
+            DB::table('courses')->updateOrInsert(
+                ['courseID' => $course->id],
+                [
+                    'courseName' => $course->title,
+                    'description' => $course->description,
+                    'difficultyLevel' => 'Beginner',
+                    'isActive' => true,
+                    'created_at' => $course->created_at ?? now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         // Create topics directly under the course with blocks and attachments.
         foreach (array_values($topics) as $index => $topicData) {

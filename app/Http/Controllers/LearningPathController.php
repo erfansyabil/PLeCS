@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\LearningContent;
 use App\Models\LearningPath;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
@@ -19,20 +20,52 @@ class LearningPathController extends Controller
      */
     private function courseCatalog(): array
     {
-        return Course::query()
-            ->where('isActive', true)
-            ->with([
-                'topics' => fn ($query) => $query->where('isActive', true)->orderBy('orderIndex'),
-            ])
-            ->orderBy('courseName')
+        // Prefer the `courses` table if it exists (we may have migrated learning_contents into it).
+        if (\Illuminate\Support\Facades\Schema::hasTable('courses')) {
+            return Course::query()
+                ->where('isActive', true)
+                ->with([
+                    'topics' => fn ($query) => $query->where('isActive', true)->orderBy('orderIndex'),
+                ])
+                ->orderBy('courseName')
+                ->get()
+                ->map(function (Course $course): array {
+                    return [
+                        'course_id' => $course->courseID,
+                        'course_title' => $course->courseName,
+                        'description' => (string) ($course->description ?? ''),
+                        'difficulty' => (string) ($course->difficultyLevel ?? 'Beginner'),
+                        'topics' => $course->topics->map(function ($topic): array {
+                            return [
+                                'name' => (string) $topic->name,
+                                'description' => (string) ($topic->description ?? ''),
+                                'difficulty' => (string) ($topic->difficultyLevel ?? 'Beginner'),
+                            ];
+                        })->values()->all(),
+                    ];
+                })
+                ->values()
+                ->all();
+        }
+
+        // Fallback: read directly from the learning_contents table where type = 'course'.
+        return LearningContent::query()
+            ->where('type', 'course')
+            ->whereNull('parent_id')
+            ->orderBy('title')
             ->get()
-            ->map(function (Course $course): array {
+            ->map(function (LearningContent $course): array {
+                $topics = \App\Models\Topic::where('courseID', $course->id)
+                    ->where('isActive', true)
+                    ->orderBy('orderIndex')
+                    ->get();
+
                 return [
-                    'course_id' => $course->courseID,
-                    'course_title' => $course->courseName,
+                    'course_id' => $course->id,
+                    'course_title' => $course->title,
                     'description' => (string) ($course->description ?? ''),
-                    'difficulty' => (string) ($course->difficultyLevel ?? 'Beginner'),
-                    'topics' => $course->topics->map(function ($topic): array {
+                    'difficulty' => (string) ($course->difficulty_level ?? 'Beginner'),
+                    'topics' => $topics->map(function ($topic): array {
                         return [
                             'name' => (string) $topic->name,
                             'description' => (string) ($topic->description ?? ''),

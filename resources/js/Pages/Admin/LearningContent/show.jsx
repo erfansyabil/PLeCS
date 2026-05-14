@@ -17,7 +17,7 @@ export default function Show({ content, topics = [] }) {
             return;
         }
 
-        router.delete(route('admin.learning-content.destroy', topicId), {
+        router.delete(route('admin.learning-content.topic.destroy', topicId), {
             preserveScroll: true,
         });
     };

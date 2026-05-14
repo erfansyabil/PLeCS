@@ -14,9 +14,9 @@ return new class extends Migration
         if (!Schema::hasTable('topics')) {
             Schema::create('topics', function (Blueprint $table) {
                 $table->id('topicID');
-                $table->foreignId('courseID')
-                      ->constrained('courses', 'courseID')
-                      ->onDelete('cascade');
+                    $table->foreignId('courseID')
+                        ->constrained('learning_contents', 'id')
+                        ->onDelete('cascade');
                 $table->string('name', 255);
                 $table->text('description')->nullable();
                 $table->string('prerequisites', 255)->nullable()

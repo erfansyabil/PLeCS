@@ -9,11 +9,10 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const [completedSurvey, setCompletedSurvey] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
-        interests: [],
-        experience_level: '',
-        learning_style: '',
-        time_commitment: '',
-        career_goals: '',
+        form_level: 'Form 1',
+        interests: '',
+        background: 'none',
+        learning_goal: 'interest',
     });
 
     const fallbackCourses = [
@@ -40,45 +39,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
         },
     ];
 
-    const surveyQuestions = {
-        interests: [
-            { value: 'programming', label: '💻 Programming' },
-            { value: 'networking', label: '🌐 Networking & Internet' },
-            { value: 'cybersecurity', label: '🔒 Cybersecurity' },
-            { value: 'databases', label: '🗄️ Databases' },
-            { value: 'algorithms', label: '🧮 Algorithms' },
-            { value: 'digitaltools', label: '🛠️ Digital Tools' },
-        ],
-        experience_level: [
-            { value: 'complete_beginner', label: 'Complete Beginner - No experience' },
-            { value: 'some_basics', label: 'Some Basics - Only learned in class' },
-            { value: 'intermediate', label: 'Intermediate - Have done some small projects' },
-        ],
-        learning_style: [
-            { value: 'visual', label: '👁️ Visual (Videos, Diagrams)' },
-            { value: 'interactive', label: '🖱️ Interactive (Hands-on, Coding)' },
-            { value: 'theoretical', label: '📚 Theoretical (Lectures, Reading)' },
-            { value: 'mixed', label: '🔄 Mixed Learning Approach' },
-        ],
-        time_commitment: [
-            { value: 'light', label: '⏰ Light (2-5 hours/week)' },
-            { value: 'moderate', label: '⏱️ Moderate (5-10 hours/week)' },
-            { value: 'intensive', label: '🚀 Intensive (10+ hours/week)' },
-        ],
-        career_goals: [
-            { value: 'exam_preparation', label: 'Exam Preparation (PT3/SPM)' },
-            { value: 'skill_development', label: 'Technical Skill Development' },
-            { value: 'career_interest', label: 'Interest in Technology Career' },
-            { value: 'general_interest', label: 'General Interest in Computer Science' },
-        ],
-    };
-
-    const toggleInterest = (interest) => {
-        setData('interests', data.interests.includes(interest)
-            ? data.interests.filter(i => i !== interest)
-            : [...data.interests, interest]
-        );
-    };
+    // Survey fields adapted to Gradio-style inputs: form_level, interests (string), background, learning_goal
 
     const normalizeText = (value) => (value || '').toString().toLowerCase();
 
@@ -98,44 +59,71 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
             return [];
         }
 
-        const idRecommendations = Array.isArray(result.recommendations)
+        const recommendationItems = Array.isArray(result.recommendations)
             ? result.recommendations
-                .map((item) => item?.course_id ?? item?.id)
-                .filter((id) => Number.isInteger(Number(id)))
-                .map((id) => Number(id))
-            : [];
+            : Array.isArray(result.raw?.learning_path)
+                ? result.raw.learning_path
+                : [];
 
-        if (idRecommendations.length > 0) {
-            return allCourses.filter((course) => idRecommendations.includes(course.id));
-        }
-
-        const topicRecommendations = Array.isArray(result.recommendations)
-            ? result.recommendations
-                .map((item) => normalizeText(item?.course_title ?? item?.title ?? item?.topic))
-                .filter(Boolean)
-            : [];
-
-        if (topicRecommendations.length === 0) {
+        if (recommendationItems.length === 0) {
             return [];
         }
 
-        return allCourses.filter((course) => {
-            const courseText = normalizeText([
-                course.title,
-                course.description,
-                ...(course.topics || []).flatMap((topic) => typeof topic === 'string'
-                    ? [topic]
-                    : [topic?.name, topic?.description].filter(Boolean)),
-            ].join(' '));
+        const normalized = recommendationItems.map((item, index) => {
+            const resolvedId = Number(item?.course_id ?? item?.id);
+            const resolvedTitle = item?.course_title ?? item?.title ?? item?.topic ?? '';
 
-            return topicRecommendations.some((topic) => courseText.includes(topic));
+            const matchedCourse = Number.isInteger(resolvedId)
+                ? allCourses.find((course) => course.id === resolvedId)
+                : allCourses.find((course) => {
+                    const courseText = normalizeText([
+                        course.title,
+                        course.description,
+                        ...(course.topics || []).flatMap((topic) => typeof topic === 'string'
+                            ? [topic]
+                            : [topic?.name, topic?.description].filter(Boolean)),
+                    ].join(' '));
+
+                    return courseText.includes(normalizeText(resolvedTitle));
+                });
+
+            const recommendationTopics = Array.isArray(item?.topics)
+                ? item.topics
+                : (matchedCourse?.topics || []);
+
+            return {
+                id: matchedCourse?.id ?? (Number.isInteger(resolvedId) ? resolvedId : index + 1),
+                title: matchedCourse?.title ?? (resolvedTitle || 'Recommended Course'),
+                description: matchedCourse?.description ?? 'Recommended based on your survey answers.',
+                difficulty: item?.difficulty ?? matchedCourse?.difficulty ?? 'Beginner',
+                topics: recommendationTopics,
+                enroll_url: item?.enroll_url ?? matchedCourse?.enroll_url,
+                estimated_hours: item?.estimated_hours ?? matchedCourse?.estimated_hours ?? null,
+                keywords: item?.keywords ?? matchedCourse?.keywords ?? null,
+                reason: item?.reason ?? '',
+                score: item?.score,
+            };
         });
+
+        // Keep stable ordering from the recommendation engine while removing duplicates.
+        const deduped = [];
+        const seen = new Set();
+
+        normalized.forEach((item) => {
+            const key = `${item.id}-${normalizeText(item.title)}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                deduped.push(item);
+            }
+        });
+
+        return deduped;
     };
 
     const handleSubmitSurvey = async (e) => {
         e.preventDefault();
-        
-        if (data.interests.length === 0 || !data.experience_level || !data.learning_style || !data.time_commitment || !data.career_goals) {
+
+        if (!data.interests || data.interests.toString().trim() === '' || !data.form_level || !data.background || !data.learning_goal) {
             alert('Please complete all fields');
             return;
         }
@@ -160,9 +148,13 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                 setCompletedSurvey(true);
                 setShowRecommendations(true);
             } else {
-                // Fallback: recommend based on interests
+                // Fallback: recommend based on interests string
+                const interestsArray = data.interests.toString().split(',').map(i => i.trim().toLowerCase()).filter(Boolean);
                 const recommendedCourses = allCourses.filter(course =>
-                    (course.topics || []).some(tag => data.interests.includes(typeof tag === 'string' ? tag : tag?.name))
+                    (course.topics || []).some(tag => {
+                        const tagText = (typeof tag === 'string' ? tag : tag?.name || '').toLowerCase();
+                        return interestsArray.includes(tagText);
+                    })
                 );
                 setRecommendations(recommendedCourses.length > 0 ? recommendedCourses : allCourses);
                 setCompletedSurvey(true);
@@ -181,11 +173,10 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
 
     const resetSurvey = () => {
         setData({
-            interests: [],
-            experience_level: '',
-            learning_style: '',
-            time_commitment: '',
-            career_goals: '',
+            form_level: 'Form 1',
+            interests: '',
+            background: 'none',
+            learning_goal: 'interest',
         });
         setShowRecommendations(false);
         setRecommendations([]);
@@ -215,43 +206,50 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                 </div>
 
                                 <form onSubmit={handleSubmitSurvey} className="space-y-8">
-                                    {/* Interests */}
+                                    {/* Form Level */}
                                     <div>
-                                        <label className="block text-lg font-semibold mb-4">
-                                            What are your interests?
-                                        </label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            {surveyQuestions.interests.map((option) => (
-                                                <button
-                                                    key={option.value}
-                                                    type="button"
-                                                    onClick={() => toggleInterest(option.value)}
-                                                    className={`p-4 rounded-lg border-2 transition font-medium text-left ${
-                                                        data.interests.includes(option.value)
-                                                            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-100'
-                                                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-400'
-                                                    }`}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <label className="block text-lg font-semibold mb-4">Form Level</label>
+                                        <select
+                                            value={data.form_level}
+                                            onChange={(e) => setData('form_level', e.target.value)}
+                                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                                        >
+                                            <option>Form 1</option>
+                                            <option>Form 2</option>
+                                            <option>Form 3</option>
+                                            <option>Form 4</option>
+                                            <option>Form 5</option>
+                                        </select>
                                     </div>
 
-                                    {/* Experience Level */}
+                                    {/* Interests (free text) */}
                                     <div>
-                                        <label className="block text-lg font-semibold mb-4">
-                                            What is your experience level?
-                                        </label>
+                                        <label className="block text-lg font-semibold mb-4">Interests (comma-separated)</label>
+                                        <input
+                                            type="text"
+                                            value={data.interests}
+                                            onChange={(e) => setData('interests', e.target.value)}
+                                            placeholder="e.g., AI, Web Development, Cybersecurity"
+                                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                                        />
+                                    </div>
+
+                                    {/* Programming Background */}
+                                    <div>
+                                        <label className="block text-lg font-semibold mb-4">Programming Background</label>
                                         <div className="space-y-2">
-                                            {surveyQuestions.experience_level.map((option) => (
+                                            {[
+                                                { value: 'none', label: 'None' },
+                                                { value: 'basic', label: 'Basic' },
+                                                { value: 'intermediate', label: 'Intermediate' },
+                                            ].map((option) => (
                                                 <label key={option.value} className="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                                     <input
                                                         type="radio"
-                                                        name="experience_level"
+                                                        name="background"
                                                         value={option.value}
-                                                        checked={data.experience_level === option.value}
-                                                        onChange={(e) => setData('experience_level', e.target.value)}
+                                                        checked={data.background === option.value}
+                                                        onChange={(e) => setData('background', e.target.value)}
                                                         className="w-4 h-4"
                                                     />
                                                     <span className="ml-3 font-medium">{option.label}</span>
@@ -260,64 +258,22 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                         </div>
                                     </div>
 
-                                    {/* Learning Style */}
+                                    {/* Learning Goal */}
                                     <div>
-                                        <label className="block text-lg font-semibold mb-4">
-                                            How do you prefer to learn?
-                                        </label>
+                                        <label className="block text-lg font-semibold mb-4">Learning Goal</label>
                                         <div className="space-y-2">
-                                            {surveyQuestions.learning_style.map((option) => (
+                                            {[
+                                                { value: 'career', label: 'Career' },
+                                                { value: 'exam', label: 'Exam Preparation' },
+                                                { value: 'interest', label: 'General Interest' },
+                                            ].map((option) => (
                                                 <label key={option.value} className="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                                     <input
                                                         type="radio"
-                                                        name="learning_style"
+                                                        name="learning_goal"
                                                         value={option.value}
-                                                        checked={data.learning_style === option.value}
-                                                        onChange={(e) => setData('learning_style', e.target.value)}
-                                                        className="w-4 h-4"
-                                                    />
-                                                    <span className="ml-3 font-medium">{option.label}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Time Commitment */}
-                                    <div>
-                                        <label className="block text-lg font-semibold mb-4">
-                                            How much time can you commit?
-                                        </label>
-                                        <div className="space-y-2">
-                                            {surveyQuestions.time_commitment.map((option) => (
-                                                <label key={option.value} className="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                                    <input
-                                                        type="radio"
-                                                        name="time_commitment"
-                                                        value={option.value}
-                                                        checked={data.time_commitment === option.value}
-                                                        onChange={(e) => setData('time_commitment', e.target.value)}
-                                                        className="w-4 h-4"
-                                                    />
-                                                    <span className="ml-3 font-medium">{option.label}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Career Goals */}
-                                    <div>
-                                        <label className="block text-lg font-semibold mb-4">
-                                            What is your primary goal?
-                                        </label>
-                                        <div className="space-y-2">
-                                            {surveyQuestions.career_goals.map((option) => (
-                                                <label key={option.value} className="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                                    <input
-                                                        type="radio"
-                                                        name="career_goals"
-                                                        value={option.value}
-                                                        checked={data.career_goals === option.value}
-                                                        onChange={(e) => setData('career_goals', e.target.value)}
+                                                        checked={data.learning_goal === option.value}
+                                                        onChange={(e) => setData('learning_goal', e.target.value)}
                                                         className="w-4 h-4"
                                                     />
                                                     <span className="ml-3 font-medium">{option.label}</span>
@@ -379,7 +335,25 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                                     <span className="inline-block px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900 rounded-full">
                                                         {course.difficulty || 'Beginner'}
                                                     </span>
+                                                    {typeof course.score === 'number' && (
+                                                        <span className="inline-block px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900 rounded-full">
+                                                            Score: {course.score}
+                                                        </span>
+                                                    )}
                                                 </div>
+
+                                                {course.reason && (
+                                                    <div className="mb-4 rounded-lg border border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 p-3">
+                                                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-1">Why this was recommended</p>
+                                                        <p className="text-xs text-emerald-800 dark:text-emerald-200">{course.reason}</p>
+                                                    </div>
+                                                )}
+
+                                                {course.estimated_hours && (
+                                                    <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                                                        Estimated completion: {course.estimated_hours} hours
+                                                    </p>
+                                                )}
 
                                                 <div className="flex flex-wrap gap-2 mb-4">
                                                     {(course.topics || []).map((tag, index) => (

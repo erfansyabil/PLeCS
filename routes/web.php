@@ -84,6 +84,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         'title' => $course->title,
                         'description' => $course->description,
                         'difficulty' => $course->difficulty_level ?? 'Beginner',
+                        'estimated_hours' => $course->estimated_hours,
+                        'keywords' => $course->keywords,
                         'topics' => $course->children->map(fn ($topic) => $topic->title)->values()->all(),
                     ];
                 })

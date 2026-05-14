@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -110,7 +112,51 @@ class LearningContentController extends Controller
         }
     }
 
-    // Legacy course mirror removed: `courses` table is no longer maintained here.
+    /**
+     * Normalize comma-separated keywords to a canonical CSV string.
+     */
+    private function normalizeKeywords(?string $keywords): ?string
+    {
+        if ($keywords === null) {
+            return null;
+        }
+
+        $parts = collect(explode(',', $keywords))
+            ->map(fn ($item) => trim($item))
+            ->filter()
+            ->unique(fn ($item) => strtolower($item))
+            ->values();
+
+        return $parts->isEmpty() ? null : $parts->implode(', ');
+    }
+
+    /**
+     * Keep the legacy `courses` table in sync for recommendation catalog queries.
+     */
+    private function syncLegacyCourseMirror(LearningContent $course): void
+    {
+        if (!Schema::hasTable('courses')) {
+            return;
+        }
+
+        DB::table('courses')->updateOrInsert(
+            ['courseID' => $course->id],
+            [
+                'courseName' => $course->title,
+                'description' => $course->description,
+                'content' => $course->content,
+                'difficultyLevel' => $course->difficulty_level ?? 'Beginner',
+                'estimatedHours' => $course->estimated_hours,
+                'keywords' => $course->keywords,
+                'resource_type' => $course->resource_type,
+                'resource_url' => $course->resource_url,
+                'resource_path' => $course->resource_path,
+                'isActive' => true,
+                'created_at' => $course->created_at ?? now(),
+                'updated_at' => now(),
+            ]
+        );
+    }
 
     /**
      * Delete media files attached to a topic.
@@ -304,6 +350,8 @@ class LearningContentController extends Controller
             'content' => 'nullable|string',
             'type' => 'required|in:course,topic',
             'difficultyLevel' => 'required_if:type,course|nullable|in:Beginner,Intermediate,Advanced',
+            'estimated_hours' => 'required_if:type,course|nullable|integer|min:1|max:2000',
+            'keywords' => 'nullable|string|max:1000',
             'parent_id' => [
                 'required_if:type,topic',
                 'nullable',
@@ -339,6 +387,8 @@ class LearningContentController extends Controller
             'resource_url' => null,
             'resource_path' => null,
             'difficulty_level' => $validated['type'] === 'course' ? ($validated['difficultyLevel'] ?? 'Beginner') : null,
+            'estimated_hours' => $validated['type'] === 'course' ? ($validated['estimated_hours'] ?? null) : null,
+            'keywords' => $validated['type'] === 'course' ? $this->normalizeKeywords($validated['keywords'] ?? null) : null,
         ];
 
         if ($payload['type'] === 'topic') {
@@ -355,6 +405,7 @@ class LearningContentController extends Controller
 
         if ($payload['type'] === 'course') {
             $course = LearningContent::create($payload);
+            $this->syncLegacyCourseMirror($course);
             return redirect()->route('admin.learning-content.index');
         }
 
@@ -524,6 +575,9 @@ class LearningContentController extends Controller
                 'required',
                 Rule::in([$currentType]),
             ],
+            'difficultyLevel' => 'required_if:type,course|nullable|in:Beginner,Intermediate,Advanced',
+            'estimated_hours' => 'required_if:type,course|nullable|integer|min:1|max:2000',
+            'keywords' => 'nullable|string|max:1000',
             'parent_id' => [
                 'required_if:type,topic',
                 'nullable',
@@ -561,6 +615,9 @@ class LearningContentController extends Controller
                 'parent_id' => $validated['type'] === 'topic' ? ($validated['parent_id'] ?? null) : null,
                 'resource_type' => 'none',
                 'resource_url' => null,
+                'difficulty_level' => $validated['type'] === 'course' ? ($validated['difficultyLevel'] ?? 'Beginner') : null,
+                'estimated_hours' => $validated['type'] === 'course' ? ($validated['estimated_hours'] ?? null) : null,
+                'keywords' => $validated['type'] === 'course' ? $this->normalizeKeywords($validated['keywords'] ?? null) : null,
             ];
 
             if ($payload['type'] === 'topic') {
@@ -635,11 +692,10 @@ class LearningContentController extends Controller
             }
 
             if ($payload['type'] === 'course') {
-                // No-op: legacy `courses` mirror removed.
+                $this->syncLegacyCourseMirror($learningContent->fresh());
             }
         } else {
             $course = LearningContent::where('type', 'course')->findOrFail((int) $validated['parent_id']);
-            // No-op: legacy `courses` mirror removed.
 
             $topic->update([
                 'courseID' => $course->id,
@@ -693,6 +749,10 @@ class LearningContentController extends Controller
                     $topic->attachments()->delete();
                     $topic->blocks()->delete();
                     $topic->delete();
+                }
+
+                if (Schema::hasTable('courses')) {
+                    DB::table('courses')->where('courseID', $learningContent->id)->delete();
                 }
             }
 

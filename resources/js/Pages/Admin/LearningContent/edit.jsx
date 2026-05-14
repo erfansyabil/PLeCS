@@ -78,6 +78,8 @@ export default function Edit({ content, courses = [] }) {
         content: materialData.content || '',
         type: materialData.type,
         difficultyLevel: materialData.difficulty_level || 'Beginner',
+        estimated_hours: materialData.estimated_hours || '',
+        keywords: materialData.keywords || '',
         parent_id: materialData.parent_id || '',
         resource_type: materialData.resource_type || 'none',
         resource_url: materialData.resource_url || '',
@@ -221,6 +223,41 @@ export default function Edit({ content, courses = [] }) {
                                         <option value="Advanced">Advanced</option>
                                     </select>
                                     {errors.difficultyLevel && <div className="text-red-500 text-sm mt-1">{errors.difficultyLevel}</div>}
+                                </div>
+                            )}
+
+                            {data.type === 'course' && (
+                                <div className="mb-4">
+                                    <label htmlFor="estimated_hours" className="block text-sm font-medium mb-2">
+                                        Estimated Completion Hours
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="estimated_hours"
+                                        min="1"
+                                        max="2000"
+                                        value={data.estimated_hours}
+                                        onChange={(e) => setData('estimated_hours', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    />
+                                    {errors.estimated_hours && <div className="text-red-500 text-sm mt-1">{errors.estimated_hours}</div>}
+                                </div>
+                            )}
+
+                            {data.type === 'course' && (
+                                <div className="mb-4">
+                                    <label htmlFor="keywords" className="block text-sm font-medium mb-2">
+                                        Keywords (comma separated)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="keywords"
+                                        value={data.keywords}
+                                        onChange={(e) => setData('keywords', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        placeholder="python, loops, fundamentals"
+                                    />
+                                    {errors.keywords && <div className="text-red-500 text-sm mt-1">{errors.keywords}</div>}
                                 </div>
                             )}
 

@@ -15,11 +15,13 @@ class LearningContent extends Model
         'description',
         'content',
         'type',
+        'difficulty_level',
+        'estimated_hours',
+        'keywords',
         'parent_id',
         'resource_type',
         'resource_url',
         'resource_path',
-        'difficulty_level',
     ];
 
     public function parent(): BelongsTo

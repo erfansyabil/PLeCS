@@ -1,8 +1,8 @@
 import StudentLayout from '@/Layouts/StudentLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function EnrollmentIndex({ auth, layout }) {
+export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const [showRecommendations, setShowRecommendations] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -16,54 +16,27 @@ export default function EnrollmentIndex({ auth, layout }) {
         career_goals: '',
     });
 
-    const allCourses = [
+    const fallbackCourses = [
         {
             id: 1,
             title: 'Introduction to Python Programming',
             description: 'Fundamentals of programming using Python. Perfect for Form 1-3 (ASK) students learning basic coding concepts.',
-            tags: ['Python', 'Programming', 'ASK', 'Fundamentals'],
-            difficulty: 'Form 1-3',
-            form: ['form1', 'form2', 'form3'],
+            difficulty: 'Beginner',
+            topics: ['Python', 'Programming', 'ASK', 'Fundamentals'],
         },
         {
             id: 2,
             title: 'Cybersecurity and Digital Ethics',
             description: 'Learn about cybersecurity threats, data protection, and responsible digital citizenship. Aligned with Malaysian curriculum standards.',
-            tags: ['Security', 'Ethics', 'Digital', 'ASK'],
-            difficulty: 'Form 1-3',
-            form: ['form1', 'form2', 'form3'],
+            difficulty: 'Beginner',
+            topics: ['Security', 'Ethics', 'Digital', 'ASK'],
         },
         {
             id: 3,
             title: 'Algorithms and Data Structures',
             description: 'Master algorithms, data structures, and problem-solving techniques. Ideal for Form 4-5 (SK) students preparing for SPM.',
-            tags: ['Algorithms', 'Programming', 'SK', 'Advanced'],
-            difficulty: 'Form 4-5',
-            form: ['form4', 'form5'],
-        },
-        {
-            id: 4,
-            title: 'Object-Oriented Programming',
-            description: 'Object-oriented programming using languages like C++ and Java for Form 4-5 (SK) curriculum standards.',
-            tags: ['OOP', 'C++', 'Java', 'SK'],
-            difficulty: 'Form 4-5',
-            form: ['form4', 'form5'],
-        },
-        {
-            id: 5,
-            title: 'Computer Networks and Internet',
-            description: 'Understand networking basics, the internet, and how data is transmitted. Core topic in ASK and SK curriculum.',
-            tags: ['Networking', 'Internet', 'ASK', 'SK'],
-            difficulty: 'Form 1-5',
-            form: ['form1', 'form2', 'form3', 'form4', 'form5'],
-        },
-        {
-            id: 6,
-            title: 'Information Technology Applications',
-            description: 'Explore IT applications, databases, and digital tools used in modern organizations and daily life.',
-            tags: ['IT', 'Databases', 'Digital Tools', 'ASK'],
-            difficulty: 'Form 1-3',
-            form: ['form1', 'form2', 'form3'],
+            difficulty: 'Advanced',
+            topics: ['Algorithms', 'Programming', 'SK', 'Advanced'],
         },
     ];
 
@@ -109,6 +82,17 @@ export default function EnrollmentIndex({ auth, layout }) {
 
     const normalizeText = (value) => (value || '').toString().toLowerCase();
 
+    const allCourses = courses.length > 0
+        ? courses.map((course) => ({
+            ...course,
+            topics: course.topics ?? [],
+            enroll_url: route('student.learning-content.show', course.id),
+        }))
+        : fallbackCourses.map((course) => ({
+            ...course,
+            enroll_url: route('student.learning-content.show', course.id),
+        }));
+
     const mapApiResultToCourses = (result) => {
         if (!result) {
             return [];
@@ -116,8 +100,9 @@ export default function EnrollmentIndex({ auth, layout }) {
 
         const idRecommendations = Array.isArray(result.recommendations)
             ? result.recommendations
-                .map((item) => item?.id)
-                .filter((id) => Number.isInteger(id))
+                .map((item) => item?.course_id ?? item?.id)
+                .filter((id) => Number.isInteger(Number(id)))
+                .map((id) => Number(id))
             : [];
 
         if (idRecommendations.length > 0) {
@@ -126,7 +111,7 @@ export default function EnrollmentIndex({ auth, layout }) {
 
         const topicRecommendations = Array.isArray(result.recommendations)
             ? result.recommendations
-                .map((item) => normalizeText(item?.topic))
+                .map((item) => normalizeText(item?.course_title ?? item?.title ?? item?.topic))
                 .filter(Boolean)
             : [];
 
@@ -138,7 +123,9 @@ export default function EnrollmentIndex({ auth, layout }) {
             const courseText = normalizeText([
                 course.title,
                 course.description,
-                ...(course.tags || []),
+                ...(course.topics || []).flatMap((topic) => typeof topic === 'string'
+                    ? [topic]
+                    : [topic?.name, topic?.description].filter(Boolean)),
             ].join(' '));
 
             return topicRecommendations.some((topic) => courseText.includes(topic));
@@ -175,7 +162,7 @@ export default function EnrollmentIndex({ auth, layout }) {
             } else {
                 // Fallback: recommend based on interests
                 const recommendedCourses = allCourses.filter(course =>
-                    course.tags.some(tag => data.interests.includes(tag))
+                    (course.topics || []).some(tag => data.interests.includes(typeof tag === 'string' ? tag : tag?.name))
                 );
                 setRecommendations(recommendedCourses.length > 0 ? recommendedCourses : allCourses);
                 setCompletedSurvey(true);
@@ -390,24 +377,33 @@ export default function EnrollmentIndex({ auth, layout }) {
 
                                                 <div className="flex items-center justify-between mb-4">
                                                     <span className="inline-block px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900 rounded-full">
-                                                        {course.difficulty}
+                                                        {course.difficulty || 'Beginner'}
                                                     </span>
                                                 </div>
 
                                                 <div className="flex flex-wrap gap-2 mb-4">
-                                                    {course.tags.map((tag) => (
+                                                    {(course.topics || []).map((tag, index) => (
                                                         <span
-                                                            key={tag}
+                                                            key={index}
                                                             className="inline-block px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded"
                                                         >
-                                                            {tag}
+                                                            {typeof tag === 'string' ? tag : tag?.name}
                                                         </span>
                                                     ))}
                                                 </div>
 
-                                                <button className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
-                                                    Enroll Now
-                                                </button>
+                                                {course.enroll_url ? (
+                                                    <Link
+                                                        href={course.enroll_url}
+                                                        className="block w-full px-4 py-2 text-center text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+                                                    >
+                                                        Enroll Now
+                                                    </Link>
+                                                ) : (
+                                                    <button className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
+                                                        Enroll Now
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

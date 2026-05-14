@@ -83,6 +83,12 @@ class LearningPath extends Model
      */
     public function recommendations(): array
     {
+        $resolved = data_get($this->path_data, 'resolved_recommendations', []);
+
+        if (is_array($resolved) && $resolved !== []) {
+            return $resolved;
+        }
+
         $items = data_get($this->spaceResponse(), 'learning_path', []);
 
         return collect(is_array($items) ? $items : [])

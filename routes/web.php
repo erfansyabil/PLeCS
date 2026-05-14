@@ -70,7 +70,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC010: Enroll in Courses
         Route::get('/enrollment', function () {
-            return Inertia::render('Student/Enrollment/index');
+            $courses = \App\Models\LearningContent::query()
+                ->where('type', 'course')
+                ->whereNull('parent_id')
+                ->with(['children' => fn ($query) => $query->where('type', 'topic')->orderBy('title')])
+                ->orderBy('title')
+                ->get()
+                ->map(function ($course) {
+                    return [
+                        'id' => $course->id,
+                        'title' => $course->title,
+                        'description' => $course->description,
+                        'difficulty' => $course->difficulty_level ?? 'Beginner',
+                        'topics' => $course->children->map(fn ($topic) => $topic->title)->values()->all(),
+                    ];
+                })
+                ->values();
+
+            return Inertia::render('Student/Enrollment/index', [
+                'courses' => $courses,
+            ]);
         })->name('enrollment.index');
 
         // UC008: Manage Learning Path

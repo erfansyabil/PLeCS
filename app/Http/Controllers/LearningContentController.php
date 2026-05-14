@@ -121,7 +121,7 @@ class LearningContentController extends Controller
             [
                 'courseName' => $course->title,
                 'description' => $course->description,
-                'difficultyLevel' => 'Beginner',
+                'difficultyLevel' => $course->difficulty_level ?? 'Beginner',
                 'isActive' => true,
                 'created_at' => $course->created_at ?? now(),
                 'updated_at' => now(),
@@ -320,6 +320,7 @@ class LearningContentController extends Controller
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'type' => 'required|in:course,topic',
+            'difficultyLevel' => 'required_if:type,course|nullable|in:Beginner,Intermediate,Advanced',
             'parent_id' => [
                 'required_if:type,topic',
                 'nullable',
@@ -354,6 +355,7 @@ class LearningContentController extends Controller
             'resource_type' => 'none',
             'resource_url' => null,
             'resource_path' => null,
+            'difficulty_level' => $validated['type'] === 'course' ? ($validated['difficultyLevel'] ?? 'Beginner') : null,
         ];
 
         if ($payload['type'] === 'topic') {

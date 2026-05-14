@@ -34,7 +34,10 @@ class ContentSeeder extends Seeder
                     [
                         'type' => 'text',
                         'title' => 'Apa itu Sains Komputer?',
-                        'content' => 'Sains komputer ialah bidang yang mengkaji pengiraan, algoritma, data, dan sistem komputer.',
+                        'content' => '<h2>Ringkasan</h2>
+<p><em>Sains komputer</em> ialah bidang yang mengkaji <strong>pengiraan</strong>, <strong>algoritma</strong>, <em>data</em>, dan sistem komputer. Ia merangkumi reka bentuk algoritma, struktur data, pembangunan perisian, dan aplikasi dunia sebenar seperti sistem pangkalan data, permainan, dan kecerdasan buatan.</p>
+<h3>Mengapa ia penting?</h3>
+<p>Memahami asas ini membantu anda menyelesaikan masalah kompleks secara berstruktur dan membina penyelesaian digital yang boleh diskalakan.</p>',
                         'url' => null,
                         'file_path' => null,
                     ],
@@ -69,7 +72,15 @@ class ContentSeeder extends Seeder
                     [
                         'type' => 'text',
                         'title' => 'Penerangan Data',
-                        'content' => 'Komputer menyimpan data dalam bentuk binari seperti nombor, teks, imej, dan bunyi.',
+                                                'content' => '<h2>Perwakilan Data</h2>
+<p>Komputer menyimpan data dalam bentuk <em>binari</em> (0 dan 1). Ini termasuk <strong>nombor</strong>, <em>teks</em>, <em>imej</em>, dan <em>bunyi</em> — setiap jenis mempunyai strategi penyimpanan berbeza (contoh: integer vs floating point, teks dalam UTF-8, imej sebagai piksel terkompres).</p>
+<h3>Contoh praktikal</h3>
+<ul>
+    <li>Teks disimpan sebagai watak berangkai;</li>
+    <li>Imej sebagai susunan piksel dengan format seperti PNG atau JPEG;</li>
+    <li>Bunyi disimpan sebagai sampel berangka.</li>
+</ul>
+<p><strong>Difficulty:</strong> Beginner</p>',
                         'url' => null,
                         'file_path' => null,
                     ],
@@ -95,7 +106,14 @@ class ContentSeeder extends Seeder
                     [
                         'type' => 'text',
                         'title' => 'Komponen Sistem Komputer',
-                        'content' => 'Sistem komputer terdiri dari unit pemprosesan, ingatan, dan peranti masukan/keluaran yang bekerja bersama.',
+                                                'content' => '<h2>Komponen Utama</h2>
+<ul>
+    <li><em>Unit pemprosesan</em> (CPU) — melaksanakan arahan program dan mengurus pengiraan.</li>
+    <li><em>Ingatan</em> (RAM, storan) — menyimpan data sementara dan kekal.</li>
+    <li><em>Peranti Masukan/Keluaran</em> — papan kekunci, tetikus, skrin, rangkaian, dan sebagainya.</li>
+</ul>
+<p>Gabungan komponen ini menentukan prestasi sistem dan kapasiti pemprosesan data.</p>
+<p><strong>Difficulty:</strong> Beginner</p>',
                         'url' => null,
                         'file_path' => null,
                     ],
@@ -125,7 +143,16 @@ class ContentSeeder extends Seeder
                     [
                         'type' => 'text',
                         'title' => 'Apa itu Rangkaian?',
-                        'content' => 'Rangkaian komputer menghubungkan beberapa komputer untuk berkongsi maklumat dan sumber.',
+                                                'content' => '<h2>Definisi Ringkas</h2>
+<p>Rangkaian komputer menghubungkan beberapa komputer untuk berkongsi <em>maklumat</em> dan <strong>sumber</strong> melalui protokol (contoh: TCP/IP) dan media fizikal (kabel, wayarles).</p>
+<h3>Aplikasi</h3>
+<ul>
+    <li>Berkongsi fail dan pencetak;</li>
+    <li>Mengakses perkhidmatan web;</li>
+    <li>Komunikasi masa nyata seperti panggilan video.</li>
+</ul>
+<p>Memahami rangkaian membantu anda merancang sistem yang selamat dan tahan ralat.</p>
+<p><strong>Difficulty:</strong> Beginner</p>',
                         'url' => null,
                         'file_path' => null,
                     ],

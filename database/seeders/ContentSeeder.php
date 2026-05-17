@@ -13,212 +13,88 @@ use Illuminate\Support\Facades\Schema;
 class ContentSeeder extends Seeder
 {
     /**
-     * Seed content records with customizable hierarchical structure.
-     *
-     * Structure:
-    * - Subject/Course (learning_contents.type = 'course')
-    *   - Topics (topics.courseID = course.id)
-     *     - Blocks: text, youtube, pdf, image
-     *     - Attachments: pdf, image
+     * Seed content records from the learning_contents table.
+     * 
+     * Data source: learning_contents.sql dump
+     * Contains 5 courses for ASK and SK subjects (Forms 1-5)
      */
     public function run(): void
     {
-        // Add or edit courses here.
-        $this->seedCourse('Asas Sains Komputer Tingkatan 1', 'Pengenalan kepada konsep asas sains komputer.', [
+        // Seed courses from the learning_contents table
+        $courses = [
             [
-                'title' => 'Bab 1: Konsep Asas Sains Komputer',
-                'description' => 'Pengenalan kepada komputer, data, dan sistem maklumat.',
-                'resource_type' => 'none',
-                'resource_url' => null,
-                'resource_path' => null,
-                'blocks' => [
-                    [
-                        'type' => 'text',
-                        'title' => 'Apa itu Sains Komputer?',
-                        'content' => '<h2>Ringkasan</h2>
-<p><em>Sains komputer</em> ialah bidang yang mengkaji <strong>pengiraan</strong>, <strong>algoritma</strong>, <em>data</em>, dan sistem komputer. Ia merangkumi reka bentuk algoritma, struktur data, pembangunan perisian, dan aplikasi dunia sebenar seperti sistem pangkalan data, permainan, dan kecerdasan buatan.</p>
-<h3>Mengapa ia penting?</h3>
-<p>Memahami asas ini membantu anda menyelesaikan masalah kompleks secara berstruktur dan membina penyelesaian digital yang boleh diskalakan.</p>',
-                        'url' => null,
-                        'file_path' => null,
-                    ],
-                    [
-                        'type' => 'youtube',
-                        'title' => 'Video Pengenalan',
-                        'content' => null,
-                        'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                        'file_path' => null,
-                    ],
-                ],
-                'attachments' => [
-                    [
-                        'title' => 'Nota Ringkas PDF',
-                        'type' => 'pdf',
-                        'file_path' => 'docs/asas-sains-komputer.pdf',
-                    ],
-                    [
-                        'title' => 'Rajah Konsep',
-                        'type' => 'image',
-                        'file_path' => 'images/asas-sains-komputer.png',
-                    ],
-                ],
+                'id' => 1,
+                'title' => 'Asas Sains Komputer Tingkatan 1',
+                'description' => "Subjek ini merangkumi 4 bab/topik:\n1. KONSEP ASAS PEMIKIRAN KOMPUTASIONAL\n2. PERWAKILAN DATA\n3. ALGORITMA\n4. KOD ARAHAN",
+                'difficulty_level' => 'Beginner',
+                'estimated_hours' => 30,
+                'keywords' => 'beginner, basic, computational thinking, data, algorithm, code',
             ],
             [
-                'title' => 'Bab 2: Perwakilan Data',
-                'description' => 'Bagaimana data diwakili dan disimpan dalam komputer.',
-                'resource_type' => 'none',
-                'resource_url' => null,
-                'resource_path' => null,
-                'blocks' => [
-                    [
-                        'type' => 'text',
-                        'title' => 'Penerangan Data',
-                                                'content' => '<h2>Perwakilan Data</h2>
-<p>Komputer menyimpan data dalam bentuk <em>binari</em> (0 dan 1). Ini termasuk <strong>nombor</strong>, <em>teks</em>, <em>imej</em>, dan <em>bunyi</em> — setiap jenis mempunyai strategi penyimpanan berbeza (contoh: integer vs floating point, teks dalam UTF-8, imej sebagai piksel terkompres).</p>
-<h3>Contoh praktikal</h3>
-<ul>
-    <li>Teks disimpan sebagai watak berangkai;</li>
-    <li>Imej sebagai susunan piksel dengan format seperti PNG atau JPEG;</li>
-    <li>Bunyi disimpan sebagai sampel berangka.</li>
-</ul>
-<p><strong>Difficulty:</strong> Beginner</p>',
-                        'url' => null,
-                        'file_path' => null,
-                    ],
-                ],
-                'attachments' => [
-                    [
-                        'title' => 'Carta Perwakilan Data',
-                        'type' => 'image',
-                        'file_path' => 'images/perwakilan-data.jpg',
-                    ],
-                ],
+                'id' => 2,
+                'title' => 'Asas Sains Komputer Tingkatan 2',
+                'description' => "Subjek ini merangkumi 3 bab/topik: \n1. PERWAKILAN DATA \n2. ALGORITMA \n3. KOD ARAHAN",
+                'difficulty_level' => 'Beginner',
+                'estimated_hours' => 30,
+                'keywords' => 'data, algorithm, code',
             ],
-        ]);
+            [
+                'id' => 3,
+                'title' => 'Asas Sains Komputer Tingkatan 3',
+                'description' => "Subjek ini merangkumi 4 bab/topik:\n1. KONSEP ASAS PEMIKIRAN KOMPUTASIONAL\n2. PERWAKILAN DATA\n3. ALGORITMA\n4. KOD ARAHAN",
+                'difficulty_level' => 'Intermediate',
+                'estimated_hours' => 30,
+                'keywords' => 'concept, computational, algorithm, code, instructions',
+            ],
+            [
+                'id' => 4,
+                'title' => 'Sains Komputer Tingkatan 4',
+                'description' => "Subjek ini merangkumi 3 bab/topik:\n1. PENGATURCARAAN\n2. PANGKALAN DATA\n3. INTERAKSI MANUSIA DENGAN KOMPUTER",
+                'difficulty_level' => 'Advanced',
+                'estimated_hours' => 30,
+                'keywords' => 'programming, database, human-computer interaction',
+            ],
+            [
+                'id' => 5,
+                'title' => 'Sains Komputer Tingkatan 5',
+                'description' => "Subjek ini merangkumi 3 bab/topik:\n1. PENGKOMPUTERAN\n2. PANGKALAN DATA LANJUTAN\n3. PENGATURCARAAN BERASASKAN WEB",
+                'difficulty_level' => 'Advanced',
+                'estimated_hours' => 40,
+                'keywords' => 'computational, database, web development, programming',
+            ],
+        ];
 
-        $this->seedCourse('Asas Sains Komputer Tingkatan 2', 'Pengenalan lanjutan kepada konsep sains komputer.', [
-            [
-                'title' => 'Bab 1: Sistem Komputer',
-                'description' => 'Memahami komponen dan sistem komputer yang lebih kompleks.',
-                'resource_type' => 'none',
-                'resource_url' => null,
-                'resource_path' => null,
-                'blocks' => [
-                    [
-                        'type' => 'text',
-                        'title' => 'Komponen Sistem Komputer',
-                                                'content' => '<h2>Komponen Utama</h2>
-<ul>
-    <li><em>Unit pemprosesan</em> (CPU) — melaksanakan arahan program dan mengurus pengiraan.</li>
-    <li><em>Ingatan</em> (RAM, storan) — menyimpan data sementara dan kekal.</li>
-    <li><em>Peranti Masukan/Keluaran</em> — papan kekunci, tetikus, skrin, rangkaian, dan sebagainya.</li>
-</ul>
-<p>Gabungan komponen ini menentukan prestasi sistem dan kapasiti pemprosesan data.</p>
-<p><strong>Difficulty:</strong> Beginner</p>',
-                        'url' => null,
-                        'file_path' => null,
-                    ],
-                    [
-                        'type' => 'youtube',
-                        'title' => 'Pengenalan Sistem Komputer',
-                        'content' => null,
-                        'url' => 'https://www.youtube.com/watch?v=example-sistem',
-                        'file_path' => null,
-                    ],
-                ],
-                'attachments' => [
-                    [
-                        'title' => 'Diagram Sistem Komputer',
-                        'type' => 'image',
-                        'file_path' => 'images/sistem-komputer.png',
-                    ],
-                ],
-            ],
-            [
-                'title' => 'Bab 2: Rangkaian dan Komunikasi',
-                'description' => 'Asas rangkaian komputer dan komunikasi data.',
-                'resource_type' => 'none',
-                'resource_url' => null,
-                'resource_path' => null,
-                'blocks' => [
-                    [
-                        'type' => 'text',
-                        'title' => 'Apa itu Rangkaian?',
-                                                'content' => '<h2>Definisi Ringkas</h2>
-<p>Rangkaian komputer menghubungkan beberapa komputer untuk berkongsi <em>maklumat</em> dan <strong>sumber</strong> melalui protokol (contoh: TCP/IP) dan media fizikal (kabel, wayarles).</p>
-<h3>Aplikasi</h3>
-<ul>
-    <li>Berkongsi fail dan pencetak;</li>
-    <li>Mengakses perkhidmatan web;</li>
-    <li>Komunikasi masa nyata seperti panggilan video.</li>
-</ul>
-<p>Memahami rangkaian membantu anda merancang sistem yang selamat dan tahan ralat.</p>
-<p><strong>Difficulty:</strong> Beginner</p>',
-                        'url' => null,
-                        'file_path' => null,
-                    ],
-                    [
-                        'type' => 'youtube',
-                        'title' => 'Video Rangkaian Komputer',
-                        'content' => null,
-                        'url' => 'https://www.youtube.com/watch?v=example-rangkaian',
-                        'file_path' => null,
-                    ],
-                ],
-                'attachments' => [
-                    [
-                        'title' => 'Topologi Rangkaian',
-                        'type' => 'image',
-                        'file_path' => 'images/topologi-rangkaian.jpg',
-                    ],
-                    [
-                        'title' => 'Catatan Rangkaian',
-                        'type' => 'pdf',
-                        'file_path' => 'docs/rangkaian-komputer.pdf',
-                    ],
-                ],
-            ],
-        ]);
+        foreach ($courses as $courseData) {
+            $this->seedCourseFromData($courseData);
+        }
     }
 
     /**
-     * Helper method to seed a course with topics that have blocks and attachments.
-     *
-     * Usage:
-     * $this->seedCourse('Course Title', 'Description', [
-     *     [
-     *         'title' => 'Topic Title',
-     *         'description' => 'Topic Description',
-     *         'resource_type' => 'none|youtube|pdf|image',
-     *         'resource_url' => 'optional URL',
-     *         'resource_path' => 'optional file path',
-     *         'blocks' => [
-     *             ['type' => 'text|youtube|pdf|image', 'title' => null, 'content' => null, 'url' => null, 'file_path' => null],
-     *         ],
-     *         'attachments' => [
-     *             ['title' => null, 'type' => 'pdf|image', 'file_path' => 'path/file.ext'],
-     *         ],
-     *     ]
-     * ])
+     * Seed a single course from the learning_contents data.
      */
-    private function seedCourse(string $courseTitle, string $courseDescription, array $topics): void
+    private function seedCourseFromData(array $courseData): void
     {
-        // Create the course
+        // Create the course using Content factory or direct creation
         $course = Content::factory()
             ->course()
-            ->withTitle($courseTitle)
-            ->withDescription($courseDescription)
-            ->create();
+            ->withTitle($courseData['title'])
+            ->withDescription($courseData['description'])
+            ->create([
+                'difficulty_level' => $courseData['difficulty_level'],
+                'estimated_hours' => $courseData['estimated_hours'],
+                'keywords' => $courseData['keywords'],
+            ]);
 
-        // Maintain a mirrored `courses` row only when the `courses` table exists
-        // so that `topics.courseID` foreign keys remain valid during seeding.
+        // Maintain a mirrored `courses` row when the `courses` table exists
         if (Schema::hasTable('courses')) {
             DB::table('courses')->updateOrInsert(
                 ['courseID' => $course->id],
                 [
                     'courseName' => $course->title,
                     'description' => $course->description,
-                    'difficultyLevel' => 'Beginner',
+                    'difficultyLevel' => $courseData['difficulty_level'],
+                    'estimatedHours' => $courseData['estimated_hours'],
+                    'keywords' => $courseData['keywords'],
                     'isActive' => true,
                     'created_at' => $course->created_at ?? now(),
                     'updated_at' => now(),
@@ -226,24 +102,238 @@ class ContentSeeder extends Seeder
             );
         }
 
-        // Create topics directly under the course with blocks and attachments.
+        // Parse topics from description and create them
+        $topics = $this->parseTopicsFromDescription($courseData['description'], $courseData['title']);
+        
         foreach (array_values($topics) as $index => $topicData) {
             $topic = Topic::query()->create([
                 'courseID' => $course->id,
                 'name' => $topicData['title'],
                 'description' => $topicData['description'],
                 'prerequisites' => null,
-                'difficultyLevel' => 'Beginner',
+                'difficultyLevel' => $courseData['difficulty_level'],
                 'orderIndex' => $index + 1,
                 'isActive' => true,
             ]);
 
-            // Seed blocks directly on this topic
-            $this->seedBlocks($topic->topicID, $topicData['blocks'] ?? []);
-
-            // Seed attachments directly on this topic
-            $this->seedAttachments($topic->topicID, $topicData['attachments'] ?? []);
+            // Create sample blocks for each topic based on the topic content
+            $this->seedSampleBlocks($topic->topicID, $topicData, $courseData['title']);
         }
+    }
+
+    /**
+     * Parse topics from the course description text.
+     * The description contains numbered topics like "1. TOPIC NAME"
+     */
+    private function parseTopicsFromDescription(string $description, string $courseTitle): array
+    {
+        $topics = [];
+        
+        // Extract numbered topics using regex pattern
+        // Matches patterns like "1. TOPIC NAME" or "1. TOPIC NAME\n2. NEXT TOPIC"
+        preg_match_all('/(\d+)\.\s+([^\n]+)/', $description, $matches);
+        
+        if (!empty($matches[2])) {
+            foreach ($matches[2] as $index => $topicName) {
+                $topicName = trim($topicName);
+                $topics[] = [
+                    'title' => $topicName,
+                    'description' => $this->generateTopicDescription($topicName, $courseTitle),
+                ];
+            }
+        } else {
+            // Fallback: Create generic topics if no numbered list found
+            $topics[] = [
+                'title' => 'Pengenalan',
+                'description' => "Pengenalan kepada {$courseTitle}",
+            ];
+            $topics[] = [
+                'title' => 'Konsep Asas',
+                'description' => "Konsep asas dalam {$courseTitle}",
+            ];
+        }
+        
+        return $topics;
+    }
+
+    /**
+     * Generate a meaningful description for a topic based on its name.
+     */
+    private function generateTopicDescription(string $topicName, string $courseTitle): string
+    {
+        // Clean up the topic name by removing any extra formatting
+        $cleanedName = preg_replace('/[^A-Za-z\s]/', '', $topicName);
+        $cleanedName = trim($cleanedName);
+        
+        $descriptions = [
+            'PEMIKIRAN KOMPUTASIONAL' => 'Memahami konsep asas pemikiran komputasional termasuk dekomposisi, pengecaman corak, peniskalaan, dan reka bentuk algoritma.',
+            'PERWAKILAN DATA' => 'Mempelajari bagaimana data diwakili dalam sistem komputer termasuk nombor, teks, imej, dan audio dalam bentuk binari.',
+            'ALGORITMA' => 'Memahami konsep algoritma, pseudokod, carta alir, dan teknik penyelesaian masalah secara berstruktur.',
+            'KOD ARAHAN' => 'Pengenalan kepada kod arahan, sintaks asas pengaturcaraan, dan pembangunan atur cara mudah.',
+            'PENGATURCARAAN' => 'Mempelajari konsep pengaturcaraan termasuk pembolehubah, struktur kawalan, fungsi, dan pengaturcaraan berorientasikan objek.',
+            'PANGKALAN DATA' => 'Memahami konsep pangkalan data, struktur jadual, hubungan, SQL asas, dan pengurusan data.',
+            'INTERAKSI MANUSIA DENGAN KOMPUTER' => 'Mempelajari prinsip reka bentuk antara muka pengguna, kebolehgunaan, dan pengalaman pengguna.',
+            'PENGKOMPUTERAN' => 'Memahami konsep pengkomputeran termasuk seni bina komputer, sistem operasi, dan rangkaian.',
+            'PANGKALAN DATA LANJUTAN' => 'Mempelajari konsep pangkalan data lanjutan termasuk normalisasi, transaksi, pengindeksan, dan pengoptimuman pertanyaan.',
+            'PENGATURCARAAN BERASASKAN WEB' => 'Pengenalan kepada pembangunan web termasuk HTML, CSS, JavaScript, dan rangka kerja web.',
+        ];
+        
+        // Find matching description or use default
+        foreach ($descriptions as $key => $desc) {
+            if (stripos($cleanedName, $key) !== false) {
+                return $desc;
+            }
+        }
+        
+        // Default description
+        return "Mempelajari topik {$topicName} dalam konteks {$courseTitle} termasuk konsep asas, aplikasi praktikal, dan latihan yang berkaitan.";
+    }
+
+    /**
+     * Seed sample blocks for a topic based on the topic content.
+     */
+    private function seedSampleBlocks(int $topicId, array $topicData, string $courseTitle): void
+    {
+        $topicName = $topicData['title'];
+        
+        // Sample blocks that adapt to the topic
+        $blocks = [
+            [
+                'type' => 'text',
+                'title' => "Pengenalan kepada {$topicName}",
+                'content' => $this->generateBlockContent($topicName, $courseTitle),
+                'url' => null,
+                'file_path' => null,
+            ],
+            [
+                'type' => 'youtube',
+                'title' => "Video Pembelajaran - {$topicName}",
+                'content' => null,
+                'url' => "https://www.youtube.com/results?search_query=" . urlencode($topicName . " " . $courseTitle),
+                'file_path' => null,
+            ],
+        ];
+        
+        // Add a practice block for certain topics
+        if (stripos($topicName, 'ALGORITMA') !== false || stripos($topicName, 'PENGATURCARAAN') !== false) {
+            $blocks[] = [
+                'type' => 'text',
+                'title' => 'Latihan Praktikal',
+                'content' => '<h3>Latihan Amali</h3><p>Cuba selesaikan tugasan berikut:</p><ul><li>Bina algoritma untuk tugasan harian</li><li>Tulis pseudokod untuk penyelesaian masalah mudah</li><li>Laksanakan atur cara ringkas berdasarkan algoritma yang dibina</li></ul>',
+                'url' => null,
+                'file_path' => null,
+            ];
+        }
+        
+        $this->seedBlocks($topicId, $blocks);
+    }
+
+    /**
+     * Generate content for a block based on the topic.
+     */
+    private function generateBlockContent(string $topicName, string $courseTitle): string
+    {
+        $cleanedName = preg_replace('/[^A-Za-z\s]/', '', $topicName);
+        $cleanedName = trim($cleanedName);
+        
+        $contentMap = [
+            'PEMIKIRAN KOMPUTASIONAL' => '<h2>Konsep Asas Pemikiran Komputasional</h2>
+<p><strong>Pemikiran komputasional</strong> adalah pendekatan penyelesaian masalah menggunakan konsep sains komputer. Ia merangkumi:</p>
+<ul>
+<li><strong>Dekomposisi</strong> - Memecahkan masalah besar kepada bahagian-bahagian kecil</li>
+<li><strong>Pengecaman Corak</strong> - Mencari persamaan atau corak dalam masalah</li>
+<li><strong>Peniskalaan</strong> - Memfokuskan kepada maklumat penting dan mengabaikan yang tidak relevan</li>
+<li><strong>Reka Bentuk Algoritma</strong> - Membangunkan langkah-langkah penyelesaian yang sistematik</li>
+</ul>
+<p>Kemahiran ini penting dalam menyelesaikan masalah kompleks secara berstruktur.</p>',
+            
+            'PERWAKILAN DATA' => '<h2>Perwakilan Data dalam Komputer</h2>
+<p>Komputer menyimpan dan memproses data dalam bentuk <strong>binari</strong> (0 dan 1). Berikut adalah perwakilan pelbagai jenis data:</p>
+<h3>1. Data Nombor</h3>
+<ul>
+<li>Integer - nombor bulat seperti 0, 1, 2, -5</li>
+<li>Nombor Perpuluhan - menggunakan titik perpuluhan (float/double)</li>
+</ul>
+<h3>2. Data Teks</h3>
+<ul>
+<li>Setiap aksara diwakili menggunakan kod seperti ASCII atau Unicode</li>
+<li>Contoh: Huruf \'A\' = 65 dalam ASCII</li>
+</ul>
+<h3>3. Data Imej</h3>
+<ul>
+<li>Imej digital terdiri daripada piksel-piksel kecil</li>
+<li>Setiap piksel mempunyai nilai warna (RGB)</li>
+</ul>
+<h3>4. Data Audio</h3>
+<ul>
+<li>Gelombang bunyi diubah kepada sampel digital</li>
+<li>Kualiti bergantung kepada kadar sampel dan kedalaman bit</li>
+</ul>',
+            
+            'ALGORITMA' => '<h2>Pengenalan kepada Algoritma</h2>
+<p><strong>Algoritma</strong> adalah satu set arahan yang tersusun dan sistematik untuk menyelesaikan sesuatu masalah.</p>
+<h3>Ciri-ciri Algoritma yang Baik:</h3>
+<ul>
+<li><strong>Ketepatan</strong> - Menghasilkan output yang betul</li>
+<li><strong>Kekangan masa</strong> - Boleh dilaksanakan dalam masa yang munasabah</li>
+<li><strong>Kecekapan</strong> - Menggunakan sumber secara optimum</li>
+<li><strong>Kebolehbacaan</strong> - Mudah difahami oleh manusia</li>
+</ul>
+<h3>Cara Mewakili Algoritma:</h3>
+<ul>
+<li><strong>Pseudokod</strong> - Gabungan bahasa manusia dan kod</li>
+<li><strong>Carta Alir (Flowchart)</strong> - Perwakilan grafik menggunakan simbol-simbol tertentu</li>
+</ul>
+<h3>Contoh Pseudokod:</h3>
+<pre>
+MULA
+    INPUT nombor1, nombor2
+    jumlah = nombor1 + nombor2
+    OUTPUT jumlah
+TAMAT
+</pre>',
+            
+            'KOD ARAHAN' => '<h2>Pengenalan kepada Kod Arahan</h2>
+<p><strong>Kod arahan</strong> adalah satu set perintah yang ditulis dalam bahasa pengaturcaraan untuk memberitahu komputer apa yang perlu dilakukan.</p>
+<h3>Konsep Asas Pengaturcaraan:</h3>
+<ul>
+<li><strong>Pembolehubah</strong> - Tempat menyimpan data</li>
+<li><strong>Struktur Kawalan</strong> - Mengawal aliran program (if-else, loops)</li>
+<li><strong>Fungsi</strong> - Blok kod yang boleh digunakan semula</li>
+<li><strong>Input/Output</strong> - Cara program berinteraksi dengan pengguna</li>
+</ul>
+<h3>Contoh Kod Mudah (Python):</h3>
+<pre>
+# Program sambutan
+nama = input("Masukkan nama anda: ")
+print("Selamat datang", nama, "ke kelas Sains Komputer!")
+</pre>
+<p>Mulakan dengan bahasa pengaturcaraan yang mudah seperti Python atau Scratch untuk memahami konsep asas.</p>',
+        ];
+        
+        // Return matching content or generic content
+        foreach ($contentMap as $key => $content) {
+            if (stripos($cleanedName, $key) !== false) {
+                return $content;
+            }
+        }
+        
+        // Generic content for other topics
+        return "<h2>Pengenalan kepada {$topicName}</h2>
+<p>Topik <strong>{$topicName}</strong> adalah sebahagian daripada kursus <em>{$courseTitle}</em>.</p>
+<h3>Objektif Pembelajaran:</h3>
+<ul>
+<li>Memahami konsep asas {$topicName}</li>
+<li>Mengaplikasikan pengetahuan dalam situasi praktikal</li>
+<li>Mengenal pasti komponen utama dalam {$topicName}</li>
+</ul>
+<h3>Aktiviti Pembelajaran:</h3>
+<ul>
+<li>Membaca nota dan bahan rujukan</li>
+<li>Menonton video pembelajaran</li>
+<li>Melaksanakan tugasan dan latihan</li>
+<li>Mengambil kuiz untuk menguji kefahaman</li>
+</ul>";
     }
 
     /**

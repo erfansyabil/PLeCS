@@ -170,8 +170,10 @@ class LearningPathController extends Controller
             ?? data_get($responseData, 'recommended_courses')
             ?? [];
 
+            $seenCourseIDs = [];
+
         return collect(is_array($items) ? $items : [])
-            ->map(function (mixed $item) use ($catalog): ?array {
+            ->map(function (mixed $item) use ($catalog, &$seenCourseIDs): ?array {
                 if (! is_array($item)) {
                     return null;
                 }
@@ -219,20 +221,17 @@ class LearningPathController extends Controller
     public function recommend(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            // Support the Gradio-style form: form_level, interests (string), background, learning_goal
             'form_level' => ['sometimes', 'string'],
-            'interests' => ['required'], // can be string (comma-separated) or array
+            'interests' => ['required'],
             'background' => ['sometimes', 'string'],
             'learning_goal' => ['sometimes', 'string'],
-
-            // Backwards-compatible fields (previous UI)
             'experience_level' => ['sometimes', 'string'],
             'learning_style' => ['sometimes', 'string'],
             'time_commitment' => ['sometimes', 'string'],
             'career_goals' => ['sometimes', 'string'],
         ]);
 
-        // Normalize interests into an array for internal use
+        // Normalize interests
         $rawInterests = $validated['interests'] ?? [];
         if (is_string($rawInterests)) {
             $interestsArray = array_values(array_filter(array_map(fn($s) => trim($s), explode(',', $rawInterests))));
@@ -242,121 +241,84 @@ class LearningPathController extends Controller
             $interestsArray = [];
         }
 
-        // Determine learning goal and background with fallbacks to older keys
-        $learningGoal = $validated['learning_goal'] ?? $validated['career_goals'] ?? null;
-        $background = $validated['background'] ?? null;
-        $experienceLevel = $validated['experience_level'] ?? null;
-
-        $spaceUrl = config('services.huggingface.space_url');
-        $apiToken = config('services.huggingface.api_token');
-
-        if (! $spaceUrl) {
-            return response()->json([
-                'message' => 'Hugging Face Space URL is not configured.',
-            ], 500);
-        }
+        $learningGoal = $validated['learning_goal'] ?? $validated['career_goals'] ?? 'interest';
+        $background = $validated['background'] ?? 'none';
+        $formLevel = $validated['form_level'] ?? 'Form 1';
+        $interestsString = is_string($rawInterests) ? $rawInterests : implode(', ', $interestsArray);
 
         $catalog = $this->courseCatalog();
 
-        // Prepare survey copy for storage and ensure interests are normalized
         $surveyForSave = $validated;
         $surveyForSave['interests'] = $interestsArray;
-        $surveyForSave['form_level'] = $validated['form_level'] ?? null;
-        $surveyForSave['background'] = $background;
-        $surveyForSave['learning_goal'] = $learningGoal;
-        $surveyForSave['experience_level'] = $experienceLevel;
-
-        // Build payload for the Space.
-        // Gradio expects arguments as an array of strings matching the function signature:
-        // generate_learning_path(form_level: str, interests: str, background: str, learning_goal: str)
-        $interestsString = is_string($rawInterests) ? $rawInterests : implode(', ', $interestsArray);
-        $formLevel = $validated['form_level'] ?? 'Form 1';
-        $learningGoalStr = $learningGoal ?? 'interest';
-        $backgroundStr = $background ?? 'none';
-
-        // Payload as array of 4 string arguments for Gradio
-        $payload = [
-            'data' => [
-                $formLevel,
-                $interestsString,
-                $backgroundStr,
-                $learningGoalStr,
-            ]
-        ];
-
-        $http = Http::timeout(20)->acceptJson();
-
-        if (! empty($apiToken)) {
-            $http = $http->withToken($apiToken);
-        }
 
         try {
-            $recommendUrl = rtrim($spaceUrl, '/') . '/recommend';
-            \Log::info('HF Space request', [
-                'url' => $recommendUrl,
-                'payload' => $payload,
-            ]);
-            $response = $http->post($recommendUrl, $payload);
-        } catch (ConnectionException $exception) {
-            \Log::error('HF Space connection failed', ['error' => $exception->getMessage()]);
-            return response()->json([
-                'message' => 'Unable to connect to Hugging Face Space.',
-                'error' => $exception->getMessage(),
-            ], 502);
-        }
+            // Call Python bridge script
+            // Replace the HTTP/polling code with:
+            $scriptPath = base_path('storage/scripts/hf_recommend.py');
+            $command = sprintf(
+                'python %s %s %s %s %s 2>&1',
+                escapeshellarg($scriptPath),
+                escapeshellarg($formLevel),
+                escapeshellarg($interestsString),
+                escapeshellarg($background),
+                escapeshellarg($learningGoal)
+            );
 
-        \Log::info('HF Space response', [
-            'status' => $response->status(),
-            'body' => $response->body(),
-        ]);
+            $output = shell_exec($command);
+            // Remove the "Loaded as API" line if present
+            $outputLines = explode("\n", trim($output));
+            $jsonLine = end($outputLines); // Get the last line (the actual JSON)
+            $responseData = json_decode($jsonLine, true);
 
-        if (! $response->successful()) {
-            \Log::error('HF Space returned error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-            return response()->json([
-                'message' => 'Unable to fetch recommendations from Hugging Face Space.',
-                'status' => $response->status(),
-                'error' => $response->body(),
-            ], 502);
-        }
-
-        // Attempt to normalize responses from different Space implementations.
-        // Some Gradio-based Spaces return a structure like: ["{...json...}"] in the `data` array.
-        $responseData = $response->json();
-
-        // If Gradio returned a JSON string inside `data[0]`, decode it.
-        if (is_array($responseData) && isset($responseData['data']) && is_array($responseData['data']) && isset($responseData['data'][0]) && is_string($responseData['data'][0])) {
-            $maybeJson = json_decode($responseData['data'][0], true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($maybeJson)) {
-                $responseData = $maybeJson;
+            if (!$responseData) {
+                \Log::error('Failed to parse Python bridge output', ['output' => $output]);
+                return response()->json(['message' => 'Recommendation service returned invalid response.'], 502);
             }
+
+            if (isset($responseData['error']) || ($responseData['success'] ?? null) === false) {
+                \Log::error('HF Space returned error', ['response' => $responseData]);
+                return response()->json([
+                    'message' => 'Recommendation service error.',
+                    'error' => $responseData['error'] ?? 'Unknown error',
+                ], 502);
+            }
+
+            // Normalize response format
+            if (isset($responseData['recommended_topics']) && is_array($responseData['recommended_topics'])) {
+                $responseData['learning_path'] = array_map(fn($t) => ['topic' => (string) $t], $responseData['recommended_topics']);
+            }
+
+            $recommendations = $this->resolveRecommendations($responseData, $catalog);
+
+            // Save learning path
+            // In your recommend() method, replace the LearningPath::create() call:
+            LearningPath::create([
+                'studentID' => auth()->id(),  // instead of user_id
+                'courseID' => $recommendations[0]['course_id'] ?? null,
+                'pathName' => 'Generated Path - ' . now()->format('d/m/Y'),
+                'complexityLevel' => $responseData['complexity_level'] ?? 'beginner',
+                'estimatedDuration' => $responseData['estimated_duration_minutes'] ?? 0,
+                'currentProgress' => 0,
+                'status' => 'active',
+                'isAdaptive' => true,
+                'path_data' => [
+                    'survey' => $surveyForSave,
+                    'space_response' => $responseData,
+                    'resolved_recommendations' => $recommendations,
+                ],
+            ]);
+
+            return response()->json([
+                'message' => 'Recommendations generated successfully.',
+                'recommendations' => $recommendations,
+                'raw' => $responseData,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('HF Space bridge error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => 'Unable to connect to recommendation service.',
+            ], 502);
         }
-
-        // If the Space returned a simple `recommended_topics` list (as in the Gradio demo),
-        // normalize it to the `learning_path` shape expected by `resolveRecommendations()`
-        if (isset($responseData['recommended_topics']) && is_array($responseData['recommended_topics'])) {
-            $responseData['learning_path'] = array_map(fn($t) => ['topic' => (string) $t], $responseData['recommended_topics']);
-        }
-
-        $recommendations = $this->resolveRecommendations($responseData, $catalog);
-
-        LearningPath::create([
-            'user_id' => auth()->id(),
-            'path_data' => [
-                'survey' => $surveyForSave,
-                'space_payload' => $payload,
-                'space_response' => $responseData,
-                'catalog' => $catalog,
-                'resolved_recommendations' => $recommendations,
-            ],
-        ]);
-
-        return response()->json([
-            'message' => 'Recommendations generated successfully.',
-            'recommendations' => $recommendations,
-            'raw' => $responseData,
-        ]);
     }
 }

@@ -13,13 +13,25 @@ class LearningPath extends Model
     /** @use HasFactory<LearningPathFactory> */
     use HasFactory;
 
+    protected $primaryKey = 'pathID';
+
     protected $fillable = [
-        'user_id',
+        'studentID',
+        'courseID',
+        'pathName',
+        'complexityLevel',
+        'isAdaptive',
+        'estimatedDuration',
+        'currentProgress',
+        'status',
         'path_data',
     ];
 
     protected $casts = [
         'path_data' => 'array',
+        'isAdaptive' => 'boolean',
+        'estimatedDuration' => 'integer',
+        'currentProgress' => 'integer',
     ];
 
     /**
@@ -27,7 +39,7 @@ class LearningPath extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'studentID');
     }
 
     /**
@@ -35,7 +47,7 @@ class LearningPath extends Model
      */
     public function scopeForUser(Builder $query, int $userId): Builder
     {
-        return $query->where('user_id', $userId);
+        return $query->where('studentID', $userId);
     }
 
     /**
@@ -48,8 +60,6 @@ class LearningPath extends Model
 
     /**
      * Get submitted enrollment survey data from the stored path payload.
-     *
-     * @return array<string, mixed>
      */
     public function survey(): array
     {
@@ -57,19 +67,7 @@ class LearningPath extends Model
     }
 
     /**
-     * Get the payload that was sent to the external recommender.
-     *
-     * @return array<string, mixed>
-     */
-    public function spacePayload(): array
-    {
-        return data_get($this->path_data, 'space_payload', []);
-    }
-
-    /**
      * Get the raw response returned by the external recommender.
-     *
-     * @return array<string, mixed>
      */
     public function spaceResponse(): array
     {
@@ -77,29 +75,10 @@ class LearningPath extends Model
     }
 
     /**
-     * Get normalized recommendations as an array of topic/difficulty entries.
-     *
-     * @return array<int, array{topic:string, difficulty:string}>
+     * Get normalized recommendations.
      */
     public function recommendations(): array
     {
-        $resolved = data_get($this->path_data, 'resolved_recommendations', []);
-
-        if (is_array($resolved) && $resolved !== []) {
-            return $resolved;
-        }
-
-        $items = data_get($this->spaceResponse(), 'learning_path', []);
-
-        return collect(is_array($items) ? $items : [])
-            ->map(function ($item) {
-                return [
-                    'topic' => (string) data_get($item, 'topic', ''),
-                    'difficulty' => (string) data_get($item, 'difficulty', ''),
-                ];
-            })
-            ->filter(fn ($item) => $item['topic'] !== '')
-            ->values()
-            ->all();
+        return data_get($this->path_data, 'resolved_recommendations', []);
     }
 }

@@ -34,6 +34,7 @@ return new class extends Migration
                   ->comment('Completion percentage 0.00 to 100.00');
             $table->enum('status', ['Active', 'Completed', 'Paused'])
                   ->default('Active');
+            $table->json('path_data')->nullable();
             $table->timestamps(); // creates created_at and updated_at
         });
     }

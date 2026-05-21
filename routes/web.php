@@ -6,6 +6,7 @@ use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\LearningPathController;
 use App\Http\Controllers\AdditionalLearningContentController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +96,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'courses' => $courses,
             ]);
         })->name('enrollment.index');
+
+        Route::post('/enrollment/enroll', [EnrollmentController::class, 'enroll'])->name('enrollment.enroll');
+        Route::get('/enrollment/my-courses', [EnrollmentController::class, 'myEnrollments'])->name('enrollment.my-courses');
+        Route::get('/enrollment/check/{courseID}', [EnrollmentController::class, 'check'])->name('enrollment.check');
+        Route::delete('/enrollment/{enrollmentID}/drop', [EnrollmentController::class, 'drop'])->name('enrollment.drop');
 
         // UC008: Manage Learning Path
         Route::get('/learning-path', function () {

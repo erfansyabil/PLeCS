@@ -8,6 +8,15 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const [loading, setLoading] = useState(false);
     const [completedSurvey, setCompletedSurvey] = useState(false);
 
+    // Enrollment modal state
+    const [enrollModal, setEnrollModal] = useState({
+        open: false,
+        course: null,
+        enrolling: false,
+        result: null, // 'success' | 'error' | null
+        message: '',
+    });
+
     const { data, setData, post, processing, errors } = useForm({
         form_level: 'Form 1',
         interests: '',
@@ -39,8 +48,6 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
         },
     ];
 
-    // Survey fields adapted to Gradio-style inputs: form_level, interests (string), background, learning_goal
-
     const normalizeText = (value) => (value || '').toString().toLowerCase();
 
     const allCourses = courses.length > 0
@@ -55,9 +62,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
         }));
 
     const mapApiResultToCourses = (result) => {
-        if (!result) {
-            return [];
-        }
+        if (!result) return [];
 
         const recommendationItems = Array.isArray(result.recommendations)
             ? result.recommendations
@@ -65,9 +70,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                 ? result.raw.learning_path
                 : [];
 
-        if (recommendationItems.length === 0) {
-            return [];
-        }
+        if (recommendationItems.length === 0) return [];
 
         const normalized = recommendationItems.map((item, index) => {
             const resolvedId = Number(item?.course_id ?? item?.id);
@@ -83,7 +86,6 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                             ? [topic]
                             : [topic?.name, topic?.description].filter(Boolean)),
                     ].join(' '));
-
                     return courseText.includes(normalizeText(resolvedTitle));
                 });
 
@@ -102,13 +104,12 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                 keywords: item?.keywords ?? matchedCourse?.keywords ?? null,
                 reason: item?.reason ?? '',
                 score: item?.score,
+                courseID: item?.course_id ?? matchedCourse?.id, // For enrollment API
             };
         });
 
-        // Keep stable ordering from the recommendation engine while removing duplicates.
         const deduped = [];
         const seen = new Set();
-
         normalized.forEach((item) => {
             const key = `${item.id}-${normalizeText(item.title)}`;
             if (!seen.has(key)) {
@@ -131,7 +132,6 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
         setLoading(true);
 
         try {
-            // Call your backend endpoint that will use HuggingFace API
             const response = await fetch('/api/recommendations', {
                 method: 'POST',
                 headers: {
@@ -148,7 +148,6 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                 setCompletedSurvey(true);
                 setShowRecommendations(true);
             } else {
-                // Fallback: recommend based on interests string
                 const interestsArray = data.interests.toString().split(',').map(i => i.trim().toLowerCase()).filter(Boolean);
                 const recommendedCourses = allCourses.filter(course =>
                     (course.topics || []).some(tag => {
@@ -162,7 +161,6 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
             }
         } catch (error) {
             console.error('Error fetching recommendations:', error);
-            // Fallback recommendation
             setRecommendations(allCourses);
             setCompletedSurvey(true);
             setShowRecommendations(true);
@@ -182,6 +180,83 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
         setRecommendations([]);
         setCompletedSurvey(false);
     };
+
+    // ─── Enrollment handlers ───────────────────────────────────────
+
+    const openEnrollModal = (course) => {
+        setEnrollModal({
+            open: true,
+            course,
+            enrolling: false,
+            result: null,
+            message: '',
+        });
+    };
+
+    const closeEnrollModal = () => {
+        setEnrollModal({
+            open: false,
+            course: null,
+            enrolling: false,
+            result: null,
+            message: '',
+        });
+    };
+
+    const handleEnroll = async () => {
+        const course = enrollModal.course;
+        if (!course) return;
+
+        setEnrollModal(prev => ({ ...prev, enrolling: true }));
+
+        try {
+            const response = await fetch('/student/enrollment/enroll', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                },
+                body: JSON.stringify({
+                    courseID: course.courseID || course.id,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setEnrollModal(prev => ({
+                    ...prev,
+                    enrolling: false,
+                    result: 'success',
+                    message: data.message || 'Successfully enrolled!',
+                }));
+            } else {
+                setEnrollModal(prev => ({
+                    ...prev,
+                    enrolling: false,
+                    result: 'error',
+                    message: data.message || 'Enrollment failed. Please try again.',
+                }));
+            }
+        } catch (error) {
+            setEnrollModal(prev => ({
+                ...prev,
+                enrolling: false,
+                result: 'error',
+                message: 'Network error. Please try again.',
+            }));
+        }
+    };
+
+    const goToCourse = () => {
+        const url = enrollModal.course?.enroll_url;
+        closeEnrollModal();
+        if (url) {
+            window.location.href = url;
+        }
+    };
+
+    // ─── Render ────────────────────────────────────────────────────
 
     return (
         <StudentLayout
@@ -222,7 +297,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                         </select>
                                     </div>
 
-                                    {/* Interests (free text) */}
+                                    {/* Interests */}
                                     <div>
                                         <label className="block text-lg font-semibold mb-4">Interests (comma-separated)</label>
                                         <input
@@ -366,18 +441,13 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                                     ))}
                                                 </div>
 
-                                                {course.enroll_url ? (
-                                                    <Link
-                                                        href={course.enroll_url}
-                                                        className="block w-full px-4 py-2 text-center text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
-                                                    >
-                                                        Enroll Now
-                                                    </Link>
-                                                ) : (
-                                                    <button className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
-                                                        Enroll Now
-                                                    </button>
-                                                )}
+                                                {/* Enroll button — opens modal instead of direct link */}
+                                                <button
+                                                    onClick={() => openEnrollModal(course)}
+                                                    className="block w-full px-4 py-2 text-center text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+                                                >
+                                                    Enroll Now
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -393,6 +463,115 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                     )}
                 </div>
             </div>
+
+            {/* ─── Enrollment Confirmation Modal ─────────────────── */}
+            {enrollModal.open && enrollModal.course && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-black/50" onClick={closeEnrollModal}></div>
+
+                    {/* Modal */}
+                    <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+                            <h3 className="text-xl font-bold text-white">
+                                {enrollModal.result === 'success' ? 'Enrollment Confirmed!' : 'Confirm Enrollment'}
+                            </h3>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6">
+                            {enrollModal.result === null && (
+                                <>
+                                    <div className="mb-4">
+                                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                            {enrollModal.course.title}
+                                        </h4>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            Difficulty: {enrollModal.course.difficulty || 'Beginner'}
+                                        </p>
+                                        {enrollModal.course.estimated_hours && (
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                Estimated: {enrollModal.course.estimated_hours} hours
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <p className="text-gray-700 dark:text-gray-300 text-sm mb-6">
+                                        Are you sure you want to enroll in this course? You'll gain access to all learning materials, topics, and assessments.
+                                    </p>
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={closeEnrollModal}
+                                            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleEnroll}
+                                            disabled={enrollModal.enrolling}
+                                            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 rounded-lg transition"
+                                        >
+                                            {enrollModal.enrolling ? 'Enrolling...' : 'Confirm Enrollment'}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {enrollModal.result === 'success' && (
+                                <>
+                                    <div className="text-center mb-4">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
+                                            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-green-700 dark:text-green-300 font-medium">
+                                            {enrollModal.message}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={closeEnrollModal}
+                                            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition"
+                                        >
+                                            Browse More Courses
+                                        </button>
+                                        <button
+                                            onClick={goToCourse}
+                                            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+                                        >
+                                            Go to Course
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {enrollModal.result === 'error' && (
+                                <>
+                                    <div className="text-center mb-4">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full mb-4">
+                                            <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-red-700 dark:text-red-300 font-medium">
+                                            {enrollModal.message}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={closeEnrollModal}
+                                        className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+                                    >
+                                        Close
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </StudentLayout>
     );
 }

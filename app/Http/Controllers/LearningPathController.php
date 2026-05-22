@@ -247,27 +247,36 @@ class LearningPathController extends Controller
         $interestsString = is_string($rawInterests) ? $rawInterests : implode(', ', $interestsArray);
 
         $catalog = $this->courseCatalog();
+        $catalogJson = json_encode($catalog);
 
         $surveyForSave = $validated;
         $surveyForSave['interests'] = $interestsArray;
 
         try {
-            // Call Python bridge script
-            // Replace the HTTP/polling code with:
-            $scriptPath = base_path('storage/scripts/hf_recommend.py');
+            // Write catalog to temp file to avoid Windows command-line escaping issues
+            $tempFile = storage_path('app/temp_catalog_' . auth()->id() . '.json');
+            file_put_contents($tempFile, $catalogJson);
+
+             $scriptPath = base_path('storage/scripts/hf_recommend.py');  // ← MOVED HERE (before $command)
+
             $command = sprintf(
-                'python %s %s %s %s %s 2>&1',
+                'python %s %s %s %s %s %s 2>&1',
                 escapeshellarg($scriptPath),
                 escapeshellarg($formLevel),
                 escapeshellarg($interestsString),
                 escapeshellarg($background),
-                escapeshellarg($learningGoal)
+                escapeshellarg($learningGoal),
+                escapeshellarg($tempFile)  // Pass file path instead of JSON string
             );
 
             $output = shell_exec($command);
-            // Remove the "Loaded as API" line if present
+
+            // Clean up temp file
+            @unlink($tempFile);
+
+            // Parse the output ← ADD THIS BLOCK
             $outputLines = explode("\n", trim($output));
-            $jsonLine = end($outputLines); // Get the last line (the actual JSON)
+            $jsonLine = end($outputLines);
             $responseData = json_decode($jsonLine, true);
 
             if (!$responseData) {

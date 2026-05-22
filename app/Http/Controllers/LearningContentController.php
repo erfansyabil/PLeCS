@@ -234,10 +234,26 @@ class LearningContentController extends Controller
                 'contents' => $contents,
             ]);
         } elseif ($request->user()->role === 'student') {
+            // Show only enrolled courses
+            $enrolledCourseIds = \App\Models\Enrollment::where('studentID', $request->user()->id)
+                ->where('status', 'active')
+                ->pluck('courseID');
+
             $contents = LearningContent::where('type', 'course')
                 ->whereNull('parent_id')
+                ->whereIn('id', $enrolledCourseIds)
                 ->orderBy('title')
                 ->get();
+
+            // Get enrollment details for each course
+            $contents->each(function ($course) use ($request) {
+                $enrollment = \App\Models\Enrollment::where('studentID', $request->user()->id)
+                    ->where('courseID', $course->id)
+                    ->first();
+                $course->enrollment_status = $enrollment->status ?? null;
+                $course->enrollment_progress = $enrollment->progress ?? 0;
+                $course->enrolled_at = $enrollment->enrolled_at ?? null;
+            });
 
             return Inertia::render('Student/LearningContent/index', [
                 'layout' => $this->layoutForRole($request->user()->role),

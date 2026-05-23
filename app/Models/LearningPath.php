@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
-use Database\Factories\LearningPathFactory;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class LearningPath extends Model
 {
-    /** @use HasFactory<LearningPathFactory> */
-    use HasFactory;
+    use SoftDeletes;
 
     protected $primaryKey = 'pathID';
+    protected $table = 'learning_paths';
+    public $incrementing = true;
 
     protected $fillable = [
         'studentID',
-        'courseID',
         'pathName',
         'complexityLevel',
         'isAdaptive',
@@ -28,57 +27,59 @@ class LearningPath extends Model
     ];
 
     protected $casts = [
-        'path_data' => 'array',
         'isAdaptive' => 'boolean',
-        'estimatedDuration' => 'integer',
-        'currentProgress' => 'integer',
+        'currentProgress' => 'float',
+        'path_data' => 'array',
     ];
 
-    /**
-     * Get the student that owns this generated learning path.
-     */
-    public function user(): BelongsTo
+    // A learning path belongs to a student
+    public function student(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'studentID');
+        return $this->belongsTo(User::class, 'studentID', 'id');
     }
 
-    /**
-     * Filter generated paths by user ID.
-     */
-    public function scopeForUser(Builder $query, int $userId): Builder
+    // Courses in this path, ordered by the pivot's 'order' column
+    public function courses(): BelongsToMany
     {
-        return $query->where('studentID', $userId);
+        return $this->belongsToMany(
+            LearningContent::class,
+            'learning_path_courses',
+            'pathID',
+            'courseID'
+        )->withPivot('order')->orderBy('learning_path_courses.order');
     }
 
-    /**
-     * Sort newest-first by creation time.
-     */
-    public function scopeLatestFirst(Builder $query): Builder
+    // Convenience: get ordered course IDs
+    public function getOrderedCourseIdsAttribute(): array
     {
-        return $query->latest('created_at');
+        return $this->courses()->pluck('courseID')->toArray();
     }
 
-    /**
-     * Get submitted enrollment survey data from the stored path payload.
-     */
-    public function survey(): array
+    // Set the order of courses (pass an array of course IDs)
+    public function setCourseOrder(array $courseIds): void
     {
-        return data_get($this->path_data, 'survey', []);
+        foreach ($courseIds as $index => $courseId) {
+            $this->courses()->updateExistingPivot($courseId, ['order' => $index]);
+        }
     }
 
-    /**
-     * Get the raw response returned by the external recommender.
-     */
-    public function spaceResponse(): array
+    // Add a course to the end of the path
+    public function addCourse($courseId): void
     {
-        return data_get($this->path_data, 'space_response', []);
+        if (!$this->courses()->where('courseID', $courseId)->exists()) {
+            $maxOrder = $this->courses()->max('order') ?? -1;
+            $this->courses()->attach($courseId, ['order' => $maxOrder + 1]);
+        }
     }
 
-    /**
-     * Get normalized recommendations.
-     */
-    public function recommendations(): array
+    // Remove a course from the path
+    public function removeCourse($courseId): void
     {
-        return data_get($this->path_data, 'resolved_recommendations', []);
+        $this->courses()->detach($courseId);
+        // Reorder remaining courses
+        $remaining = $this->courses()->orderBy('order')->get();
+        foreach ($remaining as $idx => $course) {
+            $this->courses()->updateExistingPivot($course->id, ['order' => $idx]);
+        }
     }
 }

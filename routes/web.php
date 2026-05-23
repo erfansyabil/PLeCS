@@ -107,6 +107,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('Student/LearningPath/index');
         })->name('learning-path.index');
 
+        // UC008: Manage Learning Path - API endpoints
+        Route::prefix('/learning-path')->name('learning-path.')->group(function () 
+        {
+        Route::get('/api', [LearningPathController::class, 'show'])->name('api.show');
+        Route::put('/reorder', [LearningPathController::class, 'reorder'])->name('api.reorder');
+        Route::delete('/api', [LearningPathController::class, 'destroy'])->name('api.destroy');
+        Route::post('/generate', [LearningPathController::class, 'generateFromSurvey'])->name('api.generate');
+        });
+
         // UC007: Attempt Gamified Quizzes
         Route::get('/assessment', function () {
             return Inertia::render('Student/Assessment/index');

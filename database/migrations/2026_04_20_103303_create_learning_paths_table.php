@@ -17,9 +17,6 @@ return new class extends Migration
                   ->constrained('users', 'id')
                   ->onDelete('cascade')
                   ->comment('References User table - Student role only');
-            $table->foreignId('courseID')
-                  ->constrained('learning_contents', 'id')
-                  ->onDelete('cascade');
             $table->string('pathName', 255);
             $table->enum('complexityLevel', ['Beginner', 'Intermediate', 'Advanced'])
                   ->default('Beginner');
@@ -35,7 +32,23 @@ return new class extends Migration
             $table->enum('status', ['Active', 'Completed', 'Paused'])
                   ->default('Active');
             $table->json('path_data')->nullable();
+            $table->softDeletes();
             $table->timestamps(); // creates created_at and updated_at
+        });
+        
+        Schema::create('learning_path_courses', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('pathID')
+                  ->constrained('learning_paths', 'pathID')
+                  ->onDelete('cascade');
+            $table->foreignId('courseID')
+                  ->constrained('learning_contents', 'id')
+                  ->onDelete('cascade');
+            $table->unsignedInteger('order')->default(0);
+            $table->timestamps();
+
+            $table->unique(['pathID', 'courseID']);
+            $table->index(['pathID', 'order']);
         });
     }
 
@@ -44,8 +57,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-            Schema::disableForeignKeyConstraints();
-        Schema::dropIfExists('learning_paths');
-            Schema::enableForeignKeyConstraints();
+      Schema::disableForeignKeyConstraints();
+      Schema::dropIfExists('learning_path_courses');
+      Schema::dropIfExists('learning_paths');
+      Schema::enableForeignKeyConstraints();
     }
 };

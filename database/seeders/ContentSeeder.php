@@ -117,7 +117,7 @@ class ContentSeeder extends Seeder
             ]);
 
             // Create sample blocks for each topic based on the topic content
-            $this->seedSampleBlocks($topic->topicID, $topicData, $courseData['title']);
+            $this->seedSampleBlocks($course->id, $topic->topicID, $topicData, $courseData['title']);
         }
     }
 
@@ -192,7 +192,7 @@ class ContentSeeder extends Seeder
     /**
      * Seed sample blocks for a topic based on the topic content.
      */
-    private function seedSampleBlocks(int $topicId, array $topicData, string $courseTitle): void
+    private function seedSampleBlocks(int $learningContentId, int $topicId, array $topicData, string $courseTitle): void
     {
         $topicName = $topicData['title'];
         
@@ -225,7 +225,7 @@ class ContentSeeder extends Seeder
             ];
         }
         
-        $this->seedBlocks($topicId, $blocks);
+        $this->seedBlocks($learningContentId, $topicId, $blocks);
     }
 
     /**
@@ -339,11 +339,11 @@ print("Selamat datang", nama, "ke kelas Sains Komputer!")
     /**
      * Create ordered blocks for a topic node.
      */
-    private function seedBlocks(int $topicId, array $blocks): void
+    private function seedBlocks(int $learningContentId, int $topicId, array $blocks): void
     {
         foreach (array_values($blocks) as $index => $block) {
             LearningContentBlock::query()->create([
-                'learning_content_id' => null,
+                'learning_content_id' => $learningContentId,
                 'topic_id' => $topicId,
                 'type' => $block['type'] ?? 'text',
                 'title' => $block['title'] ?? null,
@@ -358,11 +358,11 @@ print("Selamat datang", nama, "ke kelas Sains Komputer!")
     /**
      * Create ordered attachments for a topic node.
      */
-    private function seedAttachments(int $topicId, array $attachments): void
+    private function seedAttachments(int $learningContentId, int $topicId, array $attachments): void
     {
         foreach (array_values($attachments) as $index => $attachment) {
             LearningContentAttachment::query()->create([
-                'learning_content_id' => null,
+                'learning_content_id' => $learningContentId,
                 'topic_id' => $topicId,
                 'title' => $attachment['title'] ?? null,
                 'type' => $attachment['type'] ?? 'pdf',

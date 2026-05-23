@@ -3,20 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\LearningContent;
 use App\Models\LearningPath;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class LearningPathController extends Controller
 {
+    // ┌─────────────────────────────────────────────────────────────────────────┐
+    // │                    Existing Methods (keep as is)                       │
+    // └─────────────────────────────────────────────────────────────────────────┘
+
     /**
      * Parse comma-separated keywords into an array for recommendation payloads.
-     *
-     * @return array<int, string>
      */
     private function parseKeywords(?string $keywords): array
     {
@@ -38,8 +41,7 @@ class LearningPathController extends Controller
      */
     private function courseCatalog(): array
     {
-        // Prefer the `courses` table if it exists (we may have migrated learning_contents into it).
-        if (\Illuminate\Support\Facades\Schema::hasTable('courses')) {
+        if (Schema::hasTable('courses')) {
             return Course::query()
                 ->where('isActive', true)
                 ->with([
@@ -68,7 +70,6 @@ class LearningPathController extends Controller
                 ->all();
         }
 
-        // Fallback: read directly from the learning_contents table where type = 'course'.
         return LearningContent::query()
             ->where('type', 'course')
             ->whereNull('parent_id')
@@ -102,13 +103,10 @@ class LearningPathController extends Controller
 
     /**
      * Try to match a Space recommendation back to a database course.
-     *
-     * @param array<int, array<string, mixed>> $catalog
      */
     private function matchCatalogCourse(string $needle, array $catalog): ?array
     {
         $normalizedNeedle = strtolower(trim($needle));
-        // Lightweight synonyms mapping to help match English topic names to localized course titles/topics.
         $synonyms = [
             'comput' => ['komput', 'komputer', 'sains komputer', 'asas sains komputer', 'computing'],
             'python' => ['python'],
@@ -131,15 +129,11 @@ class LearningPathController extends Controller
                     return $course;
                 }
 
-                // Try token-level and synonym matching for cross-language topics.
                 $tokens = preg_split('/[^a-z0-9]+/i', $normalizedNeedle, -1, PREG_SPLIT_NO_EMPTY);
                 foreach ($tokens as $token) {
-                    // direct token
                     if ($token !== '' && str_contains($haystack, $token)) {
                         return $course;
                     }
-
-                    // synonyms
                     foreach ($synonyms as $key => $alts) {
                         if (str_starts_with($token, $key)) {
                             foreach ($alts as $alt) {
@@ -152,16 +146,11 @@ class LearningPathController extends Controller
                 }
             }
         }
-
         return null;
     }
 
     /**
      * Normalize response payloads from the Space into enrollable recommendations.
-     *
-     * @param array<string, mixed> $responseData
-     * @param array<int, array<string, mixed>> $catalog
-     * @return array<int, array<string, mixed>>
      */
     private function resolveRecommendations(array $responseData, array $catalog): array
     {
@@ -170,7 +159,7 @@ class LearningPathController extends Controller
             ?? data_get($responseData, 'recommended_courses')
             ?? [];
 
-            $seenCourseIDs = [];
+        $seenCourseIDs = [];
 
         return collect(is_array($items) ? $items : [])
             ->map(function (mixed $item) use ($catalog, &$seenCourseIDs): ?array {
@@ -218,6 +207,63 @@ class LearningPathController extends Controller
             ->all();
     }
 
+    /**
+     * Core recommendation logic: call Hugging Face Space and return resolved courses.
+     */
+    private function getRecommendationsFromSpace(array $validated): array
+    {
+        $rawInterests = $validated['interests'] ?? [];
+        if (is_string($rawInterests)) {
+            $interestsString = $rawInterests;
+        } elseif (is_array($rawInterests)) {
+            $interestsString = implode(', ', $rawInterests);
+        } else {
+            $interestsString = '';
+        }
+
+        $learningGoal = $validated['learning_goal'] ?? $validated['career_goals'] ?? 'interest';
+        $background = $validated['background'] ?? 'none';
+        $formLevel = $validated['form_level'] ?? 'Form 1';
+
+        $catalog = $this->courseCatalog();
+        $catalogJson = json_encode($catalog);
+
+        $tempFile = storage_path('app/temp_catalog_' . auth()->id() . '.json');
+        file_put_contents($tempFile, $catalogJson);
+
+        $scriptPath = base_path('storage/scripts/hf_recommend.py');
+        $command = sprintf(
+            'python %s %s %s %s %s %s 2>&1',
+            escapeshellarg($scriptPath),
+            escapeshellarg($formLevel),
+            escapeshellarg($interestsString),
+            escapeshellarg($background),
+            escapeshellarg($learningGoal),
+            escapeshellarg($tempFile)
+        );
+
+        $output = shell_exec($command);
+        @unlink($tempFile);
+
+        $outputLines = explode("\n", trim($output));
+        $jsonLine = end($outputLines);
+        $responseData = json_decode($jsonLine, true);
+
+        if (!$responseData || isset($responseData['error']) || ($responseData['success'] ?? null) === false) {
+            Log::error('HF Space error', ['output' => $output]);
+            return [];
+        }
+
+        if (isset($responseData['recommended_topics']) && is_array($responseData['recommended_topics'])) {
+            $responseData['learning_path'] = array_map(fn($t) => ['topic' => (string) $t], $responseData['recommended_topics']);
+        }
+
+        return $this->resolveRecommendations($responseData, $catalog);
+    }
+
+    /**
+     * Existing recommend endpoint (kept for backward compatibility).
+     */
     public function recommend(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -231,103 +277,190 @@ class LearningPathController extends Controller
             'career_goals' => ['sometimes', 'string'],
         ]);
 
-        // Normalize interests
-        $rawInterests = $validated['interests'] ?? [];
-        if (is_string($rawInterests)) {
-            $interestsArray = array_values(array_filter(array_map(fn($s) => trim($s), explode(',', $rawInterests))));
-        } elseif (is_array($rawInterests)) {
-            $interestsArray = array_values(array_filter($rawInterests));
-        } else {
-            $interestsArray = [];
+        $recommendations = $this->getRecommendationsFromSpace($validated);
+
+        if (empty($recommendations)) {
+            return response()->json(['message' => 'No recommendations could be generated.'], 422);
         }
 
-        $learningGoal = $validated['learning_goal'] ?? $validated['career_goals'] ?? 'interest';
-        $background = $validated['background'] ?? 'none';
-        $formLevel = $validated['form_level'] ?? 'Form 1';
-        $interestsString = is_string($rawInterests) ? $rawInterests : implode(', ', $interestsArray);
+        return response()->json([
+            'message' => 'Recommendations generated successfully.',
+            'recommendations' => $recommendations,
+        ]);
+    }
 
-        $catalog = $this->courseCatalog();
-        $catalogJson = json_encode($catalog);
+    // ┌─────────────────────────────────────────────────────────────────────────┐
+    // │                   NEW METHODS FOR UC008 (Manage Learning Path)         │
+    // └─────────────────────────────────────────────────────────────────────────┘
 
-        $surveyForSave = $validated;
-        $surveyForSave['interests'] = $interestsArray;
+    /**
+     * Get the current active learning path for the authenticated student.
+     * GET /student/learning-path/api
+     */
+    public function show(Request $request): JsonResponse
+    {
+        $path = LearningPath::where('studentID', auth()->id())
+            ->where('status', 'Active')
+            ->with('courses')
+            ->first();
 
-        try {
-            // Write catalog to temp file to avoid Windows command-line escaping issues
-            $tempFile = storage_path('app/temp_catalog_' . auth()->id() . '.json');
-            file_put_contents($tempFile, $catalogJson);
+        if (!$path) {
+            return response()->json([
+                'learning_path' => null,
+                'message' => 'No active learning path found. Start by enrolling in a course.',
+            ]);
+        }
 
-             $scriptPath = base_path('storage/scripts/hf_recommend.py');  // ← MOVED HERE (before $command)
+        // Calculate overall progress based on average of enrolled courses' progress
+        $totalProgress = $path->courses->avg(function ($course) {
+            $enrollment = Enrollment::where('studentID', auth()->id())
+                ->where('courseID', $course->id)
+                ->first();
+            return $enrollment ? $enrollment->progress : 0;
+        }) ?? 0;
 
-            $command = sprintf(
-                'python %s %s %s %s %s %s 2>&1',
-                escapeshellarg($scriptPath),
-                escapeshellarg($formLevel),
-                escapeshellarg($interestsString),
-                escapeshellarg($background),
-                escapeshellarg($learningGoal),
-                escapeshellarg($tempFile)  // Pass file path instead of JSON string
-            );
+        $path->currentProgress = round($totalProgress, 2);
+        $path->saveQuietly();
 
-            $output = shell_exec($command);
+        return response()->json([
+            'learning_path' => [
+                'pathID' => $path->pathID,
+                'pathName' => $path->pathName,
+                'progress' => $path->currentProgress,
+                'courses' => $path->courses->map(function ($course) {
+                    $enrollment = Enrollment::where('studentID', auth()->id())
+                        ->where('courseID', $course->id)
+                        ->first();
 
-            // Clean up temp file
-            @unlink($tempFile);
+                    return [
+                        'id' => $course->id,
+                        'title' => $course->title,
+                        'description' => $course->description,
+                        'difficulty' => $course->difficulty_level ?? 'Beginner',
+                        'order' => $course->pivot->order,
+                        'progress' => $enrollment ? $enrollment->progress : 0,
+                        'enroll_url' => route('student.learning-content.show', $course->id),
+                    ];
+                })->sortBy('order')->values(),
+            ],
+        ]);
+    }
 
-            // Parse the output ← ADD THIS BLOCK
-            $outputLines = explode("\n", trim($output));
-            $jsonLine = end($outputLines);
-            $responseData = json_decode($jsonLine, true);
+    /**
+     * Reorder courses within the active learning path.
+     * PUT /student/learning-path/reorder
+     * Body: { "course_order": [45, 12, 78] }
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'course_order' => 'required|array',
+            'course_order.*' => 'integer|exists:learning_contents,id',
+        ]);
 
-            if (!$responseData) {
-                \Log::error('Failed to parse Python bridge output', ['output' => $output]);
-                return response()->json(['message' => 'Recommendation service returned invalid response.'], 502);
+        $path = LearningPath::where('studentID', auth()->id())
+            ->where('status', 'Active')
+            ->firstOrFail();
+
+        $currentCourseIds = $path->courses()->pluck('courseID')->toArray();
+        foreach ($validated['course_order'] as $courseId) {
+            if (!in_array($courseId, $currentCourseIds)) {
+                return response()->json(['message' => 'Invalid course ID in order list'], 422);
             }
+        }
 
-            if (isset($responseData['error']) || ($responseData['success'] ?? null) === false) {
-                \Log::error('HF Space returned error', ['response' => $responseData]);
-                return response()->json([
-                    'message' => 'Recommendation service error.',
-                    'error' => $responseData['error'] ?? 'Unknown error',
-                ], 502);
-            }
+        foreach ($validated['course_order'] as $index => $courseId) {
+            $path->courses()->updateExistingPivot($courseId, ['order' => $index]);
+        }
 
-            // Normalize response format
-            if (isset($responseData['recommended_topics']) && is_array($responseData['recommended_topics'])) {
-                $responseData['learning_path'] = array_map(fn($t) => ['topic' => (string) $t], $responseData['recommended_topics']);
-            }
+        return response()->json([
+            'message' => 'Course order updated successfully.',
+            'course_order' => $validated['course_order'],
+        ]);
+    }
 
-            $recommendations = $this->resolveRecommendations($responseData, $catalog);
+    /**
+     * Delete (soft delete) the active learning path.
+     * DELETE /student/learning-path/api
+     */
+    public function destroy(Request $request): JsonResponse
+    {
+        $path = LearningPath::where('studentID', auth()->id())
+            ->where('status', 'Active')
+            ->first();
 
-            // Save learning path
-            // In your recommend() method, replace the LearningPath::create() call:
-            LearningPath::create([
-                'studentID' => auth()->id(),  // instead of user_id
-                'courseID' => $recommendations[0]['course_id'] ?? null,
-                'pathName' => 'Generated Path - ' . now()->format('d/m/Y'),
-                'complexityLevel' => $responseData['complexity_level'] ?? 'beginner',
-                'estimatedDuration' => $responseData['estimated_duration_minutes'] ?? 0,
-                'currentProgress' => 0,
-                'status' => 'active',
-                'isAdaptive' => true,
-                'path_data' => [
-                    'survey' => $surveyForSave,
-                    'space_response' => $responseData,
-                    'resolved_recommendations' => $recommendations,
+        if (!$path) {
+            return response()->json(['message' => 'No active learning path to delete.'], 404);
+        }
+
+        // Optional: also remove enrollments? We'll just soft delete the path.
+        $path->delete(); // uses SoftDeletes
+
+        return response()->json(['message' => 'Learning path cleared successfully.']);
+    }
+
+    /**
+     * Generate a new learning path from survey (AI via Hugging Face).
+     * POST /student/learning-path/generate
+     * Body: { form_level, interests, background, learning_goal }
+     */
+    public function generateFromSurvey(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'form_level' => 'sometimes|string',
+            'interests' => 'required',
+            'background' => 'sometimes|string',
+            'learning_goal' => 'sometimes|string',
+        ]);
+
+        $recommendations = $this->getRecommendationsFromSpace($validated);
+
+        if (empty($recommendations)) {
+            return response()->json(['message' => 'No recommendations could be generated.'], 422);
+        }
+
+        // Deactivate current active path (soft delete)
+        $currentPath = LearningPath::where('studentID', auth()->id())
+            ->where('status', 'Active')
+            ->first();
+        if ($currentPath) {
+            $currentPath->delete();
+        }
+
+        // Create new learning path
+        $estimatedMinutes = collect($recommendations)->sum('estimated_hours') * 60;
+        $newPath = LearningPath::create([
+            'studentID' => auth()->id(),
+            'pathName' => 'AI-Generated Path - ' . now()->format('d/m/Y H:i'),
+            'complexityLevel' => 'Beginner',
+            'isAdaptive' => true,
+            'estimatedDuration' => $estimatedMinutes,
+            'currentProgress' => 0,
+            'status' => 'Active',
+            'path_data' => ['survey' => $validated, 'recommendations' => $recommendations],
+        ]);
+
+        // Attach courses in order and create enrollments
+        foreach ($recommendations as $index => $rec) {
+            $newPath->courses()->attach($rec['course_id'], ['order' => $index]);
+
+            Enrollment::updateOrCreate(
+                [
+                    'studentID' => auth()->id(),
+                    'courseID' => $rec['course_id'],
                 ],
-            ]);
-
-            return response()->json([
-                'message' => 'Recommendations generated successfully.',
-                'recommendations' => $recommendations,
-                'raw' => $responseData,
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error('HF Space bridge error', ['error' => $e->getMessage()]);
-            return response()->json([
-                'message' => 'Unable to connect to recommendation service.',
-            ], 502);
+                [
+                    'pathID' => $newPath->pathID,
+                    'status' => 'active',
+                    'progress' => 0,
+                    'enrolled_at' => now(),
+                ]
+            );
         }
+
+        return response()->json([
+            'message' => 'New learning path generated successfully.',
+            'learning_path' => $newPath->load('courses'),
+        ]);
     }
 }

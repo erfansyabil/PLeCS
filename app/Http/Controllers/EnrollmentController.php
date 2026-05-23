@@ -6,6 +6,7 @@ use App\Models\Enrollment;
 use App\Models\LearningContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\LearningPath;
 
 class EnrollmentController extends Controller
 {
@@ -16,36 +17,46 @@ class EnrollmentController extends Controller
     {
         $validated = $request->validate([
             'courseID' => 'required|integer|exists:learning_contents,id',
-            'pathID' => 'nullable|integer|exists:learning_paths,pathID',
         ]);
 
         $studentID = auth()->id();
 
-        // Check if already enrolled
-        $existing = Enrollment::where('studentID', $studentID)
-            ->where('courseID', $validated['courseID'])
+        // Get or create the student's active learning path
+        $learningPath = LearningPath::where('studentID', $studentID)
+            ->where('status', 'Active')
             ->first();
 
-        if ($existing) {
-            return response()->json([
-                'message' => 'You are already enrolled in this course.',
-                'enrollment' => $existing->load('course'),
-            ], 200);
+        if (!$learningPath) {
+            // Create a new active path if none exists
+            $learningPath = LearningPath::create([
+                'studentID' => $studentID,
+                'pathName' => 'My Learning Path',
+                'complexityLevel' => 'Beginner',
+                'status' => 'Active',
+            ]);
         }
 
-        // Create enrollment
-        $enrollment = Enrollment::create([
-            'studentID' => $studentID,
-            'courseID' => $validated['courseID'],
-            'pathID' => $validated['pathID'] ?? null,
-            'status' => 'active',
-            'progress' => 0,
-            'enrolled_at' => now(),
-        ]);
+        // Add course to the path (if not already present)
+        $learningPath->addCourse($validated['courseID']);
+
+        // Create or update enrollment
+        $enrollment = Enrollment::updateOrCreate(
+            [
+                'studentID' => $studentID,
+                'courseID' => $validated['courseID'],
+            ],
+            [
+                'pathID' => $learningPath->pathID,
+                'status' => 'active',
+                'progress' => 0,
+                'enrolled_at' => now(),
+            ]
+        );
 
         return response()->json([
             'message' => 'Successfully enrolled in the course!',
             'enrollment' => $enrollment->load('course'),
+            'learning_path' => $learningPath->load('courses'),
         ], 201);
     }
 

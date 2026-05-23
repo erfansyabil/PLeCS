@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('learning_content_id')
                 ->constrained('learning_contents')
                 ->cascadeOnDelete();
+            $table->unsignedBigInteger('topic_id')->nullable();
+            $table->foreign('topic_id')->references('topicID')->on('topics')->cascadeOnDelete();
             $table->string('title')->nullable();
             $table->string('type', 20); // pdf, image
             $table->string('file_path');

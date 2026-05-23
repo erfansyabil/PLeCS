@@ -15,6 +15,7 @@ class Enrollment extends Model
         'progress',
         'enrolled_at',
         'completed_at',
+        'order',
     ];
 
     protected $casts = [

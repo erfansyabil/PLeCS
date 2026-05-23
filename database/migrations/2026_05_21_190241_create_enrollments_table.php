@@ -16,7 +16,8 @@ return new class extends Migration
             // Fix: pathID references learning_paths.pathID
             $table->unsignedBigInteger('pathID')->nullable();
             $table->foreign('pathID')->references('pathID')->on('learning_paths')->onDelete('set null');
-            
+            $table->integer('order')->default(0);
+
             $table->string('status')->default('active');
             $table->integer('progress')->default(0);
             $table->timestamp('enrolled_at')->useCurrent();

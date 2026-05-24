@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\LearningContent;
+use Inertia\Inertia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\LearningPath;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class EnrollmentController extends Controller
 {
@@ -20,30 +22,34 @@ class EnrollmentController extends Controller
         ]);
 
         $studentID = auth()->id();
+        $courseID = $validated['courseID'];
 
-        // Get or create the student's active learning path
+        // Get or create active learning path for the student
         $learningPath = LearningPath::where('studentID', $studentID)
             ->where('status', 'Active')
             ->first();
 
         if (!$learningPath) {
-            // Create a new active path if none exists
+            // Create a default learning path if none exists
             $learningPath = LearningPath::create([
                 'studentID' => $studentID,
                 'pathName' => 'My Learning Path',
-                'complexityLevel' => 'Beginner',
                 'status' => 'Active',
+                'complexityLevel' => 'Beginner',
             ]);
         }
 
-        // Add course to the path (if not already present)
-        $learningPath->addCourse($validated['courseID']);
+        // Add course to learning path (if not already added)
+        if (!$learningPath->courses()->where('courseID', $courseID)->exists()) {
+            $maxOrder = $learningPath->courses()->max('order') ?? -1;
+            $learningPath->courses()->attach($courseID, ['order' => $maxOrder + 1]);
+        }
 
         // Create or update enrollment
         $enrollment = Enrollment::updateOrCreate(
             [
                 'studentID' => $studentID,
-                'courseID' => $validated['courseID'],
+                'courseID' => $courseID,
             ],
             [
                 'pathID' => $learningPath->pathID,
@@ -102,6 +108,32 @@ class EnrollmentController extends Controller
 
         return response()->json([
             'message' => 'Successfully dropped the course.',
+        ]);
+    }
+
+    /**
+     * Get enrollment history for the authenticated student (all statuses, paginated).
+     */
+    public function history(Request $request)
+    {
+        $enrollments = Enrollment::where('studentID', auth()->id())
+            ->with('course')  // eager load course details
+            ->orderBy('enrolled_at', 'desc')
+            ->paginate(10);   // 10 per page
+
+        return Inertia::render('Student/Enrollment/history', [
+            'enrollments' => $enrollments->through(function ($enrollment) {
+                return [
+                    'id' => $enrollment->id,
+                    'course_id' => $enrollment->courseID,
+                    'course_title' => $enrollment->course->title ?? 'Unknown Course',
+                    'status' => $enrollment->status,
+                    'progress' => $enrollment->progress,
+                    'enrolled_at' => $enrollment->enrolled_at ? $enrollment->enrolled_at->format('Y-m-d H:i') : null,
+                    'completed_at' => $enrollment->completed_at ? $enrollment->completed_at->format('Y-m-d H:i') : null,
+                    'course_url' => route('student.learning-content.show', $enrollment->courseID),
+                ];
+            }),
         ]);
     }
 }

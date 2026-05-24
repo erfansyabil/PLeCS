@@ -37,6 +37,14 @@ export default function StudentLayout({ header, children }) {
                                     Enrollment
                                 </NavLink>
                                 <NavLink
+                                    href={route('student.enrollment.history')}
+                                    active={
+                                        route().current('student.enrollment.history')
+                                    }
+                                >
+                                    Enrollment History
+                                </NavLink>
+                                <NavLink
                                     href={route('student.learning-content.index')}
                                     active={
                                         route().current('student.learning-content.index') ||
@@ -45,6 +53,16 @@ export default function StudentLayout({ header, children }) {
                                     }
                                 >
                                     Learning Content
+                                </NavLink>
+                                <NavLink
+                                    href={route('student.learning-path.index')}
+                                    active={
+                                        route().current('student.learning-path.index') ||
+                                        route().current('student.learning-path.show') ||
+                                        route().current('student.learning-path.topic.show')
+                                    }
+                                >
+                                    My Learning Path
                                 </NavLink>
                                 <NavLink
                                     href={route('student.assessment.index')}

@@ -82,4 +82,26 @@ class LearningPath extends Model
             $this->courses()->updateExistingPivot($course->id, ['order' => $idx]);
         }
     }
+
+    // In LearningPath model or a service class
+    public function getNextRecommendedCourse()
+    {
+        // Get all course IDs in this path, ordered by pivot 'order'
+        $orderedCourseIds = $this->courses()->orderBy('order')->pluck('courseID')->toArray();
+        
+        // Get IDs of courses the student is enrolled in (active or completed)
+        $enrolledCourseIds = Enrollment::where('studentID', $this->studentID)
+            ->whereIn('courseID', $orderedCourseIds)
+            ->pluck('courseID')
+            ->toArray();
+        
+        // Find first course in ordered list that is not enrolled
+        foreach ($orderedCourseIds as $courseId) {
+            if (!in_array($courseId, $enrolledCourseIds)) {
+                return LearningContent::find($courseId);
+            }
+        }
+        
+        return null; // All courses enrolled
+    }
 }

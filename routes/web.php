@@ -101,7 +101,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/enrollment/my-courses', [EnrollmentController::class, 'myEnrollments'])->name('enrollment.my-courses');
         Route::get('/enrollment/check/{courseID}', [EnrollmentController::class, 'check'])->name('enrollment.check');
         Route::delete('/enrollment/{enrollmentID}/drop', [EnrollmentController::class, 'drop'])->name('enrollment.drop');
+        // Enrollment history page
+        Route::get('/enrollment/history', [EnrollmentController::class, 'history'])
+            ->name('enrollment.history');
 
+        
         // UC008: Manage Learning Path
         Route::get('/learning-path', function () {
             return Inertia::render('Student/LearningPath/index');

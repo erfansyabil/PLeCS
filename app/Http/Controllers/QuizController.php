@@ -2,101 +2,159 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LearningContent;
+use App\Models\Quiz;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class QuizController extends Controller
 {
-    /**
-     * Display a listing of quizzes and exercises and coding exercises.
-     */
-    public function index(Request $request)
+    private function courseOptions()
     {
-        // TODO: Load quizzes and exercises from a Quiz model when available.
-        return Inertia::render('Admin/QuizzesAndExercises/index', [
-            'layout' => 'AdministratorLayout',
-            // 'quizzesandexercisesandexercises' => Quiz::all(),
+        return LearningContent::query()
+            ->where('type', 'course')
+            ->orderBy('title')
+            ->get(['id', 'title']);
+    }
+
+    private function decodeQuestions(string $questionsJson): array
+    {
+        $decoded = json_decode($questionsJson, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    public function index()
+    {
+        $quizzes = Quiz::query()
+            ->with('course:id,title')
+            ->latest()
+            ->get()
+            ->map(fn (Quiz $quiz) => [
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+                'description' => $quiz->description,
+                'difficulty_level' => $quiz->difficulty_level,
+                'points' => $quiz->points,
+                'is_published' => $quiz->is_published,
+                'course' => [
+                    'id' => $quiz->course?->id,
+                    'title' => $quiz->course?->title,
+                ],
+                'created_at' => optional($quiz->created_at)?->format('Y-m-d H:i'),
+            ])
+            ->values();
+
+        return Inertia::render('Admin/Quizzes/index', [
+            'quizzes' => $quizzes,
         ]);
     }
 
-    /**
-     * Show the form for creating a new quiz.
-     */
-    public function create(Request $request)
+    public function create()
     {
-        return Inertia::render('Admin/QuizzesAndExercises/create', [
-            'layout' => 'AdministratorLayout',
+        return Inertia::render('Admin/Quizzes/create', [
+            'courses' => $this->courseOptions(),
         ]);
     }
 
-    /**
-     * Store a newly created quiz.
-     */
     public function store(Request $request)
     {
-        // TODO: validate and persist the new quiz or coding exercise.
-        // $validated = $request->validate([
-        //     'title' => 'required|string|max:255',
-        //     'description' => 'nullable|string',
-        //     'type' => 'required|in:quiz,coding',
-        //     'payload' => 'required|array',
-        // ]);
-        // Quiz::create($validated);
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'course_id' => ['required', 'integer', Rule::exists('learning_contents', 'id')->where('type', 'course')],
+            'difficulty_level' => ['required', Rule::in(['Beginner', 'Intermediate', 'Advanced'])],
+            'points' => ['required', 'integer', 'min:1'],
+            'questions_json' => ['required', 'json'],
+            'is_published' => ['nullable', 'boolean'],
+        ]);
 
-        return redirect()->route('admin.quizzesandexercises.index');
+        Quiz::create([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'course_id' => $validated['course_id'],
+            'difficulty_level' => $validated['difficulty_level'],
+            'points' => $validated['points'],
+            'questions' => $this->decodeQuestions($validated['questions_json']),
+            'is_published' => (bool) ($validated['is_published'] ?? false),
+            'published_at' => ($validated['is_published'] ?? false) ? now() : null,
+        ]);
+
+        return redirect()->route('admin.quizzes.index');
     }
 
-    /**
-     * Display the specified quiz.
-     */
-    public function show(Request $request, $id)
+    public function show(Quiz $quiz)
     {
-        // $quiz = Quiz::findOrFail($id);
-        return Inertia::render('Admin/QuizzesAndExercises/show', [
-            'layout' => 'AdministratorLayout',
-            'quizId' => $id,
-            // 'quiz' => $quiz,
+        $quiz->load('course:id,title');
+
+        return Inertia::render('Admin/Quizzes/show', [
+            'quiz' => [
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+                'description' => $quiz->description,
+                'course' => [
+                    'id' => $quiz->course?->id,
+                    'title' => $quiz->course?->title,
+                ],
+                'difficulty_level' => $quiz->difficulty_level,
+                'points' => $quiz->points,
+                'questions' => $quiz->questions ?? [],
+                'is_published' => $quiz->is_published,
+                'published_at' => optional($quiz->published_at)?->format('Y-m-d H:i'),
+            ],
         ]);
     }
 
-    /**
-     * Show the form for editing the specified quiz.
-     */
-    public function edit(Request $request, $id)
+    public function edit(Quiz $quiz)
     {
-        // $quiz = Quiz::findOrFail($id);
-        return Inertia::render('Admin/QuizzesAndExercises/edit', [
-            'layout' => 'AdministratorLayout',
-            'quizId' => $id,
-            // 'quiz' => $quiz,
+        $quiz->load('course:id,title');
+
+        return Inertia::render('Admin/Quizzes/edit', [
+            'courses' => $this->courseOptions(),
+            'quiz' => [
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+                'description' => $quiz->description,
+                'course_id' => $quiz->course_id,
+                'difficulty_level' => $quiz->difficulty_level,
+                'points' => $quiz->points,
+                'questions_json' => json_encode($quiz->questions ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                'is_published' => $quiz->is_published,
+            ],
         ]);
     }
 
-    /**
-     * Update the specified quiz.
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, Quiz $quiz)
     {
-        // $quiz = Quiz::findOrFail($id);
-        // $validated = $request->validate([
-        //     'title' => 'required|string|max:255',
-        //     'description' => 'nullable|string',
-        //     'type' => 'required|in:quiz,coding',
-        //     'payload' => 'required|array',
-        // ]);
-        // $quiz->update($validated);
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'course_id' => ['required', 'integer', Rule::exists('learning_contents', 'id')->where('type', 'course')],
+            'difficulty_level' => ['required', Rule::in(['Beginner', 'Intermediate', 'Advanced'])],
+            'points' => ['required', 'integer', 'min:1'],
+            'questions_json' => ['required', 'json'],
+            'is_published' => ['nullable', 'boolean'],
+        ]);
 
-        return redirect()->route('admin.quizzesandexercises.index');
+        $quiz->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'course_id' => $validated['course_id'],
+            'difficulty_level' => $validated['difficulty_level'],
+            'points' => $validated['points'],
+            'questions' => $this->decodeQuestions($validated['questions_json']),
+            'is_published' => (bool) ($validated['is_published'] ?? false),
+            'published_at' => ($validated['is_published'] ?? false) ? ($quiz->published_at ?? now()) : null,
+        ]);
+
+        return redirect()->route('admin.quizzes.index');
     }
 
-    /**
-     * Remove the specified quiz.
-     */
-    public function destroy(Request $request, $id)
+    public function destroy(Quiz $quiz)
     {
-        // $quiz = Quiz::findOrFail($id);
-        // $quiz->delete();
+        $quiz->delete();
 
-        return redirect()->route('admin.quizzesandexercises.index');
+        return redirect()->route('admin.quizzes.index');
     }
 }

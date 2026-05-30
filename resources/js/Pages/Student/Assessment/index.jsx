@@ -1,35 +1,13 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function AssessmentIndex({ auth }) {
-    const courses = [
-        {
-            id: 1,
-            title: 'Introduction to AI',
-            description: 'Learn the basics of Artificial Intelligence and its real-world applications.',
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Essentials',
-            description: 'Understand security threats, vulnerabilities, and basic protection methods.',
-        },
-        {
-            id: 3,
-            title: 'Multimedia Design',
-            description: 'Explore design principles, animation, and media tools.',
-        },
-        {
-            id: 4,
-            title: 'Web Development',
-            description: 'Build websites using HTML, CSS, JavaScript, and backend basics.',
-        },
-    ];
+export default function AssessmentIndex({ courses = [] }) {
 
     return (
         <StudentLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Assessment
+                    Assessment Hub
                 </h2>
             }
         >
@@ -39,10 +17,9 @@ export default function AssessmentIndex({ auth }) {
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
-                                Welcome to the Assessment module. Here you attempt a quiz to enhance your understanding!
+                                Open an enrolled course to work through quizzes and coding exercises tied to that course.
                             </p>
 
-                            {/* Grid of Course Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {courses.map((course) => (
                                     <div
@@ -53,17 +30,27 @@ export default function AssessmentIndex({ auth }) {
                                             {course.title}
                                         </h3>
                                         <p className="text-gray-600 dark:text-gray-300 text-sm">
-                                            {course.description}
+                                            {course.description ?? 'No description available.'}
                                         </p>
+                                        <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
+                                            <span>{course.quizzes_count ?? 0} quizzes</span>
+                                            <span>{course.coding_exercises_count ?? 0} exercises</span>
+                                        </div>
                                         <Link
-                                            href={route('student.assessment.show', 1)} // assuming 1 is a placeholder course ID
-                                            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                            href={route('student.assessment.show', course.id)}
+                                            className="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                                         >
-                                            Start Quiz
+                                            Open assessments
                                         </Link>
                                     </div>
                                 ))}
                             </div>
+
+                            {courses.length === 0 && (
+                                <div className="mt-6 rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-500 dark:text-gray-300">
+                                    You are not enrolled in any courses yet.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

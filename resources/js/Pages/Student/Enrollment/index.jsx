@@ -6,6 +6,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const [showRecommendations, setShowRecommendations] = useState(false);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [savingPath, setSavingPath] = useState(false);
     const [completedSurvey, setCompletedSurvey] = useState(false);
 
     // Enrollment modal state
@@ -179,6 +180,32 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
         setShowRecommendations(false);
         setRecommendations([]);
         setCompletedSurvey(false);
+    };
+
+    const handleSaveLearningPath = async () => {
+        setSavingPath(true);
+
+        try {
+            const response = await fetch(route('student.learning-path.api.generate'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                const payload = await response.json().catch(() => ({}));
+                throw new Error(payload.message || 'Unable to save learning path.');
+            }
+
+            window.location.href = route('student.learning-path.index');
+        } catch (error) {
+            alert(error.message || 'Unable to save learning path.');
+        } finally {
+            setSavingPath(false);
+        }
     };
 
     // ─── Enrollment handlers ───────────────────────────────────────
@@ -381,12 +408,21 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                             Based on your survey responses, we recommend the following courses that match your interests and level.
                                         </p>
                                     </div>
-                                    <button
-                                        onClick={resetSurvey}
-                                        className="px-4 py-2 text-indigo-600 dark:text-indigo-400 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900 transition"
-                                    >
-                                        Retake Survey
-                                    </button>
+                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                        <button
+                                            onClick={handleSaveLearningPath}
+                                            disabled={savingPath}
+                                            className="px-4 py-2 text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 rounded-lg transition"
+                                        >
+                                            {savingPath ? 'Saving Path...' : 'Save Learning Path'}
+                                        </button>
+                                        <button
+                                            onClick={resetSurvey}
+                                            className="px-4 py-2 text-indigo-600 dark:text-indigo-400 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900 transition"
+                                        >
+                                            Retake Survey
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

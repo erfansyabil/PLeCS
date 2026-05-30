@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\LearningContentAttachment;
 use App\Models\LearningContentBlock;
+use App\Models\CodingExercise;
+use App\Models\Quiz;
 
 class LearningContent extends Model
 {
@@ -42,5 +44,15 @@ class LearningContent extends Model
     public function blocks(): HasMany
     {
         return $this->hasMany(LearningContentBlock::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(Quiz::class, 'course_id');
+    }
+
+    public function codingExercises(): HasMany
+    {
+        return $this->hasMany(CodingExercise::class, 'course_id');
     }
 }

@@ -6,7 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const appName = import.meta.env.VITE_APP_NAME || 'PLeCS - Personalized Learning for Computer Science';
+const appName = import.meta.env.VITE_APP_NAME || 'PLeCS';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\LearningPathController;
 use App\Http\Controllers\AdditionalLearningContentController;
+use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\CodingExerciseController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\Auth\GoogleController;
@@ -118,15 +120,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/reorder', [LearningPathController::class, 'reorder'])->name('api.reorder');
         Route::delete('/api', [LearningPathController::class, 'destroy'])->name('api.destroy');
         Route::post('/generate', [LearningPathController::class, 'generateFromSurvey'])->name('api.generate');
+        Route::post('/{path}/activate', [LearningPathController::class, 'activateGeneratedPath'])
+            ->whereNumber('path')
+            ->name('api.activate');
         });
 
-        // UC007: Attempt Gamified Quizzes
+        // UC007: Attempt Gamified Quizzes and Coding Exercises
         Route::get('/assessment', function () {
-            return Inertia::render('Student/Assessment/index');
+            return app(AssessmentController::class)->index();
         })->name('assessment.index');
-        Route::get('/assessment/{courseId}', function ($courseId) {
-            return Inertia::render('Student/Assessment/quiz', ['courseId' => $courseId]);
-        })->name('assessment.show');
+        Route::get('/assessment/{course}', [AssessmentController::class, 'showCourse'])
+            ->whereNumber('course')
+            ->name('assessment.show');
+        Route::get('/assessment/{course}/quizzes/{quiz}', [AssessmentController::class, 'showQuiz'])
+            ->whereNumber('course')
+            ->whereNumber('quiz')
+            ->name('assessment.quiz.show');
+        Route::post('/assessment/{course}/quizzes/{quiz}', [AssessmentController::class, 'storeQuizAttempt'])
+            ->whereNumber('course')
+            ->whereNumber('quiz')
+            ->name('assessment.quiz.store');
+        Route::get('/assessment/{course}/coding-exercises/{codingExercise}', [AssessmentController::class, 'showCodingExercise'])
+            ->whereNumber('course')
+            ->whereNumber('codingExercise')
+            ->name('assessment.coding-exercise.show');
+        Route::post('/assessment/{course}/coding-exercises/{codingExercise}', [AssessmentController::class, 'storeCodingExerciseAttempt'])
+            ->whereNumber('course')
+            ->whereNumber('codingExercise')
+            ->name('assessment.coding-exercise.store');
 
         // UC011: View Performance Analytics
         Route::get('/progress', function () {
@@ -219,8 +240,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/learning-content/editor-image', [LearningContentController::class, 'uploadEditorImage'])
             ->name('learning-content.editor-image');
 
-        // UC009: Manage Quizzes and Coding Exercises
+        // UC009: Manage Quizzes
         Route::resource('quizzes', QuizController::class);
+        // UC009: Manage Coding Exercises
+        Route::resource('coding-exercises', CodingExerciseController::class);
 
     });
 

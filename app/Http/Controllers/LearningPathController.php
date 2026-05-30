@@ -9,6 +9,7 @@ use App\Models\LearningPath;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -208,6 +209,79 @@ class LearningPathController extends Controller
     }
 
     /**
+     * Serialize a path for the student UI.
+     */
+    private function formatLearningPath(LearningPath $path): array
+    {
+        $path->loadMissing('courses');
+
+        return [
+            'pathID' => $path->pathID,
+            'pathName' => $path->pathName,
+            'status' => $path->status,
+            'progress' => (float) $path->currentProgress,
+            'courses' => $path->courses->map(function ($course) {
+                $enrollment = Enrollment::where('studentID', auth()->id())
+                    ->where('courseID', $course->id)
+                    ->first();
+
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'description' => $course->description,
+                    'difficulty' => $course->difficulty_level ?? 'Beginner',
+                    'order' => $course->pivot->order,
+                    'progress' => $enrollment ? $enrollment->progress : 0,
+                    'enroll_url' => route('student.learning-content.show', $course->id),
+                ];
+            })->sortBy('order')->values(),
+        ];
+    }
+
+    /**
+     * Serialize the next suggested course for a path.
+     */
+    private function formatNextCourse(?LearningContent $course): ?array
+    {
+        if (! $course) {
+            return null;
+        }
+
+        return [
+            'id' => $course->id,
+            'title' => $course->title,
+            'description' => $course->description,
+            'difficulty' => $course->difficulty_level ?? 'Beginner',
+            'enroll_url' => route('student.learning-content.show', $course->id),
+        ];
+    }
+
+    /**
+     * Recompute the path progress from enrolled courses.
+     */
+    private function syncPathProgress(LearningPath $path): float
+    {
+        $courseIds = $path->courses()->pluck('courseID');
+
+        if ($courseIds->isEmpty()) {
+            $path->currentProgress = 0;
+            $path->saveQuietly();
+
+            return 0;
+        }
+
+        $progress = Enrollment::query()
+            ->where('studentID', auth()->id())
+            ->whereIn('courseID', $courseIds)
+            ->avg('progress') ?? 0;
+
+        $path->currentProgress = round((float) $progress, 2);
+        $path->saveQuietly();
+
+        return $path->currentProgress;
+    }
+
+    /**
      * Core recommendation logic: call Hugging Face Space and return resolved courses.
      */
     private function getRecommendationsFromSpace(array $validated): array
@@ -299,50 +373,44 @@ class LearningPathController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        $path = LearningPath::where('studentID', auth()->id())
+        $activePath = LearningPath::where('studentID', auth()->id())
             ->where('status', 'Active')
             ->with('courses')
             ->first();
 
-        if (!$path) {
+        $draftPath = LearningPath::where('studentID', auth()->id())
+            ->where('status', 'Paused')
+            ->with('courses')
+            ->latest('updated_at')
+            ->first();
+
+        if (! $activePath && ! $draftPath) {
             return response()->json([
                 'learning_path' => null,
+                'draft_learning_path' => null,
                 'message' => 'No active learning path found. Start by enrolling in a course.',
             ]);
         }
 
-        // Calculate overall progress based on average of enrolled courses' progress
-        $totalProgress = $path->courses->avg(function ($course) {
-            $enrollment = Enrollment::where('studentID', auth()->id())
-                ->where('courseID', $course->id)
-                ->first();
-            return $enrollment ? $enrollment->progress : 0;
-        }) ?? 0;
+        $learningPathPayload = null;
 
-        $path->currentProgress = round($totalProgress, 2);
-        $path->saveQuietly();
+        if ($activePath) {
+            $this->syncPathProgress($activePath);
+            $learningPathPayload = $this->formatLearningPath($activePath);
+            $learningPathPayload['next_course'] = $this->formatNextCourse($activePath->getNextRecommendedCourse());
+        }
+
+        $draftPathPayload = null;
+
+        if ($draftPath) {
+            $this->syncPathProgress($draftPath);
+            $draftPathPayload = $this->formatLearningPath($draftPath);
+            $draftPathPayload['next_course'] = null;
+        }
 
         return response()->json([
-            'learning_path' => [
-                'pathID' => $path->pathID,
-                'pathName' => $path->pathName,
-                'progress' => $path->currentProgress,
-                'courses' => $path->courses->map(function ($course) {
-                    $enrollment = Enrollment::where('studentID', auth()->id())
-                        ->where('courseID', $course->id)
-                        ->first();
-
-                    return [
-                        'id' => $course->id,
-                        'title' => $course->title,
-                        'description' => $course->description,
-                        'difficulty' => $course->difficulty_level ?? 'Beginner',
-                        'order' => $course->pivot->order,
-                        'progress' => $enrollment ? $enrollment->progress : 0,
-                        'enroll_url' => route('student.learning-content.show', $course->id),
-                    ];
-                })->sortBy('order')->values(),
-            ],
+            'learning_path' => $learningPathPayload,
+            'draft_learning_path' => $draftPathPayload,
         ]);
     }
 
@@ -360,7 +428,14 @@ class LearningPathController extends Controller
 
         $path = LearningPath::where('studentID', auth()->id())
             ->where('status', 'Active')
-            ->firstOrFail();
+            ->first();
+
+        if (! $path) {
+            $path = LearningPath::where('studentID', auth()->id())
+                ->where('status', 'Paused')
+                ->latest('updated_at')
+                ->firstOrFail();
+        }
 
         $currentCourseIds = $path->courses()->pluck('courseID')->toArray();
         foreach ($validated['course_order'] as $courseId) {
@@ -431,48 +506,80 @@ class LearningPathController extends Controller
             return response()->json(['message' => 'No recommendations could be generated.'], 422);
         }
 
-        // Deactivate current active path (soft delete)
-        $currentPath = LearningPath::where('studentID', auth()->id())
-            ->where('status', 'Active')
-            ->first();
-        if ($currentPath) {
-            $currentPath->delete();
-        }
-
-        // Create new learning path
+        // Create a draft path so the student can review it before activation.
         $estimatedMinutes = collect($recommendations)->sum('estimated_hours') * 60;
         $newPath = LearningPath::create([
             'studentID' => auth()->id(),
-            'pathName' => 'AI-Generated Path - ' . now()->format('d/m/Y H:i'),
+            'pathName' => 'Draft Learning Path - ' . now()->format('d/m/Y H:i'),
             'complexityLevel' => 'Beginner',
             'isAdaptive' => true,
             'estimatedDuration' => $estimatedMinutes,
             'currentProgress' => 0,
-            'status' => 'Active',
+            'status' => 'Paused',
             'path_data' => ['survey' => $validated, 'recommendations' => $recommendations],
         ]);
 
-        // Attach courses in order and create enrollments
+        // Attach courses in order; activation happens explicitly from the UI.
         foreach ($recommendations as $index => $rec) {
             $newPath->courses()->attach($rec['course_id'], ['order' => $index]);
-
-            Enrollment::updateOrCreate(
-                [
-                    'studentID' => auth()->id(),
-                    'courseID' => $rec['course_id'],
-                ],
-                [
-                    'pathID' => $newPath->pathID,
-                    'status' => 'active',
-                    'progress' => 0,
-                    'enrolled_at' => now(),
-                ]
-            );
         }
 
         return response()->json([
-            'message' => 'New learning path generated successfully.',
-            'learning_path' => $newPath->load('courses'),
+            'message' => 'Draft learning path generated successfully.',
+            'learning_path' => $this->formatLearningPath($newPath),
+        ]);
+    }
+
+    /**
+     * Activate a draft learning path and sync enrollments.
+     */
+    public function activateGeneratedPath(Request $request, int $pathId): JsonResponse
+    {
+        $path = LearningPath::where('studentID', auth()->id())
+            ->where('pathID', $pathId)
+            ->where('status', 'Paused')
+            ->with('courses')
+            ->firstOrFail();
+
+        DB::transaction(function () use ($path) {
+            $currentActive = LearningPath::where('studentID', auth()->id())
+                ->where('status', 'Active')
+                ->first();
+
+            if ($currentActive && $currentActive->pathID !== $path->pathID) {
+                $currentActive->update(['status' => 'Paused']);
+            }
+
+            $path->update([
+                'status' => 'Active',
+                'currentProgress' => $path->currentProgress ?? 0,
+            ]);
+
+            foreach ($path->courses as $course) {
+                $existingEnrollment = Enrollment::where('studentID', auth()->id())
+                    ->where('courseID', $course->id)
+                    ->first();
+
+                Enrollment::updateOrCreate(
+                    [
+                        'studentID' => auth()->id(),
+                        'courseID' => $course->id,
+                    ],
+                    [
+                        'pathID' => $path->pathID,
+                        'status' => 'active',
+                        'progress' => $existingEnrollment?->progress ?? 0,
+                        'enrolled_at' => $existingEnrollment?->enrolled_at ?? now(),
+                    ]
+                );
+            }
+
+            $this->syncPathProgress($path);
+        });
+
+        return response()->json([
+            'message' => 'Draft learning path activated successfully.',
+            'learning_path' => $this->formatLearningPath($path->fresh('courses')),
         ]);
     }
 }

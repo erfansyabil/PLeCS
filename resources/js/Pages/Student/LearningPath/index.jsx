@@ -7,8 +7,10 @@ import { Link } from '@inertiajs/react';
 
 export default function LearningPathIndex({ auth }) {
     const [learningPath, setLearningPath] = useState(null);
+    const [draftLearningPath, setDraftLearningPath] = useState(null);
     const [loading, setLoading] = useState(true);
     const [reordering, setReordering] = useState(false);
+    const [activating, setActivating] = useState(false);
 
     useEffect(() => {
         fetchLearningPath();
@@ -19,6 +21,7 @@ export default function LearningPathIndex({ auth }) {
             const res = await fetch('/student/learning-path/api');
             const data = await res.json();
             setLearningPath(data.learning_path);
+            setDraftLearningPath(data.draft_learning_path);
         } catch (error) {
             console.error('Failed to fetch learning path:', error);
         } finally {
@@ -61,8 +64,37 @@ export default function LearningPathIndex({ auth }) {
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
             });
             setLearningPath(null);
+            setDraftLearningPath(null);
         } catch (error) {
             console.error('Failed to clear path:', error);
+        }
+    };
+
+    const handleActivateDraft = async () => {
+        if (!draftLearningPath) return;
+
+        setActivating(true);
+
+        try {
+            const response = await fetch(route('student.learning-path.api.activate', { path: draftLearningPath.pathID }), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            if (!response.ok) {
+                const payload = await response.json().catch(() => ({}));
+                throw new Error(payload.message || 'Unable to activate the draft path.');
+            }
+
+            await fetchLearningPath();
+        } catch (error) {
+            console.error('Failed to activate draft path:', error);
+            alert(error.message || 'Unable to activate the draft path.');
+        } finally {
+            setActivating(false);
         }
     };
 
@@ -93,6 +125,34 @@ export default function LearningPathIndex({ auth }) {
                                 You don’t have an active learning path yet. 
                                 <Link href="/student/enrollment" className="text-indigo-600 ml-1">Take the survey</Link> to get started.
                             </p>
+                        )}
+
+                        {draftLearningPath && (
+                            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <h4 className="font-semibold text-amber-900">Draft Learning Path Ready</h4>
+                                        <p className="text-sm text-amber-800">
+                                            {draftLearningPath.pathName} is saved as a draft. Activate it when you want these courses to become your active path.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleActivateDraft}
+                                        disabled={activating}
+                                        className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:bg-amber-400"
+                                    >
+                                        {activating ? 'Activating...' : 'Activate Draft Path'}
+                                    </button>
+                                </div>
+                                <div className="mt-4 space-y-2">
+                                    {draftLearningPath.courses?.map((course, index) => (
+                                        <div key={course.id} className="text-sm text-amber-900 flex items-center justify-between gap-4">
+                                            <span>{index + 1}. {course.title}</span>
+                                            <span className="text-amber-700">{course.difficulty}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         )}
 
                         {learningPath && learningPath.courses.length === 0 && (

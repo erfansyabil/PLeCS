@@ -44,7 +44,13 @@ export default function AdministratorLayout({ header, children }) {
                                     href={route('admin.quizzes.index')}
                                     active={route().current('admin.quizzes.index')}
                                 >
-                                    Manage Quizzes and Coding Exercises
+                                    Manage Quizzes
+                                </NavLink>
+                                <NavLink
+                                    href={route('admin.coding-exercises.index')}
+                                    active={route().current('admin.coding-exercises.index')}
+                                >
+                                    Manage Coding Exercises
                                 </NavLink>
                                 <NavLink
                                     href={route('admin.topics.index')}
@@ -170,7 +176,13 @@ export default function AdministratorLayout({ header, children }) {
                             href={route('admin.quizzes.index')}
                             active={route().current('admin.quizzes.index')}
                         >
-                            Manage Quizzes and Coding Exercises
+                            Manage Quizzes
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.coding-exercises.index')}
+                            active={route().current('admin.coding-exercises.index')}
+                        >
+                            Manage Coding Exercises
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('admin.topics.index')}

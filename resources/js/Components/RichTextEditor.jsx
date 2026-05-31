@@ -65,6 +65,18 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write c
                             element.style.marginLeft = 'auto';
                             element.style.marginRight = '0';
                         }
+                        // Also apply Quill's block alignment format so the editor
+                        // recognizes the alignment (this ensures toolbar/state sync
+                        // and that subsequent text aligns as expected).
+                        try {
+                            const blot = editor.scroll.find(element);
+                            if (blot) {
+                                const blotIndex = editor.getIndex(blot);
+                                editor.formatLine(blotIndex, 1, 'align', alignment);
+                            }
+                        } catch (err) {
+                            // ignore if Quill internals aren't available for some nodes
+                        }
                     };
 
                     const showToolbar = () => {
@@ -398,7 +410,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write c
                 modules={modules}
                 formats={formats}
                 placeholder={placeholder}
-                style={{ minHeight: '240px' }}
+                style={{ minHeight: '150px' }}
             />
         </div>
     );

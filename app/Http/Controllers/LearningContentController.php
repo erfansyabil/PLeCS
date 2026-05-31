@@ -54,6 +54,7 @@ class LearningContentController extends Controller
     private function syncTopicBlocks(Request $request, LearningContent|Topic $topic): void
     {
         $incomingBlocks = $request->input('blocks', []);
+        $learningContentId = $topic instanceof Topic ? $topic->courseID : $topic->id;
         $existingPaths = $topic->blocks()
             ->whereNotNull('file_path')
             ->pluck('file_path')
@@ -103,7 +104,10 @@ class LearningContentController extends Controller
         $topic->blocks()->delete();
 
         foreach ($normalizedBlocks as $blockPayload) {
-            $topic->blocks()->create($blockPayload);
+            LearningContentBlock::create($blockPayload + [
+                'learning_content_id' => $learningContentId,
+                'topic_id' => $topic instanceof Topic ? $topic->topicID : null,
+            ]);
         }
 
         $pathsToDelete = array_diff($existingPaths, $keptPaths);
@@ -449,7 +453,7 @@ class LearningContentController extends Controller
             $storedPath = $request->file("attachments.$index.file")->store('learning-content/attachments', 'public');
 
             LearningContentAttachment::create([
-                'learning_content_id' => null,
+                'learning_content_id' => $course->id,
                 'topic_id' => $topic->topicID,
                 'title' => $attachmentData['title'] ?? null,
                 'type' => $attachmentData['type'],
@@ -458,7 +462,10 @@ class LearningContentController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.learning-content.index');
+        return redirect()->route('admin.learning-content.topic.show', [
+            'course' => $course->id,
+            'topic' => $topic->topicID,
+        ]);
     }
 
     /**
@@ -737,7 +744,7 @@ class LearningContentController extends Controller
                     $storedPath = $request->file("attachments.$index.file")->store('learning-content/attachments', 'public');
 
                     LearningContentAttachment::create([
-                        'learning_content_id' => null,
+                        'learning_content_id' => $course->id,
                         'topic_id' => $topic->topicID,
                         'title' => $attachmentData['title'] ?? null,
                         'type' => $attachmentData['type'],
@@ -745,6 +752,82 @@ class LearningContentController extends Controller
                         'sort_order' => (int) ($attachmentData['sort_order'] ?? 0),
                     ]);
                 }
+            }
+        }
+
+        return redirect()->route('admin.learning-content.index');
+    }
+
+    /**
+     * Update an existing topic record by topicID.
+     */
+    public function updateTopic(Request $request, Topic $topic)
+    {
+        $topic->load(['attachments', 'blocks']);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'content' => 'nullable|string',
+            'difficultyLevel' => 'nullable|in:Beginner,Intermediate,Advanced',
+            'parent_id' => [
+                'required',
+                'nullable',
+                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
+                    ->where('type', 'course')
+                    ->whereNull('parent_id')),
+            ],
+            'resource_type' => 'nullable|in:none,pdf,youtube',
+            'resource_url' => 'nullable|url|required_if:resource_type,youtube',
+            'resource_file' => 'nullable|file|mimetypes:application/pdf|max:10240|required_if:resource_type,pdf',
+            'blocks' => 'nullable|array',
+            'blocks.*.type' => 'required_with:blocks|in:text,youtube,pdf,image',
+            'blocks.*.title' => 'nullable|string|max:255',
+            'blocks.*.content' => 'nullable|string',
+            'blocks.*.url' => 'nullable|url',
+            'blocks.*.file' => 'nullable|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
+            'blocks.*.existing_file_path' => 'nullable|string',
+            'blocks.*.sort_order' => 'nullable|integer|min:0',
+            'attachments' => 'nullable|array',
+            'attachments.*.title' => 'nullable|string|max:255',
+            'attachments.*.type' => 'required_with:attachments|in:pdf,image',
+            'attachments.*.file' => 'required_with:attachments|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
+            'attachments.*.sort_order' => 'nullable|integer|min:0',
+        ]);
+
+        $course = LearningContent::where('type', 'course')->findOrFail((int) $validated['parent_id']);
+
+        $topic->update([
+            'courseID' => $course->id,
+            'name' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        if ($request->has('blocks')) {
+            $this->syncTopicBlocks($request, $topic);
+        }
+
+        if ($request->has('attachments')) {
+            foreach ($topic->attachments as $existingAttachment) {
+                Storage::disk('public')->delete($existingAttachment->file_path);
+                $existingAttachment->delete();
+            }
+
+            foreach ($request->input('attachments', []) as $index => $attachmentData) {
+                if (!$request->hasFile("attachments.$index.file")) {
+                    continue;
+                }
+
+                $storedPath = $request->file("attachments.$index.file")->store('learning-content/attachments', 'public');
+
+                LearningContentAttachment::create([
+                    'learning_content_id' => $course->id,
+                    'topic_id' => $topic->topicID,
+                    'title' => $attachmentData['title'] ?? null,
+                    'type' => $attachmentData['type'],
+                    'file_path' => $storedPath,
+                    'sort_order' => (int) ($attachmentData['sort_order'] ?? 0),
+                ]);
             }
         }
 

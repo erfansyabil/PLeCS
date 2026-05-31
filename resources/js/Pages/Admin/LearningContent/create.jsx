@@ -152,16 +152,14 @@ export default function Create({ courses = [] }) {
                                 {errors.title && <div className="text-red-500 text-sm mt-1">{errors.title}</div>}
                             </div>
 
-                            <div className="mb-4">
+                            <div className="mb-2">
                                 <label htmlFor="description" className="block text-sm font-medium mb-2">
                                     Description
                                 </label>
-                                <textarea
-                                    id="description"
+                                <RichTextEditor
                                     value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    rows="4"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    onChange={(value) => setData('description', value)}
+                                    placeholder="Write a brief description..."
                                 />
                                 {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
                             </div>
@@ -193,9 +191,7 @@ export default function Create({ courses = [] }) {
                                                 setData('blocks', [emptyBlock('text', 10)]);
                                             }
 
-                                            if (data.attachments.length === 0) {
-                                                setData('attachments', [emptyAttachment()]);
-                                            }
+                                            setData('attachments', []);
                                         }
                                     }}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
@@ -395,7 +391,8 @@ export default function Create({ courses = [] }) {
                                 </div>
                             )}
 
-                            {data.type === 'topic' && (
+                            {/* Additional Files for Teacher */}
+                            {/* {data.type === 'topic' && (
                                 <div className="mb-6">
                                     <div className="flex items-center justify-between mb-2">
                                         <label className="block text-sm font-medium">
@@ -475,9 +472,9 @@ export default function Create({ courses = [] }) {
 
                                     {errors.attachments && <div className="text-red-500 text-sm mt-2">{errors.attachments}</div>}
                                 </div>
-                            )}
+                            )} */}
 
-                            {data.type === 'course' && (
+                            {/* {data.type === 'course' && (
                                 <div className="mb-6">
                                     <label htmlFor="content" className="block text-sm font-medium mb-2">
                                         Content
@@ -489,7 +486,7 @@ export default function Create({ courses = [] }) {
                                     />
                                     {errors.content && <div className="text-red-500 text-sm mt-1">{errors.content}</div>}
                                 </div>
-                            )}
+                            )} */}
 
                             <div className="flex space-x-4">
                                 <button

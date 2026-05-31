@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* RichText display styling: re-enable list markers inside rendered HTML from editors */
+.rich-content ol {
+	list-style: decimal;
+	margin-left: 1.25rem;
+	padding-left: 0;
+}
+.rich-content ol li {
+	margin: 0.25rem 0;
+}
+.rich-content ul {
+	list-style: disc;
+	margin-left: 1.25rem;
+	padding-left: 0;
+}
+.rich-content ul li {
+	margin: 0.25rem 0;
+}

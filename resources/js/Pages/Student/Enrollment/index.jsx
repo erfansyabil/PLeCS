@@ -1,5 +1,5 @@
 import StudentLayout from '@/Layouts/StudentLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function EnrollmentIndex({ auth, layout, courses = [] }) {
@@ -20,10 +20,23 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
 
     const { data, setData, post, processing, errors } = useForm({
         form_level: 'Form 1',
-        interests: '',
+        interests: [],
         background: 'none',
         learning_goal: 'interest',
     });
+
+    const interestOptions = [
+        'Programming Basics',
+        'Web Development',
+        'Cybersecurity',
+        'Artificial Intelligence',
+        'Data Structures',
+        'Databases',
+        'Mobile Apps',
+        'Game Development',
+        'Robotics',
+        'Problem Solving',
+    ];
 
     const fallbackCourses = [
         {
@@ -125,7 +138,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const handleSubmitSurvey = async (e) => {
         e.preventDefault();
 
-        if (!data.interests || data.interests.toString().trim() === '' || !data.form_level || !data.background || !data.learning_goal) {
+        if (!Array.isArray(data.interests) || data.interests.length === 0 || !data.form_level || !data.background || !data.learning_goal) {
             alert('Please complete all fields');
             return;
         }
@@ -149,7 +162,9 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                 setCompletedSurvey(true);
                 setShowRecommendations(true);
             } else {
-                const interestsArray = data.interests.toString().split(',').map(i => i.trim().toLowerCase()).filter(Boolean);
+                const interestsArray = Array.isArray(data.interests)
+                    ? data.interests.map((interest) => interest.toLowerCase())
+                    : data.interests.toString().split(',').map(i => i.trim().toLowerCase()).filter(Boolean);
                 const recommendedCourses = allCourses.filter(course =>
                     (course.topics || []).some(tag => {
                         const tagText = (typeof tag === 'string' ? tag : tag?.name || '').toLowerCase();
@@ -173,7 +188,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const resetSurvey = () => {
         setData({
             form_level: 'Form 1',
-            interests: '',
+            interests: [],
             background: 'none',
             learning_goal: 'interest',
         });
@@ -326,14 +341,42 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
 
                                     {/* Interests */}
                                     <div>
-                                        <label className="block text-lg font-semibold mb-4">Interests (comma-separated)</label>
-                                        <input
-                                            type="text"
-                                            value={data.interests}
-                                            onChange={(e) => setData('interests', e.target.value)}
-                                            placeholder="e.g., AI, Web Development, Cybersecurity"
-                                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-                                        />
+                                        <div className="mb-4">
+                                            <label className="block text-lg font-semibold">Interests</label>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                Select one or more areas you want the system to recommend for you.
+                                            </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            {interestOptions.map((interest) => {
+                                                const selected = data.interests.includes(interest);
+
+                                                return (
+                                                    <label
+                                                        key={interest}
+                                                        className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition ${selected
+                                                            ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900/30'
+                                                            : 'border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600'
+                                                            }`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selected}
+                                                            onChange={(e) => {
+                                                                const nextInterests = e.target.checked
+                                                                    ? [...data.interests, interest]
+                                                                    : data.interests.filter((item) => item !== interest);
+
+                                                                setData('interests', nextInterests);
+                                                            }}
+                                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                        <span className="font-medium text-gray-800 dark:text-gray-100">{interest}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
 
                                     {/* Programming Background */}

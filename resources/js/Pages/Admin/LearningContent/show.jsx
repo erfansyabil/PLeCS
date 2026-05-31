@@ -84,7 +84,10 @@ export default function Show({ content, topics = [] }) {
                         <div className="p-6 text-gray-900 dark:text-white">
                             <div className="mb-6">
                                 <h3 className="text-2xl font-bold mb-2">{materialData.title}</h3>
-                                <p className="text-gray-600 dark:text-gray-300 mb-4">{materialData.description}</p>
+                                <div
+                                    className="rich-content text-gray-600 dark:text-gray-300 mb-4"
+                                    dangerouslySetInnerHTML={{ __html: materialData.description || '' }}
+                                />
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                     <div>
@@ -94,62 +97,7 @@ export default function Show({ content, topics = [] }) {
                                         <strong>Created:</strong> {new Date(materialData.created_at).toLocaleDateString()}
                                     </div>
                                 </div>
-
-                                {blocks.length > 0 && (
-                                    <div className="mb-6">
-                                        {/* <strong>Ordered Topic Blocks:</strong> */}
-                                        <div className="mt-3 space-y-4">
-                                            {blocks.map((block) => {
-                                                const blockFileUrl = getBlockFileUrl(block.file_path);
-                                                const blockVideoUrl = getYouTubeEmbedUrl(block.url);
-
-                                                return (
-                                                    <div key={block.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
-                                                        {/* <div className="mb-2 text-sm text-gray-500 dark:text-gray-300">
-                                                            {block.type.toUpperCase()} · Order {block.sort_order ?? 0}
-                                                        </div> */}
-                                                        {block.title && <p className="font-semibold mb-3">{block.title}</p>}
-
-                                                        {block.type === 'text' && (
-                                                            <div dangerouslySetInnerHTML={{ __html: block.content || '<p>No content provided.</p>' }} />
-                                                        )}
-
-                                                        {block.type === 'youtube' && blockVideoUrl && (
-                                                            <div className="aspect-video">
-                                                                <iframe
-                                                                    src={blockVideoUrl}
-                                                                    title={block.title || 'YouTube video'}
-                                                                    className="w-full h-full rounded"
-                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                    allowFullScreen
-                                                                />
-                                                            </div>
-                                                        )}
-
-                                                        {block.type === 'pdf' && blockFileUrl && (
-                                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                                                <iframe
-                                                                    src={blockFileUrl}
-                                                                    title={block.title || 'PDF block'}
-                                                                    className="w-full h-[640px]"
-                                                                />
-                                                            </div>
-                                                        )}
-
-                                                        {block.type === 'image' && blockFileUrl && (
-                                                            <img
-                                                                src={blockFileUrl}
-                                                                alt={block.title || 'Image block'}
-                                                                className="max-h-[640px] w-full object-contain rounded"
-                                                            />
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
+                                
                                 {blocks.length === 0 && materialData.content && (
                                     <div className="mb-6">
                                         <strong>Content:</strong>

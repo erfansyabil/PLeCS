@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\LearningContentAttachment;
 use App\Models\LearningContentBlock;
@@ -34,6 +35,26 @@ class LearningContent extends Model
     public function children(): HasMany
     {
         return $this->hasMany(LearningContent::class, 'parent_id');
+    }
+
+    public function prerequisites(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            LearningContent::class,
+            'learning_content_prerequisites',
+            'learning_content_id',
+            'prerequisite_learning_content_id'
+        )->withTimestamps();
+    }
+
+    public function dependentContents(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            LearningContent::class,
+            'learning_content_prerequisites',
+            'prerequisite_learning_content_id',
+            'learning_content_id'
+        )->withTimestamps();
     }
 
     public function attachments(): HasMany

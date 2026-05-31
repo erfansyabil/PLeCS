@@ -64,15 +64,27 @@ class ContentSeeder extends Seeder
             ],
         ];
 
+        $createdCourses = [];
         foreach ($courses as $courseData) {
-            $this->seedCourseFromData($courseData);
+            $createdCourses[] = $this->seedCourseFromData($courseData);
+        }
+
+        // Attach prerequisites: Form 2 requires Form 1, Form 3 requires Form 2, etc.
+        for ($i = 1; $i < count($createdCourses); $i++) {
+            $current = $createdCourses[$i];
+            $prev = $createdCourses[$i - 1];
+
+            if ($current && $prev) {
+                // Attach previous form as prerequisite for current form
+                $current->prerequisites()->syncWithoutDetaching([$prev->id]);
+            }
         }
     }
 
     /**
      * Seed a single course from the learning_contents data.
      */
-    private function seedCourseFromData(array $courseData): void
+    private function seedCourseFromData(array $courseData)
     {
         // Create the course using Content factory or direct creation
         $course = Content::factory()
@@ -119,6 +131,8 @@ class ContentSeeder extends Seeder
             // Create sample blocks for each topic based on the topic content
             $this->seedSampleBlocks($course->id, $topic->topicID, $topicData, $courseData['title']);
         }
+
+        return $course;
     }
 
     /**
@@ -213,17 +227,6 @@ class ContentSeeder extends Seeder
                 'file_path' => null,
             ],
         ];
-        
-        // Add a practice block for certain topics
-        if (stripos($topicName, 'ALGORITMA') !== false || stripos($topicName, 'PENGATURCARAAN') !== false) {
-            $blocks[] = [
-                'type' => 'text',
-                'title' => 'Latihan Praktikal',
-                'content' => '<h3>Latihan Amali</h3><p>Cuba selesaikan tugasan berikut:</p><ul><li>Bina algoritma untuk tugasan harian</li><li>Tulis pseudokod untuk penyelesaian masalah mudah</li><li>Laksanakan atur cara ringkas berdasarkan algoritma yang dibina</li></ul>',
-                'url' => null,
-                'file_path' => null,
-            ];
-        }
         
         $this->seedBlocks($learningContentId, $topicId, $blocks);
     }

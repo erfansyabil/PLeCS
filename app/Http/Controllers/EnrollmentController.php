@@ -13,6 +13,63 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class EnrollmentController extends Controller
 {
     /**
+     * Determine whether a student has completed a course.
+     */
+    private function hasCompletedCourse(int $studentID, int $courseID): bool
+    {
+        return Enrollment::query()
+            ->where('studentID', $studentID)
+            ->where('courseID', $courseID)
+            ->where(function ($query) {
+                $query->where('status', 'completed')
+                    ->orWhereNotNull('completed_at');
+            })
+            ->exists();
+    }
+
+    /**
+     * Collect all prerequisite courses for a course, including indirect prerequisites.
+     *
+     * @return array<int, LearningContent>
+     */
+    private function prerequisiteCourses(LearningContent $course): array
+    {
+        $pending = $course->prerequisites()->get()->all();
+        $visited = [];
+        $prerequisites = [];
+
+        while ($pending !== []) {
+            $prerequisite = array_pop($pending);
+
+            if (isset($visited[$prerequisite->id])) {
+                continue;
+            }
+
+            $visited[$prerequisite->id] = true;
+            $prerequisites[$prerequisite->id] = $prerequisite;
+
+            foreach ($prerequisite->prerequisites()->get() as $nestedPrerequisite) {
+                $pending[] = $nestedPrerequisite;
+            }
+        }
+
+        return array_values($prerequisites);
+    }
+
+    /**
+     * Identify prerequisite courses the student has not completed yet.
+     *
+     * @return array<int, LearningContent>
+     */
+    private function missingPrerequisites(int $studentID, LearningContent $course): array
+    {
+        return array_values(array_filter(
+            $this->prerequisiteCourses($course),
+            fn (LearningContent $prerequisite) => !$this->hasCompletedCourse($studentID, $prerequisite->id)
+        ));
+    }
+
+    /**
      * Enroll a student in a course.
      */
     public function enroll(Request $request): JsonResponse
@@ -23,6 +80,21 @@ class EnrollmentController extends Controller
 
         $studentID = auth()->id();
         $courseID = $validated['courseID'];
+        $course = LearningContent::findOrFail($courseID);
+
+        $missingPrerequisites = $this->missingPrerequisites($studentID, $course);
+
+        if ($missingPrerequisites !== []) {
+            $missingPrerequisiteNames = array_map(
+                fn (LearningContent $prerequisite) => $prerequisite->title,
+                $missingPrerequisites
+            );
+
+            return response()->json([
+                'message' => 'Complete the prerequisite course(s) before enrolling: '.implode(', ', $missingPrerequisiteNames),
+                'missing_prerequisites' => $missingPrerequisiteNames,
+            ], 422);
+        }
 
         // Get or create active learning path for the student
         $learningPath = LearningPath::where('studentID', $studentID)

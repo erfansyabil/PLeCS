@@ -132,7 +132,11 @@ export default function Edit({ content, courses = [] }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('admin.learning-content.update', materialData.id), {
+        const submitRoute = materialData.type === 'topic'
+            ? route('admin.learning-content.topic.update', materialData.id)
+            : route('admin.learning-content.update', materialData.id);
+
+        post(submitRoute, {
             forceFormData: true,
         });
     };
@@ -178,13 +182,18 @@ export default function Edit({ content, courses = [] }) {
                                 <label htmlFor="description" className="block text-sm font-medium mb-2">
                                     Description
                                 </label>
-                                <textarea
+                                <RichTextEditor
+                                    value={data.description}
+                                    onChange={(value) => setData('description', value)}
+                                    placeholder="Write a brief description..."
+                                />
+                                {/* <textarea
                                     id="description"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows="4"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                                />
+                                /> */}
                                 {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
                             </div>
 

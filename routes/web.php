@@ -230,6 +230,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->whereNumber('topic')
             ->name('learning-content.topic.edit');
 
+        // Admin: explicit update route for topics to avoid ID collisions with learning_contents
+        Route::put('/learning-content/topic/{topic}', [LearningContentController::class, 'updateTopic'])
+            ->whereNumber('topic')
+            ->name('learning-content.topic.update');
+
             // Admin: explicit delete route for topics to avoid collisions with learning_contents
             Route::delete('/learning-content/topic/{topic}', [LearningContentController::class, 'destroyTopic'])
                 ->whereNumber('topic')

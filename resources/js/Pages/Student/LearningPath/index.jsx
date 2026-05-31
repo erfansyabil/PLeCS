@@ -63,8 +63,7 @@ export default function LearningPathIndex({ auth }) {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
             });
-            setLearningPath(null);
-            setDraftLearningPath(null);
+            await fetchLearningPath();
         } catch (error) {
             console.error('Failed to clear path:', error);
         }
@@ -110,7 +109,7 @@ export default function LearningPathIndex({ auth }) {
                             <h3 className="text-lg font-bold">
                                 {learningPath ? learningPath.pathName : 'No Active Learning Path'}
                             </h3>
-                            {learningPath && (
+                            {(learningPath || draftLearningPath) && (
                                 <button
                                     onClick={handleClearPath}
                                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"

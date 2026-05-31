@@ -455,35 +455,33 @@ class LearningPathController extends Controller
     }
 
     /**
-     * Delete (soft delete) the active learning path and drop all enrollments.
+     * Clear the student's learning path state and drop linked enrollments.
      * DELETE /student/learning-path/api
      */
     public function destroy(Request $request): JsonResponse
     {
-        $path = LearningPath::where('studentID', auth()->id())
-            ->where('status', 'Active')
+        $paths = LearningPath::where('studentID', auth()->id())
+            ->whereIn('status', ['Active', 'Paused'])
             ->with('courses')
-            ->first();
+            ->get();
 
-        if (!$path) {
-            return response()->json(['message' => 'No active learning path to delete.'], 404);
+        if ($paths->isEmpty()) {
+            return response()->json(['message' => 'No learning path to clear.'], 404);
         }
 
-        // Drop all enrollments for courses in this path
-        foreach ($path->courses as $course) {
-            $enrollment = Enrollment::where('studentID', auth()->id())
-                ->where('courseID', $course->id)
-                ->first();
-            
-            if ($enrollment && $enrollment->status !== 'dropped') {
-                $enrollment->update(['status' => 'dropped']);
+        DB::transaction(function () use ($paths) {
+            $pathIds = $paths->pluck('pathID');
+
+            Enrollment::where('studentID', auth()->id())
+                ->whereIn('pathID', $pathIds)
+                ->update(['status' => 'dropped']);
+
+            foreach ($paths as $path) {
+                $path->delete();
             }
-        }
+        });
 
-        // Soft delete the learning path
-        $path->delete();
-
-        return response()->json(['message' => 'Learning path cleared and all enrollments removed.']);
+        return response()->json(['message' => 'Learning path cleared and linked enrollments dropped.']);
     }
 
     /**

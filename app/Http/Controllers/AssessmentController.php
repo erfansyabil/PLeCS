@@ -19,6 +19,7 @@ class AssessmentController extends Controller
             Enrollment::query()
                 ->where('studentID', auth()->id())
                 ->where('courseID', $course->id)
+                ->where('status', 'active')
                 ->exists(),
             403
         );
@@ -106,6 +107,7 @@ class AssessmentController extends Controller
     {
         $courses = Enrollment::query()
             ->where('studentID', auth()->id())
+            ->where('status', 'active')
             ->with('course:id,title,description')
             ->orderByDesc('enrolled_at')
             ->get()

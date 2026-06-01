@@ -15,7 +15,7 @@ export default function Edit({ content, courses = [] }) {
                 url: block.url || '',
                 file: null,
                 existing_file_path: block.file_path || '',
-                sort_order: block.sort_order ?? (index + 1) * 10,
+                sort_order: block.sort_order ?? (index + 1) * 1,
             }));
         }
 
@@ -72,6 +72,8 @@ export default function Edit({ content, courses = [] }) {
         }];
     };
 
+    const initialPrerequisites = Array.isArray(materialData.prerequisites) ? materialData.prerequisites.map((p) => p.id) : [];
+
     const { data, setData, post, processing, errors } = useForm({
         title: materialData.title,
         description: materialData.description,
@@ -85,6 +87,7 @@ export default function Edit({ content, courses = [] }) {
         resource_url: materialData.resource_url || '',
         resource_file: null,
         blocks: materialData.type === 'topic' ? mapBlocksFromContent() : [],
+        prerequisites: initialPrerequisites,
         _method: 'put',
     });
 
@@ -106,7 +109,7 @@ export default function Edit({ content, courses = [] }) {
             url: '',
             file: null,
             existing_file_path: '',
-            sort_order: nextBlocks[index]?.sort_order ?? (index + 1) * 10,
+            sort_order: nextBlocks[index]?.sort_order ?? (index + 1) * 1,
         };
         setData('blocks', nextBlocks);
     };
@@ -121,7 +124,7 @@ export default function Edit({ content, courses = [] }) {
                 url: '',
                 file: null,
                 existing_file_path: '',
-                sort_order: (data.blocks.length + 1) * 10,
+                sort_order: (data.blocks.length + 1) * 1,
             },
         ]);
     };
@@ -270,6 +273,29 @@ export default function Edit({ content, courses = [] }) {
                                 </div>
                             )}
 
+                            {data.type === 'course' && (
+                                <div className="mb-4">
+                                    <label htmlFor="prerequisites" className="block text-sm font-medium mb-2">
+                                        Prerequisite Courses
+                                    </label>
+                                    <select
+                                        id="prerequisites"
+                                        multiple
+                                        value={data.prerequisites}
+                                        onChange={(e) => setData('prerequisites', Array.from(e.target.selectedOptions, (o) => o.value))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                        {courses
+                                            .filter((c) => c.id !== materialData.id)
+                                            .map((course) => (
+                                                <option key={course.id} value={course.id}>{course.title}</option>
+                                            ))}
+                                    </select>
+                                    <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">Select any prerequisite courses required before enrolling.</p>
+                                    {errors.prerequisites && <div className="text-red-500 text-sm mt-1">{errors.prerequisites}</div>}
+                                </div>
+                            )}
+
                             {data.type === 'topic' && (
                                 <div className="mb-4">
                                     <label htmlFor="parent_id" className="block text-sm font-medium mb-2">
@@ -297,13 +323,6 @@ export default function Edit({ content, courses = [] }) {
                                         <label className="block text-sm font-medium">
                                             Ordered Topic Blocks
                                         </label>
-                                        <button
-                                            type="button"
-                                            onClick={addBlock}
-                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
-                                        >
-                                            Add Block
-                                        </button>
                                     </div>
                                     <p className="text-xs text-gray-500 dark:text-gray-300 mb-3">
                                         Use sort order to control final page flow.
@@ -339,7 +358,7 @@ export default function Edit({ content, courses = [] }) {
                                                         <label className="block text-sm font-medium mb-2">Sort Order</label>
                                                         <input
                                                             type="number"
-                                                            min="0"
+                                                            min=""
                                                             value={block.sort_order}
                                                             onChange={(e) => updateBlock(index, 'sort_order', e.target.value)}
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
@@ -401,6 +420,16 @@ export default function Edit({ content, courses = [] }) {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+
+                                    <div className="mt-3 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={addBlock}
+                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                        >
+                                            Add Block
+                                        </button>
                                     </div>
 
                                     {errors.blocks && <div className="text-red-500 text-sm mt-2">{errors.blocks}</div>}

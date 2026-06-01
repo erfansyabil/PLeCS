@@ -17,9 +17,10 @@ export default function Create({ courses = [] }) {
         resource_file: null,
         blocks: [],
         attachments: [],
+        prerequisites: [],
     });
 
-    const emptyBlock = (type = 'text', sortOrder = 10) => ({
+    const emptyBlock = (type = 'text', sortOrder = 1) => ({
         type,
         title: '',
         content: '',
@@ -64,7 +65,7 @@ export default function Create({ courses = [] }) {
     };
 
     const addBlock = (type = 'text') => {
-        const nextSortOrder = (data.blocks.length + 1) * 10;
+        const nextSortOrder = (data.blocks.length + 1) * 1;
         setData('blocks', [...data.blocks, emptyBlock(type, nextSortOrder)]);
     };
 
@@ -257,6 +258,27 @@ export default function Create({ courses = [] }) {
                                 </div>
                             )}
 
+                            {data.type === 'course' && (
+                                <div className="mb-4">
+                                    <label htmlFor="prerequisites" className="block text-sm font-medium mb-2">
+                                        Prerequisite Courses
+                                    </label>
+                                    <select
+                                        id="prerequisites"
+                                        multiple
+                                        value={data.prerequisites}
+                                        onChange={(e) => setData('prerequisites', Array.from(e.target.selectedOptions, (o) => o.value))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    >
+                                        {sortedCourses.map((course) => (
+                                            <option key={course.id} value={course.id}>{course.title}</option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">Select any prerequisite courses required before enrolling.</p>
+                                    {errors.prerequisites && <div className="text-red-500 text-sm mt-1">{errors.prerequisites}</div>}
+                                </div>
+                            )}
+
                             {data.type === 'topic' && (
                                 <div className="mb-4">
                                     <label htmlFor="parent_id" className="block text-sm font-medium mb-2">
@@ -286,13 +308,6 @@ export default function Create({ courses = [] }) {
                                         <label className="block text-sm font-medium">
                                             Ordered Topic Blocks
                                         </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => addBlock('text')}
-                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
-                                        >
-                                            Add Block
-                                        </button>
                                     </div>
                                     <p className="text-xs text-gray-500 dark:text-gray-300 mb-3">
                                         Rearrange your lesson flow using sort order: text, video, text, PDF, and more.
@@ -328,7 +343,7 @@ export default function Create({ courses = [] }) {
                                                         <label className="block text-sm font-medium mb-2">Sort Order</label>
                                                         <input
                                                             type="number"
-                                                            min="0"
+                                                            min=""
                                                             value={block.sort_order}
                                                             onChange={(e) => updateBlock(index, 'sort_order', e.target.value)}
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
@@ -385,6 +400,16 @@ export default function Create({ courses = [] }) {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+
+                                    <div className="mt-3 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => addBlock('text')}
+                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                        >
+                                            Add Block
+                                        </button>
                                     </div>
 
                                     {errors.blocks && <div className="text-red-500 text-sm mt-2">{errors.blocks}</div>}

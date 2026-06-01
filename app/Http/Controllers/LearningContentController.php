@@ -395,6 +395,14 @@ class LearningContentController extends Controller
             'attachments.*.type' => 'required_with:attachments|in:pdf,image',
             'attachments.*.file' => 'required_with:attachments|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
             'attachments.*.sort_order' => 'nullable|integer|min:0',
+            'prerequisites' => 'nullable|array',
+            'prerequisites.*' => [
+                'nullable',
+                'integer',
+                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
+                    ->where('type', 'course')
+                    ->whereNull('parent_id')),
+            ],
         ]);
 
         $payload = [
@@ -425,6 +433,9 @@ class LearningContentController extends Controller
 
         if ($payload['type'] === 'course') {
             $course = LearningContent::create($payload);
+            if (!empty($validated['prerequisites'])) {
+                $course->prerequisites()->sync(array_map('intval', $validated['prerequisites']));
+            }
             $this->syncLegacyCourseMirror($course);
             return redirect()->route('admin.learning-content.index');
         }
@@ -477,6 +488,7 @@ class LearningContentController extends Controller
             $learningContent = LearningContent::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'prerequisites' => fn ($query) => $query->orderBy('title'),
             ])->find($id);
 
             if ($learningContent) {
@@ -521,6 +533,7 @@ class LearningContentController extends Controller
         $learningContent = LearningContent::with([
             'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
             'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            'prerequisites' => fn ($query) => $query->orderBy('title'),
         ])->find($id);
 
         if (!$learningContent) {
@@ -625,6 +638,15 @@ class LearningContentController extends Controller
             'attachments.*.type' => 'required_with:attachments|in:pdf,image',
             'attachments.*.file' => 'required_with:attachments|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp|max:10240',
             'attachments.*.sort_order' => 'nullable|integer|min:0',
+            'prerequisites' => 'nullable|array',
+            'prerequisites.*' => [
+                'nullable',
+                'integer',
+                Rule::exists('learning_contents', 'id')->where(fn ($query) => $query
+                    ->where('type', 'course')
+                    ->whereNull('parent_id')
+                    ->where('id', '!=', $id)),
+            ],
         ], [
             'type.in' => 'Type cannot be changed after creation. Create a new course or topic instead.',
         ]);
@@ -680,6 +702,13 @@ class LearningContentController extends Controller
             }
 
             $learningContent->update($payload);
+
+            if ($payload['type'] === 'course') {
+                // Sync prerequisites for course
+                if ($request->has('prerequisites')) {
+                    $learningContent->prerequisites()->sync(array_map('intval', $request->input('prerequisites', [])));
+                }
+            }
 
             if ($payload['type'] === 'topic' && $request->has('blocks')) {
                 $this->syncTopicBlocks($request, $learningContent);

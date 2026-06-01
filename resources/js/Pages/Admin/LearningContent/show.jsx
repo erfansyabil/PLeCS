@@ -97,6 +97,30 @@ export default function Show({ content, topics = [] }) {
                                         <strong>Created:</strong> {new Date(materialData.created_at).toLocaleDateString()}
                                     </div>
                                 </div>
+                                {materialData.prerequisites && (
+                                    <div className="mb-6">
+                                        <strong>Prerequisite{Array.isArray(materialData.prerequisites) && materialData.prerequisites.length !== 1 ? 's' : ''}:</strong>
+
+                                        {Array.isArray(materialData.prerequisites) ? (
+                                            <ul className="mt-2 space-y-2">
+                                                {materialData.prerequisites.map((prereq) => (
+                                                    <li key={prereq.id} className="rounded border border-gray-200 px-3 py-2 dark:border-gray-500">
+                                                        <Link
+                                                            href={route('admin.learning-content.show', prereq.id)}
+                                                            className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300"
+                                                        >
+                                                            {prereq.title}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            materialData.prerequisites && (
+                                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{materialData.prerequisites}</p>
+                                            )
+                                        )}
+                                    </div>
+                                )}
                                 
                                 {blocks.length === 0 && materialData.content && (
                                     <div className="mb-6">

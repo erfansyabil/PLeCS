@@ -370,6 +370,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write c
             container: [
                 [{ header: [1, 2, 3, false] }],
                 ['bold', 'italic', 'underline', 'strike'],
+                [{ script: 'sub' }, { script: 'super' }],
                 [{ list: 'ordered' }, { list: 'bullet' }],
                 [{ indent: '-1' }, { indent: '+1' }],
                 [{ align: [] }],
@@ -389,6 +390,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write c
         'italic',
         'underline',
         'strike',
+        'script',
         'list',
         'bullet',
         'indent',

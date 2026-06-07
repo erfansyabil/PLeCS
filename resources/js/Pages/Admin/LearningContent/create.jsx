@@ -58,7 +58,7 @@ export default function Create({ courses = [] }) {
     const updateBlockType = (index, type) => {
         const nextBlocks = [...data.blocks];
         nextBlocks[index] = {
-            ...emptyBlock(type, nextBlocks[index]?.sort_order ?? (index + 1) * 10),
+            ...emptyBlock(type, nextBlocks[index]?.sort_order ?? (index + 1) * 1),
             title: nextBlocks[index]?.title ?? '',
         };
         setData('blocks', nextBlocks);
@@ -189,7 +189,7 @@ export default function Create({ courses = [] }) {
 
                                         if (nextType === 'topic') {
                                             if (data.blocks.length === 0) {
-                                                setData('blocks', [emptyBlock('text', 10)]);
+                                                setData('blocks', [emptyBlock('text', 1)]);
                                             }
 
                                             setData('attachments', []);

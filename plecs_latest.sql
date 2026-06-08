@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 08, 2026 at 06:46 PM
+-- Generation Time: Jun 08, 2026 at 07:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,28 @@ SET time_zone = "+00:00";
 --
 -- Database: `plecs`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `additional_learning_resources`
+--
+
+CREATE TABLE `additional_learning_resources` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `topic_id` bigint(20) UNSIGNED NOT NULL,
+  `course_id` bigint(20) UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `type` enum('Document','Video','Link','Presentation','Other') NOT NULL DEFAULT 'Document',
+  `url` text DEFAULT NULL,
+  `file_path` varchar(255) DEFAULT NULL,
+  `order_index` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -458,7 +480,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (263, '2026_05_31_000002_create_coding_exercises_table', 2),
 (264, '2026_05_31_000003_create_quiz_attempts_table', 2),
 (265, '2026_05_31_000004_create_coding_exercise_attempts_table', 2),
-(266, '2026_05_31_000005_create_learning_content_prerequisites_table', 2);
+(266, '2026_05_31_000005_create_learning_content_prerequisites_table', 2),
+(267, '2026_06_09_120000_create_additional_learning_resources_table', 3);
 
 -- --------------------------------------------------------
 
@@ -622,6 +645,15 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `ro
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `additional_learning_resources`
+--
+ALTER TABLE `additional_learning_resources`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `additional_learning_resources_topic_id_index` (`topic_id`),
+  ADD KEY `additional_learning_resources_course_id_index` (`course_id`),
+  ADD KEY `additional_learning_resources_created_by_index` (`created_by`);
 
 --
 -- Indexes for table `cache`
@@ -799,6 +831,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `additional_learning_resources`
+--
+ALTER TABLE `additional_learning_resources`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `coding_exercises`
 --
 ALTER TABLE `coding_exercises`
@@ -874,7 +912,7 @@ ALTER TABLE `learning_path_topics`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=267;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=268;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
@@ -909,6 +947,14 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `additional_learning_resources`
+--
+ALTER TABLE `additional_learning_resources`
+  ADD CONSTRAINT `additional_learning_resources_course_id_foreign` FOREIGN KEY (`course_id`) REFERENCES `learning_contents` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `additional_learning_resources_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `additional_learning_resources_topic_id_foreign` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topicID`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `coding_exercises`

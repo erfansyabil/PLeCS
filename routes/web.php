@@ -190,6 +190,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC005: Manage Additional Materials
         Route::resource('additional-content', AdditionalLearningContentController::class);
+        Route::get('/additional-content-topics/{courseId}', [AdditionalLearningContentController::class, 'getTopicsForCourse'])
+            ->name('additional-content.topics');
 
         // UC013: Provide Feedback and Guidance
         Route::get('/guidance', function () {

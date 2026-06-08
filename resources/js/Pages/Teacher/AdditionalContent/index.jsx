@@ -1,36 +1,21 @@
 import TeacherLayout from '@/Layouts/TeacherLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function AdditionalContentIndex({materials}) {
-    // Placeholder data since model isn't implemented yet
-    const placeholderMaterials = [
-        {
-            id: 1,
-            title: 'AI Ethics Guidelines',
-            description: 'Comprehensive guidelines for ethical AI development and deployment.',
-            type: 'Document',
-            url: 'https://example.com/ai-ethics.pdf',
-            created_at: '2024-01-15',
-        },
-        {
-            id: 2,
-            title: 'Cybersecurity Best Practices Video',
-            description: 'Video tutorial on implementing security best practices.',
-            type: 'Video',
-            url: 'https://example.com/cybersecurity-video',
-            created_at: '2024-01-20',
-        },
-        {
-            id: 3,
-            title: 'Web Development Resources',
-            description: 'Curated list of useful resources for web development learning.',
-            type: 'Link',
-            url: 'https://example.com/web-dev-resources',
-            created_at: '2024-01-25',
-        },
-    ];
+export default function AdditionalContentIndex({materials, topicId}) {
+    const { delete: deleteResource, processing } = useForm();
 
-    const materialsList = materials || placeholderMaterials;
+    const handleDelete = (id) => {
+        if (confirm('Are you sure you want to delete this material?')) {
+            deleteResource(route('teacher.additional-content.destroy', id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Material deleted successfully
+                },
+            });
+        }
+    };
+
+    const materialsList = materials?.data || [];
 
     return (
         <TeacherLayout
@@ -95,9 +80,11 @@ export default function AdditionalContentIndex({materials}) {
                                                             {material.title}
                                                         </div>
                                                         <div className="text-sm text-gray-500 dark:text-gray-300">
-                                                            {material.description.length > 50
-                                                                ? `${material.description.substring(0, 50)}...`
-                                                                : material.description}
+                                                            {material.description
+                                                                ? material.description.length > 50
+                                                                    ? `${material.description.substring(0, 50)}...`
+                                                                    : material.description
+                                                                : 'No description'}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -123,13 +110,9 @@ export default function AdditionalContentIndex({materials}) {
                                                                 Edit
                                                             </Link>
                                                             <button
-                                                                onClick={() => {
-                                                                    if (confirm('Are you sure you want to delete this material?')) {
-                                                                        // Handle delete - would use Inertia delete method
-                                                                        console.log('Delete material', material.id);
-                                                                    }
-                                                                }}
-                                                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                                onClick={() => handleDelete(material.id)}
+                                                                disabled={processing}
+                                                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
                                                             >
                                                                 Delete
                                                             </button>

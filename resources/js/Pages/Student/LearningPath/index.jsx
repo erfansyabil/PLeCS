@@ -100,13 +100,14 @@ export default function LearningPathIndex({ auth }) {
     if (loading) return <StudentLayout header={<h2>My Learning Path</h2>}><div>Loading...</div></StudentLayout>;
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold">My Learning Path</h2>}>
+        <StudentLayout 
+        header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Learning Path</h2>}>
             <Head title="Learning Path" />
             <div className="py-12">
                 <div className="max-w-5xl mx-auto">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
                                 {learningPath ? learningPath.pathName : 'No Active Learning Path'}
                             </h3>
                             {(learningPath || draftLearningPath) && (
@@ -130,7 +131,7 @@ export default function LearningPathIndex({ auth }) {
                             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <h4 className="font-semibold text-amber-900">Draft Learning Path Ready</h4>
+                                        <h4 className="font-semibold text-amber-900 text-gray-800 dark:text-gray-200">Draft Learning Path Ready</h4>
                                         <p className="text-sm text-amber-800">
                                             {draftLearningPath.pathName} is saved as a draft. Activate it when you want these courses to become your active path.
                                         </p>
@@ -174,7 +175,7 @@ export default function LearningPathIndex({ auth }) {
                                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                                         <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${learningPath.progress}%` }}></div>
                                     </div>
-                                    <p className="text-sm mt-1">Overall Progress: {learningPath.progress}%</p>
+                                    <p className="text-sm mt-1 text-gray-800 dark:text-gray-200">Overall Progress: {learningPath.progress}%</p>
                                 </div>
 
                                 <DragDropContext onDragEnd={handleDragEnd}>
@@ -193,8 +194,11 @@ export default function LearningPathIndex({ auth }) {
                                                                 <div className="flex items-center gap-3">
                                                                     <span className="cursor-move">☰</span>
                                                                     <div>
-                                                                        <h4 className="font-medium">{course.title}</h4>
-                                                                        <p className="text-sm text-gray-500">{course.description?.substring(0, 80)}</p>
+                                                                        <h4 className="font-medium text-sm text-gray-500 dark:text-gray-300">{course.title}</h4>
+                                                                        <div
+                                                                            className="rich-content text-sm text-gray-500 dark:text-gray-300"
+                                                                            dangerouslySetInnerHTML={{ __html: course.description?.substring(0, 80) }}
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                                 <a href={course.enroll_url} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded">Go</a>

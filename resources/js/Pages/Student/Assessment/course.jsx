@@ -34,9 +34,12 @@ export default function CourseAssessmentPage({ course, quizzes = [], codingExerc
                                         {topic.title}
                                     </h4>
 
-                                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                        {topic.description ?? 'No description provided.'}
-                                    </p>
+                                    <div
+                                        className="rich-content mt-2 text-sm text-gray-600 dark:text-gray-300"
+                                        dangerouslySetInnerHTML={{
+                                            __html: topic.description ?? 'No description provided.',
+                                        }}
+                                    />
 
                                     <div className="mt-4 text-xs text-gray-500 dark:text-gray-300">
                                         {topic.quizzes?.length ?? 0} quizzes available

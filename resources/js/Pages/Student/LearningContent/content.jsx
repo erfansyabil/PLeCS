@@ -49,7 +49,10 @@ export default function LearningContentContent({ course, topics = [], layout }) 
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-white">
                             <h3 className="text-lg font-semibold mb-2">{course.title}</h3>
-                            <p className="mb-4">{course.description}</p>
+                            <div
+                                className="mb-4 rich-content text-gray-500 dark:text-gray-300"
+                                dangerouslySetInnerHTML={{ __html: course.description }}
+                            />
                             <h4 className="font-semibold mb-2">Topics:</h4>
                             <ul className="list-disc list-inside">
                                 {topics.map((topic) => (

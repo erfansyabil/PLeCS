@@ -49,9 +49,10 @@ export default function LearningContentIndex({ layout, contents = [] }) {
                                         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
                                             {course.title}
                                         </h3>
-                                        <p className="text-gray-600 dark:text-gray-300 text-sm">
-                                            {course.description}
-                                        </p>
+                                        <div
+                                            className="rich-content text-gray-600 dark:text-gray-300 text-sm"
+                                            dangerouslySetInnerHTML={{ __html: course.description }}
+                                        />
                                         <Link
                                             href={route('student.learning-content.show', course.id)}
                                             className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"

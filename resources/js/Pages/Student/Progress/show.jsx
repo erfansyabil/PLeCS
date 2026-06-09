@@ -1,5 +1,6 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head } from '@inertiajs/react';
+import Header from '@/Components/ui/Header';
 
 export default function ProgressShow({ auth, courseId }) {
     // Example static data; in a real app, fetch this from the backend
@@ -49,14 +50,9 @@ export default function ProgressShow({ auth, courseId }) {
     }
 
     return (
-        <StudentLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {course.title} - Progress Details
-                </h2>
-            }
-        >
+        <StudentLayout>
             <Head title="Your Progress" />
+            <Header title={`${course.title} - Progress Details`} />
             <div className="py-12">
                 <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">

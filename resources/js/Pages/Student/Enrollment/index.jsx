@@ -1,6 +1,8 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import Header from '@/Components/ui/Header';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
 export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     const [showRecommendations, setShowRecommendations] = useState(false);
@@ -306,14 +308,9 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
     // ─── Render ────────────────────────────────────────────────────
 
     return (
-        <StudentLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Course Enrollment & Recommendations
-                </h2>
-            }
-        >
-            <Head title="Enrollment" />
+        <StudentLayout>
+            <Head title="Enrollment"/>
+            <Header title="Course Enrollment & Recommendations" />
             <div className="py-12">
                 <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
                     {!showRecommendations ? (
@@ -434,13 +431,14 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
 
                                     {/* Submit Button */}
                                     <div className="flex gap-4 pt-6">
-                                        <button
+                                        <PrimaryButton
                                             type="submit"
+                                            fullWidth
+                                            size="lg"
                                             disabled={loading}
-                                            className="flex-1 px-6 py-3 text-white font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 rounded-lg transition"
                                         >
                                             {loading ? 'Getting Recommendations...' : 'Get Recommendations'}
-                                        </button>
+                                        </PrimaryButton>
                                     </div>
                                 </form>
                             </div>
@@ -457,19 +455,19 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                                         </p>
                                     </div>
                                     <div className="flex flex-col gap-2 sm:flex-row">
-                                        <button
+                                        <PrimaryButton
                                             onClick={handleSaveLearningPath}
                                             disabled={savingPath}
                                             className="px-4 py-2 text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 rounded-lg transition"
                                         >
                                             {savingPath ? 'Saving Path...' : 'Save Learning Path'}
-                                        </button>
-                                        <button
+                                        </PrimaryButton>
+                                        <PrimaryButton
                                             onClick={resetSurvey}
                                             className="px-4 py-2 text-indigo-600 dark:text-indigo-400 border border-indigo-600 dark:border-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900 transition"
                                         >
                                             Retake Survey
-                                        </button>
+                                        </PrimaryButton>
                                     </div>
                                 </div>
 

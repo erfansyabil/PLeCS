@@ -3,6 +3,8 @@ import StudentLayout from '@/Layouts/StudentLayout';
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link} from '@inertiajs/react';
+import Header from '@/Components/ui/Header';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
 export default function LearningContentIndex({ layout, contents = [] }) {
 
@@ -23,18 +25,13 @@ export default function LearningContentIndex({ layout, contents = [] }) {
 
     const LayoutComponent = getLayout();
     return (
-        <LayoutComponent
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Learning Content
-                </h2>
-            }
-        >
+        <LayoutComponent>
             <Head title="Learning Content" />
+            <Header title="My Learning Content" />
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-white">
+                        <div className="p-6 text-gray-900 dark:text-white bg-gray-800">
                             <p className="mb-6">
                                 Welcome to the Learning Content module. Here you can browse, add, and manage your learning materials.
                             </p>
@@ -53,12 +50,12 @@ export default function LearningContentIndex({ layout, contents = [] }) {
                                             className="rich-content text-gray-600 dark:text-gray-300 text-sm"
                                             dangerouslySetInnerHTML={{ __html: course.description }}
                                         />
-                                        <Link
+                                        <PrimaryButton
                                             href={route('student.learning-content.show', course.id)}
-                                            className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+                                            className="mt-4"
                                         >
                                             View Course
-                                        </Link>
+                                        </PrimaryButton>
                                     </div>
                                 ))}
 

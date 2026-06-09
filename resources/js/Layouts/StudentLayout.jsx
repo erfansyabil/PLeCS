@@ -12,8 +12,8 @@ export default function StudentLayout({ header, children }) {
         useState(false);
 
     return (
-        <div className="min-h-screen bg-[#79a9d1]">
-            <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="min-h-screen bg-[#F1E2D1]">
+            <nav className="border-b border-gray-100 bg-[#541A1A] dark:border-gray-700">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
@@ -248,7 +248,7 @@ export default function StudentLayout({ header, children }) {
             </nav>
 
             {header && (
-                <header className="bg-white shadow dark:bg-gray-800">
+                <header className="bg-[#DCC3AA] shadow">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>

@@ -4,6 +4,7 @@ import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head } from '@inertiajs/react';
 import { useMemo } from 'react';
+import Header from '@/Components/ui/Header';
 
 export default function TopicPage({ topic, layout }) {
 
@@ -162,14 +163,9 @@ export default function TopicPage({ topic, layout }) {
 
     const LayoutComponent = getLayout();
     return (
-        <LayoutComponent
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {topic.title}
-                </h2>
-            }
-        >
+        <LayoutComponent>
             <Head title={topic.title} />
+            <Header title={topic.title} />
             <div className="py-12">
                 <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">

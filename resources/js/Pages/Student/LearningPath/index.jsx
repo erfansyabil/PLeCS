@@ -4,6 +4,8 @@ import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Link } from '@inertiajs/react';
+import Header from '@/Components/ui/Header';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
 export default function LearningPathIndex({ auth }) {
     const [learningPath, setLearningPath] = useState(null);
@@ -100,9 +102,9 @@ export default function LearningPathIndex({ auth }) {
     if (loading) return <StudentLayout header={<h2>My Learning Path</h2>}><div>Loading...</div></StudentLayout>;
 
     return (
-        <StudentLayout 
-        header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Learning Path</h2>}>
+        <StudentLayout>
             <Head title="Learning Path" />
+            <Header title="My Learning Path" />
             <div className="py-12">
                 <div className="max-w-5xl mx-auto">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -111,12 +113,13 @@ export default function LearningPathIndex({ auth }) {
                                 {learningPath ? learningPath.pathName : 'No Active Learning Path'}
                             </h3>
                             {(learningPath || draftLearningPath) && (
-                                <button
+                                <PrimaryButton
                                     onClick={handleClearPath}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                    variant="danger"
+                                    size="md"
                                 >
                                     Clear Path
-                                </button>
+                                </PrimaryButton>
                             )}
                         </div>
 
@@ -201,7 +204,9 @@ export default function LearningPathIndex({ auth }) {
                                                                         />
                                                                     </div>
                                                                 </div>
-                                                                <a href={course.enroll_url} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded">Go</a>
+                                                                <PrimaryButton href={course.enroll_url} variant="secondary" size="md">
+                                                                    Go
+                                                                </PrimaryButton>
                                                             </div>
                                                         )}
                                                     </Draggable>

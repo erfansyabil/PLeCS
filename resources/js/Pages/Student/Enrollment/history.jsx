@@ -1,6 +1,8 @@
+import Header from '@/Components/ui/Header';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
 export default function History({ enrollments }) {
     const [reEnrolling, setReEnrolling] = useState(null);
@@ -41,8 +43,9 @@ export default function History({ enrollments }) {
     };
 
     return (
-        <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-600 dark:text-gray-300 text-sm">Enrollment History</h2>}>
+        <StudentLayout>
             <Head title="Enrollment History" />
+            <Header title="Enrollment History" />
             <div className="py-12">
                 <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -83,29 +86,32 @@ export default function History({ enrollments }) {
                                                         </td>
                                                         <td className="px-6 py-4 text-sm space-x-2">
                                                             {enrollment.status === 'active' && (
-                                                                <Link
+                                                                <PrimaryButton
                                                                     href={enrollment.course_url}
-                                                                    className="inline-block px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700"
+                                                                    variant="secondary"
+                                                                    size="sm"
                                                                 >
                                                                     Continue
-                                                                </Link>
+                                                                </PrimaryButton>
                                                             )}
                                                             {enrollment.status === 'completed' && (
-                                                                <Link
+                                                                <PrimaryButton
                                                                     href={enrollment.course_url}
-                                                                    className="inline-block px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                                                                    variant="secondary"
+                                                                    size="sm"
                                                                 >
                                                                     Review
-                                                                </Link>
+                                                                </PrimaryButton>
                                                             )}
                                                             {enrollment.status === 'dropped' && (
-                                                                <button
+                                                                <PrimaryButton
                                                                     onClick={() => handleReEnroll(enrollment.id, enrollment.course_id)}
                                                                     disabled={reEnrolling === enrollment.id}
-                                                                    className="inline-block px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                                                                    variant="primary"
+                                                                    size="sm"
                                                                 >
-                                                                    {reEnrolling === enrollment.id ? '...' : 'Re-enroll'}
-                                                                </button>
+                                                                    {reEnrolling === enrollment.id ? 'Re-enrolling...' : 'Re-enroll'}
+                                                                </PrimaryButton>
                                                             )}
                                                         </td>
                                                     </tr>

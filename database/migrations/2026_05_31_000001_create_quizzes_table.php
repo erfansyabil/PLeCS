@@ -10,13 +10,14 @@ return new class extends Migration
     {
         Schema::create('quizzes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->constrained('learning_contents')->cascadeOnDelete();
+            $table->unsignedBigInteger('topic_id');
+            $table->foreign('topic_id')->references('topicID')->on('topics')->cascadeOnDelete();
+            $table->index(['topic_id', 'is_published']);
             $table->string('title');
             $table->text('description')->nullable();
             $table->enum('difficulty_level', ['Beginner', 'Intermediate', 'Advanced'])->default('Beginner');
             $table->unsignedInteger('points')->default(10);
             $table->json('questions');
-            $table->boolean('is_published')->default(false);
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
 

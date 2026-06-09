@@ -27,6 +27,10 @@ class User extends Authenticatable
         'role',
         'google_id',
         'avatar',
+        'points',
+        'streak_days',
+        'last_quiz_date',
+        'badges'
     ];
 
     /**
@@ -49,6 +53,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'badges'         => 'array',
+            'last_quiz_date' => 'date',
         ];
     }
 

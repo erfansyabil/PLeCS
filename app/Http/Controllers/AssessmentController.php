@@ -8,11 +8,20 @@ use App\Models\Enrollment;
 use App\Models\LearningContent;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Services\StudentProgressService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AssessmentController extends Controller
 {
+    public function __construct(
+        private readonly StudentProgressService $progress,
+    ) {}
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
     private function ensureEnrollment(LearningContent $course): void
     {
         abort_unless(
@@ -28,28 +37,29 @@ class AssessmentController extends Controller
     private function gradeQuiz(Quiz $quiz, array $answers): array
     {
         $questions = $quiz->questions ?? [];
-        $score = 0;
-        $maxScore = 0;
-        $feedback = [];
+        $score     = 0;
+        $maxScore  = 0;
+        $feedback  = [];
 
         foreach ($questions as $index => $question) {
-            $points = (int) ($question['points'] ?? max(1, (int) floor($quiz->points / max(count($questions), 1))));
+            $points   = (int) ($question['points'] ?? max(1, (int) floor($quiz->points / max(count($questions), 1))));
             $maxScore += $points;
 
-            $correctIndex = (string) ($question['correct_index'] ?? '');
+            $correctIndex   = (string) ($question['correct_index'] ?? '');
             $selectedAnswer = isset($answers[$index]) ? (string) $answers[$index] : null;
-            $isCorrect = $selectedAnswer !== null && $selectedAnswer === $correctIndex;
+            $isCorrect      = $selectedAnswer !== null && $selectedAnswer === $correctIndex;
 
             if ($isCorrect) {
                 $score += $points;
             }
 
             $feedback[] = [
-                'question' => $question['question'] ?? ('Question '.($index + 1)),
+                'question'        => $question['question'] ?? ('Question ' . ($index + 1)),
                 'selected_answer' => $selectedAnswer,
-                'correct_answer' => $correctIndex,
-                'is_correct' => $isCorrect,
-                'points' => $points,
+                'correct_answer'  => $correctIndex,
+                'is_correct'      => $isCorrect,
+                'points'          => $points,
+                'explanation'     => $question['explanation'] ?? null,
             ];
         }
 
@@ -61,12 +71,12 @@ class AssessmentController extends Controller
     private function gradeCodingExercise(CodingExercise $exercise, string $submissionCode): array
     {
         $testCases = $exercise->test_cases ?? [];
-        $score = 0;
-        $maxScore = 0;
-        $feedback = [];
+        $score     = 0;
+        $maxScore  = 0;
+        $feedback  = [];
 
         foreach ($testCases as $index => $testCase) {
-            $points = (int) ($testCase['points'] ?? max(1, (int) floor($exercise->points / max(count($testCases), 1))));
+            $points   = (int) ($testCase['points'] ?? max(1, (int) floor($exercise->points / max(count($testCases), 1))));
             $maxScore += $points;
 
             $requiredSnippets = collect($testCase['must_contain'] ?? [])
@@ -76,9 +86,8 @@ class AssessmentController extends Controller
                 ->all();
 
             $missingSnippets = [];
-
             foreach ($requiredSnippets as $snippet) {
-                if (!str_contains(mb_strtolower($submissionCode), mb_strtolower($snippet))) {
+                if (! str_contains(mb_strtolower($submissionCode), mb_strtolower($snippet))) {
                     $missingSnippets[] = $snippet;
                 }
             }
@@ -90,11 +99,11 @@ class AssessmentController extends Controller
             }
 
             $feedback[] = [
-                'label' => $testCase['label'] ?? ('Test Case '.($index + 1)),
-                'is_correct' => $isCorrect,
+                'label'             => $testCase['label'] ?? ('Test Case ' . ($index + 1)),
+                'is_correct'        => $isCorrect,
                 'required_snippets' => $requiredSnippets,
-                'missing_snippets' => $missingSnippets,
-                'points' => $points,
+                'missing_snippets'  => $missingSnippets,
+                'points'            => $points,
             ];
         }
 
@@ -102,6 +111,10 @@ class AssessmentController extends Controller
 
         return [$score, $maxScore, $passed, $feedback];
     }
+
+    // -------------------------------------------------------------------------
+    // Read routes (unchanged logic, no side effects needed)
+    // -------------------------------------------------------------------------
 
     public function index()
     {
@@ -114,29 +127,31 @@ class AssessmentController extends Controller
             ->map(function (Enrollment $enrollment) {
                 $course = $enrollment->course;
 
-                if (!$course) {
+                if (! $course) {
                     return null;
                 }
 
                 $course->loadCount([
-                    'quizzes as published_quizzes_count' => fn ($query) => $query->where('is_published', true),
-                    'codingExercises as published_coding_exercises_count' => fn ($query) => $query->where('is_published', true),
+                    'quizzes as published_quizzes_count'                    => fn ($q) => $q->where('is_published', true),
+                    'codingExercises as published_coding_exercises_count'   => fn ($q) => $q->where('is_published', true),
                 ]);
 
                 return [
-                    'id' => $course->id,
-                    'title' => $course->title,
-                    'description' => $course->description,
-                    'quizzes_count' => $course->published_quizzes_count,
-                    'coding_exercises_count' => $course->published_coding_exercises_count,
-                    'enrolled_at' => optional($enrollment->enrolled_at)?->format('Y-m-d H:i'),
+                    'id'                      => $course->id,
+                    'title'                   => $course->title,
+                    'description'             => $course->description,
+                    'quizzes_count'           => $course->published_quizzes_count,
+                    'coding_exercises_count'  => $course->published_coding_exercises_count,
+                    'enrolled_at'             => optional($enrollment->enrolled_at)?->format('Y-m-d H:i'),
                 ];
             })
             ->filter()
             ->values();
 
         return Inertia::render('Student/Assessment/index', [
-            'courses' => $courses,
+            'courses'       => $courses,
+            'studentPoints' => auth()->user()->points ?? 0,
+            'streak'        => $this->progress->getCurrentStreak(auth()->id()),
         ]);
     }
 
@@ -145,24 +160,40 @@ class AssessmentController extends Controller
         $this->ensureEnrollment($course);
 
         $course->loadCount([
-            'quizzes as published_quizzes_count' => fn ($query) => $query->where('is_published', true),
-            'codingExercises as published_coding_exercises_count' => fn ($query) => $query->where('is_published', true),
+            'quizzes as published_quizzes_count'                    => fn ($q) => $q->where('is_published', true),
+            'codingExercises as published_coding_exercises_count'   => fn ($q) => $q->where('is_published', true),
         ]);
+
+        $studentId = auth()->id();
 
         $quizzes = Quiz::query()
             ->where('course_id', $course->id)
             ->where('is_published', true)
             ->orderBy('title')
             ->get()
-            ->map(fn (Quiz $quiz) => [
-                'id' => $quiz->id,
-                'title' => $quiz->title,
-                'description' => $quiz->description,
-                'difficulty_level' => $quiz->difficulty_level,
-                'points' => $quiz->points,
-                'questions_count' => count($quiz->questions ?? []),
-                'is_published' => $quiz->is_published,
-            ])
+            ->map(function (Quiz $quiz) use ($studentId) {
+                $latest = QuizAttempt::query()
+                    ->where('quiz_id', $quiz->id)
+                    ->where('student_id', $studentId)
+                    ->latest('submitted_at')
+                    ->first(['score', 'max_score', 'passed']);
+
+                return [
+                    'id'               => $quiz->id,
+                    'title'            => $quiz->title,
+                    'description'      => $quiz->description,
+                    'difficulty_level' => $quiz->difficulty_level,
+                    'points'           => $quiz->points,
+                    'questions_count'  => count($quiz->questions ?? []),
+                    'is_published'     => $quiz->is_published,
+                    // surface attempt status on the course overview card
+                    'latest_attempt'   => $latest ? [
+                        'score'     => $latest->score,
+                        'max_score' => $latest->max_score,
+                        'passed'    => $latest->passed,
+                    ] : null,
+                ];
+            })
             ->values();
 
         $codingExercises = CodingExercise::query()
@@ -170,26 +201,39 @@ class AssessmentController extends Controller
             ->where('is_published', true)
             ->orderBy('title')
             ->get()
-            ->map(fn (CodingExercise $exercise) => [
-                'id' => $exercise->id,
-                'title' => $exercise->title,
-                'description' => $exercise->description,
-                'difficulty_level' => $exercise->difficulty_level,
-                'points' => $exercise->points,
-                'test_cases_count' => count($exercise->test_cases ?? []),
-                'is_published' => $exercise->is_published,
-            ])
+            ->map(function (CodingExercise $exercise) use ($studentId) {
+                $latest = CodingExerciseAttempt::query()
+                    ->where('coding_exercise_id', $exercise->id)
+                    ->where('student_id', $studentId)
+                    ->latest('submitted_at')
+                    ->first(['score', 'max_score', 'passed']);
+
+                return [
+                    'id'               => $exercise->id,
+                    'title'            => $exercise->title,
+                    'description'      => $exercise->description,
+                    'difficulty_level' => $exercise->difficulty_level,
+                    'points'           => $exercise->points,
+                    'test_cases_count' => count($exercise->test_cases ?? []),
+                    'is_published'     => $exercise->is_published,
+                    'latest_attempt'   => $latest ? [
+                        'score'     => $latest->score,
+                        'max_score' => $latest->max_score,
+                        'passed'    => $latest->passed,
+                    ] : null,
+                ];
+            })
             ->values();
 
         return Inertia::render('Student/Assessment/course', [
             'course' => [
-                'id' => $course->id,
-                'title' => $course->title,
-                'description' => $course->description,
-                'quizzes_count' => $course->published_quizzes_count,
+                'id'                     => $course->id,
+                'title'                  => $course->title,
+                'description'            => $course->description,
+                'quizzes_count'          => $course->published_quizzes_count,
                 'coding_exercises_count' => $course->published_coding_exercises_count,
             ],
-            'quizzes' => $quizzes,
+            'quizzes'         => $quizzes,
             'codingExercises' => $codingExercises,
         ]);
     }
@@ -207,52 +251,23 @@ class AssessmentController extends Controller
             ->first();
 
         return Inertia::render('Student/Assessment/quiz', [
-            'course' => [
-                'id' => $course->id,
-                'title' => $course->title,
-            ],
-            'quiz' => [
-                'id' => $quiz->id,
-                'title' => $quiz->title,
-                'description' => $quiz->description,
+            'course' => ['id' => $course->id, 'title' => $course->title],
+            'quiz'   => [
+                'id'               => $quiz->id,
+                'title'            => $quiz->title,
+                'description'      => $quiz->description,
                 'difficulty_level' => $quiz->difficulty_level,
-                'points' => $quiz->points,
-                'questions' => $quiz->questions ?? [],
+                'points'           => $quiz->points,
+                'questions'        => $quiz->questions ?? [],
             ],
             'latestAttempt' => $latestAttempt ? [
-                'score' => $latestAttempt->score,
-                'max_score' => $latestAttempt->max_score,
-                'passed' => $latestAttempt->passed,
-                'feedback' => $latestAttempt->feedback ?? [],
+                'score'        => $latestAttempt->score,
+                'max_score'    => $latestAttempt->max_score,
+                'passed'       => $latestAttempt->passed,
+                'feedback'     => $latestAttempt->feedback ?? [],
                 'submitted_at' => optional($latestAttempt->submitted_at)?->format('Y-m-d H:i'),
             ] : null,
         ]);
-    }
-
-    public function storeQuizAttempt(Request $request, LearningContent $course, Quiz $quiz)
-    {
-        $this->ensureEnrollment($course);
-        abort_unless((int) $quiz->course_id === (int) $course->id, 404);
-        abort_unless($quiz->is_published, 404);
-
-        $validated = $request->validate([
-            'answers' => ['required', 'array'],
-        ]);
-
-        [$score, $maxScore, $passed, $feedback] = $this->gradeQuiz($quiz, $validated['answers']);
-
-        QuizAttempt::create([
-            'quiz_id' => $quiz->id,
-            'student_id' => auth()->id(),
-            'answers' => $validated['answers'],
-            'score' => $score,
-            'max_score' => $maxScore,
-            'passed' => $passed,
-            'feedback' => $feedback,
-            'submitted_at' => now(),
-        ]);
-
-        return redirect()->route('student.assessment.quiz.show', [$course->id, $quiz->id]);
     }
 
     public function showCodingExercise(LearningContent $course, CodingExercise $codingExercise)
@@ -268,29 +283,63 @@ class AssessmentController extends Controller
             ->first();
 
         return Inertia::render('Student/Assessment/coding-exercise', [
-            'course' => [
-                'id' => $course->id,
-                'title' => $course->title,
-            ],
+            'course'         => ['id' => $course->id, 'title' => $course->title],
             'codingExercise' => [
-                'id' => $codingExercise->id,
-                'title' => $codingExercise->title,
-                'description' => $codingExercise->description,
+                'id'               => $codingExercise->id,
+                'title'            => $codingExercise->title,
+                'description'      => $codingExercise->description,
                 'difficulty_level' => $codingExercise->difficulty_level,
-                'points' => $codingExercise->points,
-                'instructions' => $codingExercise->instructions,
-                'starter_code' => $codingExercise->starter_code,
-                'test_cases' => $codingExercise->test_cases ?? [],
+                'points'           => $codingExercise->points,
+                'instructions'     => $codingExercise->instructions,
+                'starter_code'     => $codingExercise->starter_code,
+                'test_cases'       => $codingExercise->test_cases ?? [],
             ],
             'latestAttempt' => $latestAttempt ? [
-                'score' => $latestAttempt->score,
-                'max_score' => $latestAttempt->max_score,
-                'passed' => $latestAttempt->passed,
-                'feedback' => $latestAttempt->feedback ?? [],
-                'submitted_at' => optional($latestAttempt->submitted_at)?->format('Y-m-d H:i'),
+                'score'           => $latestAttempt->score,
+                'max_score'       => $latestAttempt->max_score,
+                'passed'          => $latestAttempt->passed,
+                'feedback'        => $latestAttempt->feedback ?? [],
+                'submitted_at'    => optional($latestAttempt->submitted_at)?->format('Y-m-d H:i'),
                 'submission_code' => $latestAttempt->submission_code,
             ] : null,
         ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Submit routes — only these two methods changed from your original
+    // -------------------------------------------------------------------------
+
+    public function storeQuizAttempt(Request $request, LearningContent $course, Quiz $quiz)
+    {
+        $this->ensureEnrollment($course);
+        abort_unless((int) $quiz->course_id === (int) $course->id, 404);
+        abort_unless($quiz->is_published, 404);
+
+        $validated = $request->validate([
+            'answers' => ['required', 'array'],
+        ]);
+
+        [$score, $maxScore, $passed, $feedback] = $this->gradeQuiz($quiz, $validated['answers']);
+
+        QuizAttempt::create([
+            'quiz_id'      => $quiz->id,
+            'student_id'   => auth()->id(),
+            'answers'      => $validated['answers'],
+            'score'        => $score,
+            'max_score'    => $maxScore,
+            'passed'       => $passed,
+            'feedback'     => $feedback,
+            'submitted_at' => now(),
+        ]);
+
+        // Award points + update streak + evaluate badges
+        $this->progress->recordAttempt(
+            studentId:    auth()->id(),
+            pointsEarned: $score,   // earn exactly what was scored
+            passed:       $passed,
+        );
+
+        return redirect()->route('student.assessment.quiz.show', [$course->id, $quiz->id]);
     }
 
     public function storeCodingExerciseAttempt(Request $request, LearningContent $course, CodingExercise $codingExercise)
@@ -307,15 +356,22 @@ class AssessmentController extends Controller
 
         CodingExerciseAttempt::create([
             'coding_exercise_id' => $codingExercise->id,
-            'student_id' => auth()->id(),
-            'submission_code' => $validated['submission_code'],
-            'score' => $score,
-            'max_score' => $maxScore,
-            'passed' => $passed,
-            'feedback' => $feedback,
-            'status' => $passed ? 'passed' : 'submitted',
-            'submitted_at' => now(),
+            'student_id'         => auth()->id(),
+            'submission_code'    => $validated['submission_code'],
+            'score'              => $score,
+            'max_score'          => $maxScore,
+            'passed'             => $passed,
+            'feedback'           => $feedback,
+            'status'             => $passed ? 'passed' : 'submitted',
+            'submitted_at'       => now(),
         ]);
+
+        // Award points + update streak + evaluate badges
+        $this->progress->recordAttempt(
+            studentId:    auth()->id(),
+            pointsEarned: $score,
+            passed:       $passed,
+        );
 
         return redirect()->route('student.assessment.coding-exercise.show', [$course->id, $codingExercise->id]);
     }

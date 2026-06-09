@@ -10,6 +10,7 @@ use App\Http\Controllers\CodingExerciseController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Student\QuizAttemptController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -126,24 +127,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // UC007: Attempt Gamified Quizzes and Coding Exercises
-        Route::get('/assessment', function () {
-            return app(AssessmentController::class)->index();
-        })->name('assessment.index');
+        // Course list
+        Route::get('/assessment', [AssessmentController::class, 'index'])
+            ->name('assessment.index');
+ 
+        // Topics + quizzes for a course
         Route::get('/assessment/{course}', [AssessmentController::class, 'showCourse'])
             ->whereNumber('course')
             ->name('assessment.show');
-        Route::get('/assessment/{course}/quizzes/{quiz}', [AssessmentController::class, 'showQuiz'])
+ 
+        // ---- Quizzes (now routed through topic) ----
+        Route::get('/assessment/{course}/topics/{topic}/quizzes/{quiz}', [AssessmentController::class, 'showQuiz'])
             ->whereNumber('course')
+            ->whereNumber('topic')
             ->whereNumber('quiz')
             ->name('assessment.quiz.show');
-        Route::post('/assessment/{course}/quizzes/{quiz}', [AssessmentController::class, 'storeQuizAttempt'])
+ 
+        Route::post('/assessment/{course}/topics/{topic}/quizzes/{quiz}', [AssessmentController::class, 'storeQuizAttempt'])
             ->whereNumber('course')
+            ->whereNumber('topic')
             ->whereNumber('quiz')
             ->name('assessment.quiz.store');
+ 
+        // ---- Coding exercises (course-level, unchanged) ----
         Route::get('/assessment/{course}/coding-exercises/{codingExercise}', [AssessmentController::class, 'showCodingExercise'])
             ->whereNumber('course')
             ->whereNumber('codingExercise')
             ->name('assessment.coding-exercise.show');
+ 
         Route::post('/assessment/{course}/coding-exercises/{codingExercise}', [AssessmentController::class, 'storeCodingExerciseAttempt'])
             ->whereNumber('course')
             ->whereNumber('codingExercise')

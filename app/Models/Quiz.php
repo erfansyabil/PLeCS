@@ -28,9 +28,21 @@ class Quiz extends Model
         'published_at' => 'datetime',
     ];
 
-    public function course(): BelongsTo
+    public function topic(): BelongsTo
     {
-        return $this->belongsTo(LearningContent::class, 'course_id');
+        return $this->belongsTo(Topic::class, 'topic_id', 'topicID');
+    }
+
+    public function course(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            LearningContent::class, // final model
+            Topic::class,           // intermediate model
+            'topicID',              // FK on topics pointing to... (topics.topicID = quizzes.topic_id)
+            'id',                   // FK on learning_contents (learning_contents.id)
+            'topic_id',             // local key on quizzes
+            'courseID',             // local key on topics
+        );
     }
 
     public function attempts(): HasMany

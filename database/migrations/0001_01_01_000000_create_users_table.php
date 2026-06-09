@@ -18,8 +18,13 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['student', 'teacher', 'administrator'])->default('student');
+            $table->unsignedBigInteger('points');
+            $table->unsignedInteger('streak_days');
+            $table->date('last_quiz_date');
+            $table->json('badges')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

@@ -6,6 +6,7 @@ use Database\Factories\TopicFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Topic extends Model
 {
@@ -44,16 +45,35 @@ class Topic extends Model
         return TopicFactory::new();
     }
 
+    // -------------------------------------------------------------------------
+    // Relationships
+    // -------------------------------------------------------------------------
+ 
+    /**
+     * The course this topic belongs to.
+     */
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(LearningContent::class, 'courseID', 'id');
+    }
+ 
+    /**
+     * Quizzes attached to this topic.
+     */
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(Quiz::class, 'topic_id', 'topicID');
+    }
+ 
     public function blocks(): HasMany
     {
         return $this->hasMany(LearningContentBlock::class, 'topic_id', 'topicID');
     }
-
+ 
     public function attachments(): HasMany
     {
         return $this->hasMany(LearningContentAttachment::class, 'topic_id', 'topicID');
     }
-
     // Provide compatibility accessors so existing views that expect `title`/`description`
     // on a LearningContent still work when handed a Topic instance.
     public function getTitleAttribute(): ?string

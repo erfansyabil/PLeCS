@@ -152,7 +152,12 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    form_level: data.form_level,
+                    interests: data.interests,
+                    background: data.background,
+                    learning_goal: data.learning_goal,
+                }),
             });
 
             if (response.ok) {

@@ -20,6 +20,7 @@ class Topic extends Model
     protected $fillable = [
         'topicID',
         'courseID',
+        'topic_id',
         'name',
         'description',
         'prerequisites',

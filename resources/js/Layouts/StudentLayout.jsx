@@ -12,7 +12,7 @@ export default function StudentLayout({ header, children }) {
         useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-300 dark:bg-gray-300">
+        <div className="min-h-screen bg-red-300 dark:bg-red-300">
             <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
@@ -66,7 +66,12 @@ export default function StudentLayout({ header, children }) {
                                 </NavLink>
                                 <NavLink
                                     href={route('student.assessment.index')}
-                                    active={route().current('student.assessment.index')}
+                                    active={
+                                        route().current('student.assessment.index') ||
+                                        route().current('student.assessment.show')
+
+                                    }
+                                    
                                 >
                                     Assessment
                                 </NavLink>

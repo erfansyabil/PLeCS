@@ -90,10 +90,14 @@ class QuizController extends Controller
             'is_published'     => ['nullable', 'boolean'],
         ]);
 
+        // 1. Automatically fetch the course ID from the selected Topic model
+        $topic = Topic::findOrFail($validated['topic_id']);
+
         Quiz::create([
             'title'            => $validated['title'],
             'description'      => $validated['description'] ?? null,
             'topic_id'         => $validated['topic_id'],
+            'course_id'        => $topic->courseID,
             'difficulty_level' => $validated['difficulty_level'],
             'points'           => $validated['points'],
             'questions'        => $this->decodeQuestions($validated['questions_json']),

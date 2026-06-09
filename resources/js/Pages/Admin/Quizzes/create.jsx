@@ -1,34 +1,65 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-
-const sampleQuestions = JSON.stringify(
-    [
-        {
-            question: 'What does HTML stand for?',
-            options: ['HyperText Markup Language', 'High Transfer Machine Language', 'Home Tool Markup Language', 'Hyperlink Markup Logic'],
-            correct_index: 0,
-            points: 10,
-        },
-    ],
-    null,
-    2,
-);
+import { useEffect } from 'react';
 
 export default function Create({ topics = [] }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, transform, post, processing, errors } = useForm({
         title: '',
         description: '',
         topic_id: topics[0]?.id ?? '',
         difficulty_level: 'Beginner',
         points: 10,
-        questions_json: sampleQuestions,
+        questions: [
+            {
+                question: '',
+                options: ['', '', '', ''],
+                correct_index: 0,
+                points: 10,
+            }
+        ],
+        questions_json: '',
         is_published: false,
     });
 
+    // 2. Add a new question block
+    const addQuestion = () => {
+        setData('questions', [
+            ...data.questions,
+            { question: '', options: ['', '', '', ''], correct_index: 0, points: 10 }
+        ]);
+    };
+
+    // 3. Remove a question block
+    const removeQuestion = (qIndex) => {
+        const updated = data.questions.filter((_, index) => index !== qIndex);
+        setData('questions', updated);
+    };
+
+    // 4. Update specific text fields inside a question
+    const handleQuestionChange = (index, field, value) => {
+        const updated = [...data.questions];
+        updated[index][field] = value;
+        setData('questions', updated);
+    };
+
+    // 5. Update a specific multiple-choice option
+    const handleOptionChange = (qIndex, oIndex, value) => {
+        const updated = [...data.questions];
+        updated[qIndex].options[oIndex] = value;
+        setData('questions', updated);
+    };
+
     const submit = (e) => {
         e.preventDefault();
+        
+        transform((data) => ({
+        ...data,
+        questions_json: JSON.stringify(data.questions),
+        }));
+
+        // Inertia post accepts custom data payload overrides directly
         post(route('admin.quizzes.store'));
-    };
+    }
 
     // Group topics by course_title for <optgroup> display
     const grouped = topics.reduce((acc, topic) => {
@@ -79,8 +110,8 @@ export default function Create({ topics = [] }) {
                             />
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-3">
-                            {/* course list */}
+                        <div className="grid gap-2 md:grid-cols-2">
+                            {/* Course List */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Course</label>
                                 <select
@@ -98,7 +129,7 @@ export default function Create({ topics = [] }) {
                                 {errors.course_id && <p className="mt-1 text-sm text-red-600">{errors.course_id}</p>}
                             </div>
 
-                            {/* topic list */}            
+                            {/* Topic List */}            
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Topic</label>
                                 <select
@@ -124,7 +155,9 @@ export default function Create({ topics = [] }) {
                                 </select>
                                 {errors.topic_id && <p className="mt-1 text-sm text-red-600">{errors.topic_id}</p>}
                             </div>
+                        </div>
 
+                        <div className="grid gap-2 md:grid-cols-2">
                             {/* Difficulty */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Difficulty</label>
@@ -152,17 +185,84 @@ export default function Create({ topics = [] }) {
                             </div>
                         </div>
 
-                        {/* Questions JSON */}
+                        {/* VISUAL QUESTION BUILDER SECTION */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Questions JSON</label>
-                            <textarea
-                                value={data.questions_json}
-                                onChange={(e) => setData('questions_json', e.target.value)}
-                                rows="14"
-                                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 font-mono text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                            />
-                            {errors.questions_json && <p className="mt-1 text-sm text-red-600">{errors.questions_json}</p>}
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Quiz Questions</h3>
+                                <button
+                                    type="button"
+                                    onClick={addQuestion}
+                                    className="rounded-lg bg-green-600 px-4 py-2 text-xs font-medium text-white hover:bg-green-700"
+                                >
+                                    + Add Question
+                                </button>
+                            </div>
+
+                            {errors.questions_json && <p className="mb-4 text-sm text-red-600 font-medium">{errors.questions_json}</p>}
+
+                            <div className="space-y-6">
+                                {data.questions.map((q, qIndex) => (
+                                    <div key={qIndex} className="p-5 rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50 space-y-4 relative">
+                                        
+                                        {/* Remove Button */}
+                                        {data.questions.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeQuestion(qIndex)}
+                                                className="absolute top-4 right-4 text-sm text-red-500 hover:text-red-700 font-medium"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+
+                                        <span className="inline-block text-xs font-bold text-blue-600 uppercase tracking-wide">
+                                            Question {qIndex + 1}
+                                        </span>
+
+                                        {/* Question Text Input */}
+                                        <div>
+                                            <input
+                                                type="text"
+                                                placeholder="Enter your question text here..."
+                                                value={q.question}
+                                                onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 font-medium"
+                                                required
+                                            />
+                                        </div>
+
+                                        {/* Options Grid */}
+                                        <div className="space-y-2">
+                                            <label className="block text-xs font-medium text-gray-500 uppercase">Answer Options</label>
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                {q.options.map((option, oIndex) => (
+                                                    <div key={oIndex} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                                                        <input
+                                                            type="radio"
+                                                            name={`correct-answer-${qIndex}`}
+                                                            checked={q.correct_index === oIndex}
+                                                            onChange={() => handleQuestionChange(qIndex, 'correct_index', oIndex)}
+                                                            className="text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            placeholder={`Option ${oIndex + 1}`}
+                                                            value={option}
+                                                            onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                                                            className="w-full border-0 p-1 text-sm bg-transparent focus:ring-0 dark:text-gray-200"
+                                                            required
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-gray-400 italic mt-1">Select the radio bullet to mark which answer option is correct.</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
+
+                        <hr className="border-gray-200 dark:border-gray-700" />
 
                         {/* Publish */}
                         <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200">

@@ -159,42 +159,14 @@ class AssessmentController extends Controller
     {
         $this->ensureEnrollment($course);
 
+        $course->load('topics.quizzes');
+
         $course->loadCount([
             'quizzes as published_quizzes_count'                    => fn ($q) => $q->where('is_published', true),
             'codingExercises as published_coding_exercises_count'   => fn ($q) => $q->where('is_published', true),
         ]);
 
         $studentId = auth()->id();
-
-        $quizzes = Quiz::query()
-            ->where('course_id', $course->id)
-            ->where('is_published', true)
-            ->orderBy('title')
-            ->get()
-            ->map(function (Quiz $quiz) use ($studentId) {
-                $latest = QuizAttempt::query()
-                    ->where('quiz_id', $quiz->id)
-                    ->where('student_id', $studentId)
-                    ->latest('submitted_at')
-                    ->first(['score', 'max_score', 'passed']);
-
-                return [
-                    'id'               => $quiz->id,
-                    'title'            => $quiz->title,
-                    'description'      => $quiz->description,
-                    'difficulty_level' => $quiz->difficulty_level,
-                    'points'           => $quiz->points,
-                    'questions_count'  => count($quiz->questions ?? []),
-                    'is_published'     => $quiz->is_published,
-                    // surface attempt status on the course overview card
-                    'latest_attempt'   => $latest ? [
-                        'score'     => $latest->score,
-                        'max_score' => $latest->max_score,
-                        'passed'    => $latest->passed,
-                    ] : null,
-                ];
-            })
-            ->values();
 
         $codingExercises = CodingExercise::query()
             ->where('course_id', $course->id)
@@ -227,14 +199,47 @@ class AssessmentController extends Controller
 
         return Inertia::render('Student/Assessment/course', [
             'course' => [
-                'id'                     => $course->id,
-                'title'                  => $course->title,
-                'description'            => $course->description,
-                'quizzes_count'          => $course->published_quizzes_count,
-                'coding_exercises_count' => $course->published_coding_exercises_count,
+                'id'          => $course->id,
+                'title'       => $course->title,
+                'description' => $course->description,
+
+                'topics' => $course->topics->map(function ($topic) use ($studentId) {
+
+                    return [
+                        'id'          => $topic->topicID,
+                        'title'       => $topic->name,
+                        'description' => $topic->description,
+
+                        'quizzes' => $topic->quizzes
+                            ->where('is_published', true)
+                            ->map(function ($quiz) use ($studentId) {
+
+                                $latest = QuizAttempt::query()
+                                    ->where('quiz_id', $quiz->id)
+                                    ->where('student_id', $studentId)
+                                    ->latest('submitted_at')
+                                    ->first(['score', 'max_score', 'passed']);
+
+                                return [
+                                    'id'               => $quiz->id,
+                                    'title'            => $quiz->title,
+                                    'description'      => $quiz->description,
+                                    'difficulty_level' => $quiz->difficulty_level,
+                                    'points'           => $quiz->points,
+                                    'questions_count'  => count($quiz->questions ?? []),
+                                    'latest_attempt'   => $latest ? [
+                                        'score'     => $latest->score,
+                                        'max_score' => $latest->max_score,
+                                        'passed'    => $latest->passed,
+                                    ] : null,
+                                ];
+                            })
+                            ->values(),
+                    ];
+                })->values(),
             ],
-            'quizzes'         => $quizzes,
-            'codingExercises' => $codingExercises,
+
+            'codingExercises' => [], // keep for now or leave as is
         ]);
     }
 

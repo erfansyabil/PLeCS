@@ -37,6 +37,12 @@ class LearningContent extends Model
         return $this->hasMany(LearningContent::class, 'parent_id');
     }
 
+    public function topics(): HasMany
+{
+    return $this->hasMany(Topic::class, 'courseID', 'id')
+        ->orderBy('orderIndex');
+}
+
     public function prerequisites(): BelongsToMany
     {
         return $this->belongsToMany(

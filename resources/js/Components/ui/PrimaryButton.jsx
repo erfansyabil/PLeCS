@@ -19,7 +19,7 @@ export default function PrimaryButton({
 
     const variants = {
         primary:
-            'bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-white',
+            'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600',
         secondary:
             'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500',
         danger: 'bg-red-600 text-white hover:bg-red-700',

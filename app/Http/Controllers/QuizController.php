@@ -26,6 +26,7 @@ class QuizController extends Controller
             ->map(fn (Topic $topic) => [
                 'id'           => $topic->topicID,
                 'name'         => $topic->name,
+                'course_id'    => $topic->courseID,
                 'course_title' => $topic->course?->title ?? 'Unknown course',
             ]);
     }
@@ -81,28 +82,50 @@ class QuizController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'            => ['required', 'string', 'max:255'],
-            'description'      => ['nullable', 'string'],
-            'topic_id'         => ['required', 'integer', Rule::exists('topics', 'topicID')],
-            'difficulty_level' => ['required', Rule::in(['Beginner', 'Intermediate', 'Advanced'])],
-            'points'           => ['required', 'integer', 'min:1'],
-            'questions_json'   => ['required', 'json'],
-            'is_published'     => ['nullable', 'boolean'],
+            'title' => ['required'],
+            'description' => ['nullable'],
+            'topic_id' => ['required'],
+            'difficulty_level' => ['required'],
+            'points' => ['nullable'],
+            'questions' => ['required', 'array'],
+            'is_published' => ['boolean'],
         ]);
 
-        // 1. Automatically fetch the course ID from the selected Topic model
         $topic = Topic::findOrFail($validated['topic_id']);
 
+        $questions = $validated['questions'];
+
+        $totalPoints = collect($questions)->sum(function ($q) {
+            return (int) ($q['points'] ?? 0);
+        });
+
+        foreach ($questions as $qIndex => $question) {
+
+            foreach ($question['options'] as $oIndex => $option) {
+
+                // IF IMAGE OPTION WITH FILE
+                if (isset($option['file']) && $option['file']) {
+
+                    $path = $option['file']->store('quiz-options', 'public');
+
+                    $questions[$qIndex]['options'][$oIndex]['url'] =
+                        asset('storage/' . $path);
+
+                    unset($questions[$qIndex]['options'][$oIndex]['file']);
+                }
+            }
+        }
+
         Quiz::create([
-            'title'            => $validated['title'],
-            'description'      => $validated['description'] ?? null,
-            'topic_id'         => $validated['topic_id'],
-            'course_id'        => $topic->courseID,
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'topic_id' => $validated['topic_id'],
+            'course_id' => $topic->courseID,
             'difficulty_level' => $validated['difficulty_level'],
-            'points'           => $validated['points'],
-            'questions'        => $this->decodeQuestions($validated['questions_json']),
-            'is_published'     => (bool) ($validated['is_published'] ?? false),
-            'published_at'     => ($validated['is_published'] ?? false) ? now() : null,
+            'points' => $totalPoints,
+            'questions' => $questions,
+            'is_published' => (bool) ($validated['is_published'] ?? false),
+            'published_at' => now(),
         ]);
 
         return redirect()->route('admin.quizzes.index');
@@ -147,7 +170,7 @@ class QuizController extends Controller
                 'topic_id'         => $quiz->topic_id,
                 'difficulty_level' => $quiz->difficulty_level,
                 'points'           => $quiz->points,
-                'questions_json'   => json_encode($quiz->questions ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                'questions' => $quiz->questions ?? [],
                 'is_published'     => $quiz->is_published,
             ],
         ]);
@@ -161,19 +184,27 @@ class QuizController extends Controller
             'topic_id'         => ['required', 'integer', Rule::exists('topics', 'topicID')],
             'difficulty_level' => ['required', Rule::in(['Beginner', 'Intermediate', 'Advanced'])],
             'points'           => ['required', 'integer', 'min:1'],
-            'questions_json'   => ['required', 'json'],
+            'questions'        => ['required', 'array'],
             'is_published'     => ['nullable', 'boolean'],
         ]);
+
+        $questions = $validated['questions'];
+
+        $totalPoints = collect($questions)->sum(function ($q) {
+            return (int) ($q['points'] ?? 0);
+        });
 
         $quiz->update([
             'title'            => $validated['title'],
             'description'      => $validated['description'] ?? null,
             'topic_id'         => $validated['topic_id'],
             'difficulty_level' => $validated['difficulty_level'],
-            'points'           => $validated['points'],
-            'questions'        => $this->decodeQuestions($validated['questions_json']),
+            'points'           => $totalPoints,
+            'questions'        => $validated['questions'],
             'is_published'     => (bool) ($validated['is_published'] ?? false),
-            'published_at'     => ($validated['is_published'] ?? false) ? ($quiz->published_at ?? now()) : null,
+            'published_at'     => ($validated['is_published'] ?? false)
+                ? ($quiz->published_at ?? now())
+                : null,
         ]);
 
         return redirect()->route('admin.quizzes.index');

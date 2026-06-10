@@ -16,6 +16,7 @@ class Quiz extends Model
         'title',
         'description',
         'course_id',
+        'topic_id',
         'difficulty_level',
         'points',
         'questions',

@@ -19,7 +19,6 @@ return new class extends Migration
             $table->json('feedback')->nullable();
             $table->timestamp('submitted_at')->useCurrent();
             $table->timestamps();
-
             $table->index(['quiz_id', 'student_id']);
         });
     }

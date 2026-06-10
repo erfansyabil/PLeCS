@@ -1,73 +1,284 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import RichTextEditor from '@/Components/RichTextEditor';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
-export default function Edit({ quiz, courses = [] }) {
+export default function Edit({ quiz, topics = [] }) {
+
     const { data, setData, put, processing, errors } = useForm({
         title: quiz.title ?? '',
         description: quiz.description ?? '',
-        course_id: quiz.course_id ?? courses[0]?.id ?? '',
+        topic_id: quiz.topic_id ?? topics[0]?.id ?? '',
         difficulty_level: quiz.difficulty_level ?? 'Beginner',
         points: quiz.points ?? 10,
-        questions_json: quiz.questions_json ?? '[]',
         is_published: !!quiz.is_published,
+
+        // IMPORTANT: decode questions array (NOT JSON TEXT)
+        questions: quiz.questions ? JSON.parse(JSON.stringify(quiz.questions)) : [],
     });
+
+    const totalPoints = (data.questions || []).reduce((sum, q) => {
+        return sum + (parseInt(q.points ?? 0));
+    }, 0);
+
+    const addOption = (qIndex, type = 'text') => {
+        const updated = [...data.questions];
+
+        updated[qIndex].options.push({
+            id: crypto.randomUUID(),
+            type,
+            value: '',
+            file: null,
+            url: ''
+        });
+
+        setData('questions', updated);
+    };
+
+    const removeOption = (qIndex, oIndex) => {
+        const updated = [...data.questions];
+        updated[qIndex].options.splice(oIndex, 1);
+        setData('questions', updated);
+    };
+
+    const handleQuestionChange = (qIndex, field, value) => {
+        const updated = [...data.questions];
+        updated[qIndex][field] = value;
+        setData('questions', updated);
+    };
+
+    const handleOptionChange = (qIndex, oIndex, value) => {
+        const updated = [...data.questions];
+        updated[qIndex].options[oIndex].value = value;
+        setData('questions', updated);
+    };
+
+    const handleOptionImage = (qIndex, oIndex, file) => {
+        const updated = [...data.questions];
+
+        updated[qIndex].options[oIndex].file = file;
+        updated[qIndex].options[oIndex].url = URL.createObjectURL(file);
+
+        setData('questions', updated);
+    };
 
     const submit = (e) => {
         e.preventDefault();
-        put(route('admin.quizzes.update', quiz.id));
+
+        put(route('admin.quizzes.update', quiz.id), data, {
+            forceFormData: true,
+        });
     };
 
     return (
-        <AdministratorLayout header={<div className="flex items-center justify-between"><h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Edit Quiz</h2><Link href={route('admin.quizzes.index')} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Back</Link></div>}>
+        <AdministratorLayout
+            header={
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                        Edit Quiz
+                    </h2>
+
+                    <Link
+                        href={route('admin.quizzes.index')}
+                        className="rounded-lg border px-4 py-2 text-sm"
+                    >
+                        Back
+                    </Link>
+                </div>
+            }
+        >
             <Head title="Edit Quiz" />
-            <div className="py-12">
-                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-                    <form onSubmit={submit} className="space-y-5 rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-600">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Title</label>
-                            <input value={data.title} onChange={(e) => setData('title', e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" />
-                            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+
+            <div className="py-10">
+                <div className="mx-auto max-w-5xl px-4">
+
+                    <form onSubmit={submit} className="space-y-6">
+
+                        {/* TITLE */}
+                        <input
+                            className="w-full border p-2 rounded"
+                            value={data.title}
+                            onChange={(e) => setData('title', e.target.value)}
+                        />
+
+                        {/* DESCRIPTION */}
+                        <textarea
+                            className="w-full border p-2 rounded"
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                        />
+
+                        {/* TOPIC */}
+                        <select
+                            className="w-full border p-2 rounded"
+                            value={data.topic_id}
+                            onChange={(e) => setData('topic_id', e.target.value)}
+                        >
+                            {topics.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.name}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* QUESTIONS */}
+                        <div className="space-y-6">
+
+                            <h3 className="font-bold">Questions</h3>
+
+                            {data.questions.map((q, qIndex) => (
+                                <div key={q.id} className="border p-4 rounded space-y-4">
+
+                                    {/* QUESTION */}
+                                    <RichTextEditor
+                                        value={q.question}
+                                        onChange={(val) =>
+                                            handleQuestionChange(qIndex, 'question', val)
+                                        }
+                                    />
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">
+                                            Points for this question
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={q.points}
+                                            onChange={(e) =>
+                                                handleQuestionChange(
+                                                    qIndex,
+                                                    'points',
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            className="border rounded p-2 w-32"
+                                        />
+                                    </div>
+
+                                    {/* OPTIONS */}
+                                    <div className="space-y-2">
+
+                                        {q.options?.map((opt, oIndex) => {
+
+                                            const isCorrect =
+                                                q.correct_option_id === opt.id;
+
+                                            return (
+                                                <div
+                                                    key={opt.id}
+                                                    className={`flex gap-2 items-center border p-2 rounded
+                                                        ${isCorrect ? 'bg-green-100' : ''}`}
+                                                >
+
+                                                    {/* correct selector */}
+                                                    <input
+                                                        type="radio"
+                                                        checked={isCorrect}
+                                                        onChange={() =>
+                                                            handleQuestionChange(
+                                                                qIndex,
+                                                                'correct_option_id',
+                                                                opt.id
+                                                            )
+                                                        }
+                                                    />
+
+                                                    {/* TEXT OPTION */}
+                                                    {opt.type === 'text' && (
+                                                        <input
+                                                            className="border p-1 flex-1"
+                                                            value={opt.value}
+                                                            onChange={(e) =>
+                                                                handleOptionChange(
+                                                                    qIndex,
+                                                                    oIndex,
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        />
+                                                    )}
+
+                                                    {/* IMAGE OPTION */}
+                                                    {opt.type === 'image' && (
+                                                        <div className="flex flex-col gap-2">
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) =>
+                                                                    handleOptionImage(
+                                                                        qIndex,
+                                                                        oIndex,
+                                                                        e.target.files[0]
+                                                                    )
+                                                                }
+                                                            />
+
+                                                            {opt.url && (
+                                                                <img
+                                                                    src={opt.url}
+                                                                    className="w-20 h-20 object-cover rounded"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* DELETE */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            removeOption(qIndex, oIndex)
+                                                        }
+                                                        className="text-red-500"
+                                                    >
+                                                        X
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* ADD OPTIONS */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                addOption(qIndex, 'text')
+                                            }
+                                        >
+                                            + Text
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                addOption(qIndex, 'image')
+                                            }
+                                        >
+                                            + Image
+                                        </button>
+                                    </div>
+
+                                </div>
+                            ))}
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
-                            <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows="3" className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" />
-                        </div>
+                        {/* SUBMIT */}
+                        <PrimaryButton
+                            type="submit"
+                            size="md"
+                            variant="primary"
+                        >
+                            Save Quiz
+                        </PrimaryButton>
 
-                        <div className="grid gap-4 md:grid-cols-3">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Course</label>
-                                <select value={data.course_id} onChange={(e) => setData('course_id', e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                                    {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
-                                </select>
-                                {errors.course_id && <p className="mt-1 text-sm text-red-600">{errors.course_id}</p>}
+                        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                            <div className="font-semibold">
+                                Total Quiz Points: {totalPoints}
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Difficulty</label>
-                                <select value={data.difficulty_level} onChange={(e) => setData('difficulty_level', e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">Intermediate</option>
-                                    <option value="Advanced">Advanced</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Points</label>
-                                <input type="number" min="1" value={data.points} onChange={(e) => setData('points', e.target.value)} className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" />
-                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Questions JSON</label>
-                            <textarea value={data.questions_json} onChange={(e) => setData('questions_json', e.target.value)} rows="14" className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 font-mono text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" />
-                            {errors.questions_json && <p className="mt-1 text-sm text-red-600">{errors.questions_json}</p>}
-                        </div>
-
-                        <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
-                            <input type="checkbox" checked={data.is_published} onChange={(e) => setData('is_published', e.target.checked)} />
-                            Publish immediately
-                        </label>
-
-                        <button disabled={processing} type="submit" className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">{processing ? 'Saving...' : 'Save quiz'}</button>
                     </form>
                 </div>
             </div>

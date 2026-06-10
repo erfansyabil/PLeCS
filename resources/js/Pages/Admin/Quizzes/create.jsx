@@ -1,287 +1,375 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
+import RichTextEditor from '@/Components/RichTextEditor';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
 export default function Create({ topics = [] }) {
-    const { data, setData, transform, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         title: '',
         description: '',
+        course_id: '',
         topic_id: topics[0]?.id ?? '',
         difficulty_level: 'Beginner',
+        is_published: false,
         points: 10,
         questions: [
             {
+                id: crypto.randomUUID(),
+                type: 'mcq',
                 question: '',
-                options: ['', '', '', ''],
-                correct_index: 0,
+                image: null,
+                options: [
+                    { id: crypto.randomUUID(), type: 'text', value: '' },
+                    { id: crypto.randomUUID(), type: 'text', value: '' },
+                ],
+                correct_option_id: null,
                 points: 10,
             }
         ],
-        questions_json: '',
-        is_published: false,
     });
 
-    // 2. Add a new question block
+    
+
+    const courses = [...new Map(
+        topics.map(t => [t.course_id, t.course_title])
+    ).entries()];
+
+    const totalPoints = data.questions.reduce(
+    (sum, q) => sum + Number(q.points || 0),
+        0
+    );
+    
     const addQuestion = () => {
         setData('questions', [
             ...data.questions,
-            { question: '', options: ['', '', '', ''], correct_index: 0, points: 10 }
+            {
+                id: crypto.randomUUID(),
+                type: 'mcq',
+                question: '',
+                image: null,
+                options: [
+                    { id: crypto.randomUUID(), type: 'text', value: '', file: null, url: '' },
+                    { id: crypto.randomUUID(), type: 'text', value: '', file: null, url: '' },
+                ],
+                correct_option_id: null,
+            }
         ]);
     };
 
-    // 3. Remove a question block
     const removeQuestion = (qIndex) => {
-        const updated = data.questions.filter((_, index) => index !== qIndex);
-        setData('questions', updated);
-    };
-
-    // 4. Update specific text fields inside a question
-    const handleQuestionChange = (index, field, value) => {
         const updated = [...data.questions];
-        updated[index][field] = value;
+        updated.splice(qIndex, 1);
         setData('questions', updated);
     };
 
-    // 5. Update a specific multiple-choice option
+    const handleQuestionChange = (qIndex, field, value) => {
+        const updated = [...data.questions];
+        updated[qIndex][field] = value;
+        setData('questions', updated);
+    };
+
+    const addOption = (qIndex, type = 'text') => {
+        const updated = [...data.questions];
+
+        updated[qIndex].options.push({
+            id: crypto.randomUUID(),
+            type: type, // MUST be image
+            value: '',
+            file: null,
+            url: ''
+        });
+
+        setData('questions', updated);
+    };
+
+    const removeOption = (qIndex, oIndex) => {
+        const updated = [...data.questions];
+        const removed = updated[qIndex].options.splice(oIndex, 1);
+
+        // reset correct answer if deleted option was correct
+        if (removed[0]?.id === updated[qIndex].correct_option_id) {
+            updated[qIndex].correct_option_id = null;
+        }
+
+        setData('questions', updated);
+    };
+
     const handleOptionChange = (qIndex, oIndex, value) => {
         const updated = [...data.questions];
-        updated[qIndex].options[oIndex] = value;
+        updated[qIndex].options[oIndex].value = value;
+        setData('questions', updated);
+    };
+
+    const handleOptionImage = (qIndex, oIndex, file) => {
+        const updated = [...data.questions];
+
+        updated[qIndex].options[oIndex].file = file;
+        updated[qIndex].options[oIndex].url = URL.createObjectURL(file); // preview
+
         setData('questions', updated);
     };
 
     const submit = (e) => {
         e.preventDefault();
-        
-        transform((data) => ({
-        ...data,
-        questions_json: JSON.stringify(data.questions),
-        }));
-
-        // Inertia post accepts custom data payload overrides directly
-        post(route('admin.quizzes.store'));
-    }
-
-    // Group topics by course_title for <optgroup> display
-    const grouped = topics.reduce((acc, topic) => {
-        const key = topic.course_title ?? 'Uncategorised';
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(topic);
-        return acc;
-    }, {});
+        post(route('admin.quizzes.store'),  {
+            ...data, 
+            points:totalPoints,
+            forceFormData: true,
+        });
+    };
 
     return (
         <AdministratorLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Quiz</h2>
-                    <Link
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                        Create Quiz
+                    </h2>
+
+                    <PrimaryButton
+                        variant="secondary"
+                        size="md"
                         href={route('admin.quizzes.index')}
-                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                     >
                         Back
-                    </Link>
+                    </PrimaryButton>
                 </div>
             }
         >
             <Head title="Create Quiz" />
-            <div className="py-12">
-                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-                    <form onSubmit={submit} className="space-y-5 rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-600">
+
+            <div className="py-10">
+                <div className="mx-auto max-w-5xl px-4">
+
+                    <form onSubmit={submit} className="space-y-6">
 
                         {/* Title */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Title</label>
-                            <input
-                                value={data.title}
-                                onChange={(e) => setData('title', e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                            />
-                            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-                        </div>
+                        <input
+                            className="w-full border p-2 rounded"
+                            placeholder="Quiz Title"
+                            value={data.title}
+                            onChange={(e) => setData('title', e.target.value)}
+                        />
 
                         {/* Description */}
+                        <textarea
+                            className="w-full border p-2 rounded"
+                            placeholder="Description"
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                        />
+
+                        {/* Course */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
-                            <textarea
-                                value={data.description}
-                                onChange={(e) => setData('description', e.target.value)}
-                                rows="3"
-                                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                            />
+                            <label className="block text-sm font-medium">Course</label>
+
+                            <select
+                                value={data.course_id}
+                                onChange={(e) => {
+                                    setData('course_id', e.target.value);
+                                    setData('topic_id', '');
+                                }}
+                                className="w-full border p-2 rounded"
+                            >
+                                <option value="">Select Course</option>
+
+                                {courses.map(([id, title]) => (
+                                    <option key={id} value={id}>
+                                        {title}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
-                        <div className="grid gap-2 md:grid-cols-2">
-                            {/* Course List */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Course</label>
-                                <select
-                                    value={data.course_id}
-                                    onChange={(e) => setData('course_id', e.target.value)}
-                                    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                >
-                                    <option value="">Select a Course</option>
-                                    {Object.keys(grouped).map((courseTitle) => (
-                                        <option key={courseTitle} value={courseTitle}>
-                                            {courseTitle}
+                        {/* Topic */}
+                        <div>
+                            <label className="block text-sm font-medium">Topic</label>
+
+                            <select
+                                value={data.topic_id}
+                                onChange={(e) => setData('topic_id', e.target.value)}
+                                disabled={!data.course_id}
+                                className="w-full border p-2 rounded"
+                            >
+                                <option value="">Select Topic</option>
+
+                                {topics
+                                    .filter(t => t.course_id === Number(data.course_id))
+                                    .map(topic => (
+                                        <option key={topic.id} value={topic.id}>
+                                            {topic.name}
                                         </option>
-                                    ))}
-                                </select>
-                                {errors.course_id && <p className="mt-1 text-sm text-red-600">{errors.course_id}</p>}
-                            </div>
-
-                            {/* Topic List */}            
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Topic</label>
-                                <select
-                                    value={data.topic_id}
-                                    onChange={(e) => setData('topic_id', e.target.value)}
-                                    disabled={!data.course_id} // Disabled until a course is picked
-                                    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                >
-                                    {!data.course_id ? (
-                                        <option value="">Please select a course first</option>
-                                    ) : !grouped[data.course_id] || grouped[data.course_id].length === 0 ? (
-                                        <option value="" disabled>No topics available</option>
-                                    ) : (
-                                        <>
-                                            <option value="">Select a Topic</option>
-                                            {grouped[data.course_id].map((topic) => (
-                                                <option key={topic.id} value={topic.id}>
-                                                    {topic.name}
-                                                </option>
-                                            ))}
-                                        </>
-                                    )}
-                                </select>
-                                {errors.topic_id && <p className="mt-1 text-sm text-red-600">{errors.topic_id}</p>}
-                            </div>
+                                    ))
+                                }
+                            </select>
                         </div>
 
-                        <div className="grid gap-2 md:grid-cols-2">
-                            {/* Difficulty */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Difficulty</label>
-                                <select
-                                    value={data.difficulty_level}
-                                    onChange={(e) => setData('difficulty_level', e.target.value)}
-                                    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                >
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">Intermediate</option>
-                                    <option value="Advanced">Advanced</option>
-                                </select>
-                            </div>
+                        {/* Questions */}
+                        <div className="space-y-6">
+                            <div className="flex justify-between">
+                                <h3 className="font-bold">Questions</h3>
 
-                            {/* Points */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Points</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={data.points}
-                                    onChange={(e) => setData('points', e.target.value)}
-                                    className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                />
-                            </div>
-                        </div>
-
-                        {/* VISUAL QUESTION BUILDER SECTION */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Quiz Questions</h3>
-                                <button
+                                <PrimaryButton
                                     type="button"
+                                    variant="secondary"
+                                    size="md"
                                     onClick={addQuestion}
-                                    className="rounded-lg bg-green-600 px-4 py-2 text-xs font-medium text-white hover:bg-green-700"
                                 >
                                     + Add Question
-                                </button>
+                                </PrimaryButton>
                             </div>
 
-                            {errors.questions_json && <p className="mb-4 text-sm text-red-600 font-medium">{errors.questions_json}</p>}
+                            {data.questions.map((q, qIndex) => (
+                                <div key={q.id} className="border p-4 rounded space-y-4">
 
-                            <div className="space-y-6">
-                                {data.questions.map((q, qIndex) => (
-                                    <div key={qIndex} className="p-5 rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50 space-y-4 relative">
-                                        
-                                        {/* Remove Button */}
-                                        {data.questions.length > 1 && (
+                                    {/* Remove Question */}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeQuestion(qIndex)}
+                                        className="text-red-500 text-sm"
+                                    >
+                                        Remove Question
+                                    </button>
+
+                                    {/* Rich Text Question */}
+                                    <RichTextEditor
+                                        value={q.question}
+                                        onChange={(val) =>
+                                            handleQuestionChange(qIndex, 'question', val)
+                                        }
+                                    />
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">
+                                            Points for this question
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={q.points}
+                                            onChange={(e) =>
+                                                handleQuestionChange(
+                                                    qIndex,
+                                                    'points',
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            className="border rounded p-2 w-32"
+                                        />
+                                    </div>
+
+                                    {/* Options */}
+                                    <div className="space-y-2">
+                                        {q.options.map((opt, oIndex) => (
+                                        <div key={opt.id} className="flex gap-2 items-center border p-2 rounded">
+
+                                            {/* Correct answer */}
+                                            <input
+                                                type="radio"
+                                                checked={q.correct_option_id === opt.id}
+                                                onChange={() =>
+                                                    handleQuestionChange(qIndex, 'correct_option_id', opt.id)
+                                                }
+                                            />
+
+                                            {/* TEXT OPTION */}
+                                            {opt.type === 'text' && (
+                                                <input
+                                                    className="border p-1 flex-1"
+                                                    value={opt.value}
+                                                    onChange={(e) => {
+                                                        const updated = [...data.questions];
+                                                        updated[qIndex].options[oIndex].value = e.target.value;
+                                                        setData('questions', updated);
+                                                    }}
+                                                    placeholder="Text option"
+                                                />
+                                            )}
+
+                                            {/* IMAGE OPTION */}
+                                            {opt.type === 'image' && (
+                                                <div className="flex flex-col gap-2">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) =>
+                                                            handleOptionImage(qIndex, oIndex, e.target.files[0])
+                                                        }
+                                                    />
+
+                                                    {opt.url && (
+                                                        <img
+                                                            src={opt.url}
+                                                            className="w-24 h-24 object-cover rounded border"
+                                                        />
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* DELETE */}
                                             <button
                                                 type="button"
-                                                onClick={() => removeQuestion(qIndex)}
-                                                className="absolute top-4 right-4 text-sm text-red-500 hover:text-red-700 font-medium"
+                                                onClick={() => removeOption(qIndex, oIndex)}
+                                                className="text-red-500"
                                             >
-                                                Remove
+                                                X
                                             </button>
-                                        )}
-
-                                        <span className="inline-block text-xs font-bold text-blue-600 uppercase tracking-wide">
-                                            Question {qIndex + 1}
-                                        </span>
-
-                                        {/* Question Text Input */}
-                                        <div>
-                                            <input
-                                                type="text"
-                                                placeholder="Enter your question text here..."
-                                                value={q.question}
-                                                onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
-                                                className="w-full rounded-lg border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 font-medium"
-                                                required
-                                            />
                                         </div>
-
-                                        {/* Options Grid */}
-                                        <div className="space-y-2">
-                                            <label className="block text-xs font-medium text-gray-500 uppercase">Answer Options</label>
-                                            <div className="grid gap-3 sm:grid-cols-2">
-                                                {q.options.map((option, oIndex) => (
-                                                    <div key={oIndex} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                                                        <input
-                                                            type="radio"
-                                                            name={`correct-answer-${qIndex}`}
-                                                            checked={q.correct_index === oIndex}
-                                                            onChange={() => handleQuestionChange(qIndex, 'correct_index', oIndex)}
-                                                            className="text-blue-600 focus:ring-blue-500"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            placeholder={`Option ${oIndex + 1}`}
-                                                            value={option}
-                                                            onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                                                            className="w-full border-0 p-1 text-sm bg-transparent focus:ring-0 dark:text-gray-200"
-                                                            required
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <p className="text-xs text-gray-400 italic mt-1">Select the radio bullet to mark which answer option is correct.</p>
-                                        </div>
+                                    ))}
                                     </div>
-                                ))}
-                            </div>
+
+                                    {/* Add Option */}
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => addOption(qIndex, 'text')}
+                                            className="text-blue-600 text-sm"
+                                        >
+                                            + Text Option
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => addOption(qIndex, 'image')}
+                                            className="text-purple-600 text-sm"
+                                        >
+                                            + Image Option
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
-                        <hr className="border-gray-200 dark:border-gray-700" />
-
                         {/* Publish */}
-                        <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+                        <label className="flex items-center gap-2">
                             <input
                                 type="checkbox"
                                 checked={data.is_published}
-                                onChange={(e) => setData('is_published', e.target.checked)}
+                                onChange={(e) =>
+                                    setData('is_published', e.target.checked)
+                                }
                             />
-                            Publish immediately
+                            Publish
                         </label>
 
-                        <button
-                            disabled={processing}
+                        {/* Submit */}
+                        <PrimaryButton
                             type="submit"
-                            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                            disabled={processing}
+                            size="md"
+                            variant="primary"
                         >
-                            {processing ? 'Creating...' : 'Create quiz'}
-                        </button>
+                            {processing ? 'Saving...' : 'Create Quiz'}
+                        </PrimaryButton>
+
+                        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                            <div className="font-semibold">
+                                Total Quiz Points: {totalPoints}
+                            </div>
+                        </div>
                     </form>
+
                 </div>
             </div>
         </AdministratorLayout>

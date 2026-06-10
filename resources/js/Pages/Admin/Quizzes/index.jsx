@@ -19,7 +19,7 @@ export default function Index({ quizzes = [] }) {
             }
         >
             <Head title="Quiz Management" />
-
+            
             <div className="py-12">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-gray-600">

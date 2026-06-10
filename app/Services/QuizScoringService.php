@@ -31,39 +31,41 @@ class QuizScoringService
         }
 
         $defaultPointsPerQ = intdiv($quiz->points, $totalQuestions) ?: 1;
-        // Deduction is half the question's worth, minimum 1
-        $defaultDeduction  = max(1, intdiv($defaultPointsPerQ, 2));
 
         $score        = 0;
         $maxScore     = 0;
         $pointsEarned = 0;
         $feedback     = [];
 
+        $maxScore = collect($questions)->sum(fn ($q) => $q['points'] ?? $defaultPointsPerQ);
+
         foreach ($questions as $i => $q) {
-            $qPoints    = $q['points'] ?? $defaultPointsPerQ;
-            $deduction  = $q['deduction'] ?? $defaultDeduction;
-            $maxScore  += $qPoints;
 
-            $studentAnswer = isset($studentAnswers[(string) $i])
-                ? (int) $studentAnswers[(string) $i]
-                : null;
+            $qPoints = $q['points'] ?? $defaultPointsPerQ;
 
-            $correct = $studentAnswer === (int) $q['correct_index'];
+            $deduction = $q['deduction']
+                ?? max(1, intdiv($qPoints, 2));
+
+            $questionId = $q['id'] ?? (string) $i;
+
+            $studentAnswer = $studentAnswers[$questionId] ?? null;
+            $correctAnswer = $q['correct_option_id'] ?? null;
+
+            $correct = $studentAnswer === $correctAnswer;
 
             if ($correct) {
-                $score        += $qPoints;
-                $pointsEarned += $qPoints;   // FR026: award
+                $score += $qPoints;
+                $pointsEarned += $qPoints;
             } else {
-                $pointsEarned -= $deduction; // FR027: deduct
+                $pointsEarned -= $deduction;
             }
 
-            $feedback[$i] = [
-                'question'       => $q['question'],
-                'chosen_index'   => $studentAnswer,
-                'correct_index'  => (int) $q['correct_index'],
-                'correct'        => $correct,
+            $feedback[$questionId] = [
+                'question' => $q['question'] ?? '',
+                'chosen_option_id' => $studentAnswer,
+                'correct_option_id' => $correctAnswer,
+                'correct' => $correct,
                 'points_awarded' => $correct ? $qPoints : -$deduction,
-                'explanation'    => $q['explanation'] ?? null,
             ];
         }
 

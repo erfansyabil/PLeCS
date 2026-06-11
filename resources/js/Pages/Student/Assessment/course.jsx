@@ -82,7 +82,7 @@ export default function CourseAssessmentPage({ course, quizzes = [], codingExerc
                                                         href={route('student.assessment.quiz.show', {
                                                             course: course.id,
                                                             topic: topic.id,
-                                                            quiz: topic.quizzes[0].id,
+                                                            quiz: quiz.id,
                                                         })}
                                                         className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                                                     >

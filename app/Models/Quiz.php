@@ -10,7 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Quiz extends Model
 {
-    use HasFactory;
+     use HasFactory;
+
+    protected $primaryKey = 'id';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'title',
@@ -50,5 +54,10 @@ class Quiz extends Model
     public function attempts(): HasMany
     {
         return $this->hasMany(QuizAttempt::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'id';
     }
 }

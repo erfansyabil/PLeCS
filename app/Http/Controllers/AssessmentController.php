@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\LearningContent;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Models\Topic;
 use App\Services\StudentProgressService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -243,11 +244,12 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function showQuiz(LearningContent $course, Quiz $quiz)
+    public function showQuiz(LearningContent $course, Topic $topic, Quiz $quiz)
     {
         $this->ensureEnrollment($course);
-        abort_unless((int) $quiz->course_id === (int) $course->id, 404);
         abort_unless($quiz->is_published, 404);
+        abort_unless((int) $quiz->course_id === (int) $course->id, 404);
+        abort_unless((int) $quiz->topic_id === (int) $topic->topicID, 404);
 
         $latestAttempt = QuizAttempt::query()
             ->where('quiz_id', $quiz->id)
@@ -272,6 +274,7 @@ class AssessmentController extends Controller
                 'feedback'     => $latestAttempt->feedback ?? [],
                 'submitted_at' => optional($latestAttempt->submitted_at)?->format('Y-m-d H:i'),
             ] : null,
+            
         ]);
     }
 

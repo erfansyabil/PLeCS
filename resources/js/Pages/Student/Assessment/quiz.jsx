@@ -49,59 +49,89 @@ export default function QuizPage({ course, quiz, latestAttempt }) {
                     </div>
 
                     {/* QUESTIONS */}
-                    <form onSubmit={submit} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-600">
+                    <form
+                        onSubmit={submit}
+                        className="space-y-6"
+                    >
 
                         {quiz.questions?.map((question, qIndex) => (
-                            <fieldset
+                            <div
                                 key={question.id ?? qIndex}
-                                className="rounded-2xl border border-gray-200 p-4"
+                                className="rounded-2xl bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden"
                             >
-                                <legend className="text-base font-medium">
-                                    {qIndex + 1}. {question.question}
-                                </legend>
 
-                                <div className="mt-4 space-y-3">
+                                {/* QUESTION HEADER */}
+                                <div className="p-5 border-b border-gray-100 dark:border-gray-600">
+                                    <div className="flex gap-3">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold">
+                                            {qIndex + 1}
+                                        </span>
+
+                                        <div className="flex-1">
+                                            <div
+                                                className="text-gray-900 dark:text-white leading-relaxed"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: question.question,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* OPTIONS */}
+                                <div className="p-5 space-y-3">
                                     {(question.options ?? []).map((option) => (
                                         <label
                                             key={option.id}
-                                            className="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm hover:border-blue-400"
+                                            className={`
+                                                flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition
+                                                hover:border-blue-500
+                                                ${data.answers[qIndex] === option.id
+                                                    ? 'border-blue-500 bg-blue-50 dark:bg-gray-600'
+                                                    : 'border-gray-200 dark:border-gray-600'
+                                                }
+                                            `}
                                         >
                                             <input
                                                 type="radio"
                                                 name={`question-${qIndex}`}
                                                 checked={data.answers[qIndex] === option.id}
                                                 onChange={() => handleAnswer(qIndex, option.id)}
+                                                className="mt-0.5"
                                             />
 
                                             {/* TEXT OPTION */}
                                             {option.type === 'text' && (
-                                                <span>{option.value}</span>
+                                                <span className="text-gray-800 dark:text-gray-100">
+                                                    {option.value}
+                                                </span>
                                             )}
 
                                             {/* IMAGE OPTION */}
-                                            {option.type === 'image' && (
-                                                <img
-                                                    src={option.url}
-                                                    className="w-24 h-24 object-cover rounded"
-                                                />
+                                            {option.type === 'image' && option.url && (
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={option.url}
+                                                        className="w-28 h-20 object-cover rounded-lg border"
+                                                    />
+                                                </div>
                                             )}
                                         </label>
                                     ))}
                                 </div>
-                            </fieldset>
+                            </div>
                         ))}
 
-                        {errors.answers && (
-                            <p className="text-sm text-red-600">{errors.answers}</p>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-600 px-5 py-2 text-white"
-                        >
-                            {processing ? 'Submitting...' : 'Submit quiz'}
-                        </button>
+                        {/* SUBMIT BUTTON */}
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="w-full rounded-xl bg-blue-600 px-5 py-3 text-white font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                            >
+                                {processing ? 'Submitting...' : 'Submit Quiz'}
+                            </button>
+                        </div>
                     </form>
 
                     {/* EMPTY STATE */}

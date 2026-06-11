@@ -35,6 +35,24 @@ export default function Edit({ quiz, topics = [] }) {
         setData('questions', updated);
     };
 
+    const addQuestion = () => {
+        setData('questions', [
+            ...data.questions,
+            {
+                id: crypto.randomUUID(),
+                type: 'mcq',
+                question: '',
+                image: null,
+                options: [
+                    { id: crypto.randomUUID(), type: 'text', value: '', file: null, url: '' },
+                    { id: crypto.randomUUID(), type: 'text', value: '', file: null, url: '' },
+                ],
+                correct_option_id: null,
+                points: 10,
+            }
+        ]);
+    };
+
     const removeOption = (qIndex, oIndex) => {
         const updated = [...data.questions];
         updated[qIndex].options.splice(oIndex, 1);
@@ -124,7 +142,17 @@ export default function Edit({ quiz, topics = [] }) {
                         {/* QUESTIONS */}
                         <div className="space-y-6">
 
-                            <h3 className="font-bold">Questions</h3>
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold">Questions</h3>
+
+                                <button
+                                    type="button"
+                                    onClick={addQuestion}
+                                    className="text-sm px-3 py-1 bg-blue-600 text-white rounded"
+                                >
+                                    + Add Question
+                                </button>
+                            </div>
 
                             {data.questions.map((q, qIndex) => (
                                 <div key={q.id} className="border p-4 rounded space-y-4">

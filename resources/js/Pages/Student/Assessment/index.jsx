@@ -1,6 +1,7 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link } from '@inertiajs/react';
 import Header from '@/Components/ui/Header';
+import PrimaryButton from '@/Components/ui/PrimaryButton';
 
 export default function AssessmentIndex({ courses = [] }) {
 
@@ -25,19 +26,21 @@ export default function AssessmentIndex({ courses = [] }) {
                                         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
                                             {course.title}
                                         </h3>
-                                        <p className="text-gray-600 dark:text-gray-300 text-sm">
-                                            {course.description ?? 'No description available.'}
-                                        </p>
-                                        <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
+                                        <div
+                                            className="rich-content text-gray-600 dark:text-gray-300 text-sm"
+                                            dangerouslySetInnerHTML={{ __html: course.description }}
+                                        />
+                                        <div className="mt-2 mb-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
                                             <span>{course.quizzes_count ?? 0} quizzes</span>
                                             <span>{course.coding_exercises_count ?? 0} exercises</span>
                                         </div>
-                                        <Link
+                                        <PrimaryButton
                                             href={route('student.assessment.show', course.id)}
-                                            className="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                            variant="primary"
+                                            size="md"
                                         >
                                             Open assessments
-                                        </Link>
+                                        </PrimaryButton>
                                     </div>
                                 ))}
                             </div>

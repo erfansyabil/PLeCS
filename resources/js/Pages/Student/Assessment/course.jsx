@@ -21,16 +21,16 @@ export default function CourseAssessmentPage({ course, quizzes = [], codingExerc
 
                     <section className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            Topics
+                            Topics & Quizzes
                         </h3>
 
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="space-y-6">
                             {course.topics?.map((topic) => (
                                 <div
                                     key={topic.id}
                                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-600"
                                 >
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                                         {topic.title}
                                     </h4>
 
@@ -41,27 +41,62 @@ export default function CourseAssessmentPage({ course, quizzes = [], codingExerc
                                         }}
                                     />
 
-                                    <div className="mt-4 text-xs text-gray-500 dark:text-gray-300">
+                                    <div className="mt-3 text-xs text-gray-500 dark:text-gray-300">
                                         {topic.quizzes?.length ?? 0} quizzes available
                                     </div>
 
                                     {topic.quizzes?.length > 0 ? (
-                                        <Link
-                                            href={route('student.assessment.quiz.show', [
-                                                course.id,
-                                                topic.quizzes[0].id, // start FIRST quiz in topic
-                                            ])}
-                                            className="mt-4 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-                                        >
-                                            Start Quiz
-                                        </Link>
+                                        <div className="mt-4 space-y-3">
+                                            {topic.quizzes.map((quiz) => (
+                                                <div
+                                                    key={quiz.id}
+                                                    className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3"
+                                                >
+                                                    <div>
+                                                        <div className="font-medium text-gray-900 dark:text-white">
+                                                            {quiz.title}
+                                                        </div>
+
+                                                        <div className="mt-1 text-xs text-gray-500 dark:text-gray-300 flex gap-3">
+                                                            <span>{quiz.points} pts</span>
+                                                            <span>{quiz.questions_count} questions</span>
+                                                            <span>{quiz.difficulty_level}</span>
+                                                        </div>
+
+                                                        {quiz.latest_attempt && (
+                                                            <div className="mt-1 text-xs">
+                                                                {quiz.latest_attempt.passed ? (
+                                                                    <span className="text-green-600">
+                                                                        Passed ({quiz.latest_attempt.score}/{quiz.latest_attempt.max_score})
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-red-600">
+                                                                        Failed ({quiz.latest_attempt.score}/{quiz.latest_attempt.max_score})
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <Link
+                                                        href={route('student.assessment.quiz.show', {
+                                                            course: course.id,
+                                                            topic: topic.id,
+                                                            quiz: topic.quizzes[0].id,
+                                                        })}
+                                                        className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                                    >
+                                                        {topic.quizzes[0]?.latest_attempt
+                                                            ? 'Retake Quiz'
+                                                            : 'Attempt Quiz'}
+                                                    </Link>
+                                                </div>
+                                            ))}
+                                        </div>
                                     ) : (
-                                        <button
-                                            disabled
-                                            className="mt-4 inline-flex rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-600 cursor-not-allowed"
-                                        >
-                                            No quiz available
-                                        </button>
+                                        <div className="mt-4 text-sm text-gray-500 dark:text-gray-300">
+                                            No quizzes available for this topic.
+                                        </div>
                                     )}
                                 </div>
                             ))}

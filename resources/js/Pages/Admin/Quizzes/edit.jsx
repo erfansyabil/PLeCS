@@ -1,7 +1,8 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import RichTextEditor from '@/Components/RichTextEditor';
 import PrimaryButton from '@/Components/ui/PrimaryButton';
+import { useState } from 'react';
 
 export default function Edit({ quiz, topics = [] }) {
 
@@ -22,14 +23,15 @@ export default function Edit({ quiz, topics = [] }) {
     }, 0);
 
     const addOption = (qIndex, type = 'text') => {
+        console.log("ADDING OPTION TYPE:", type);
         const updated = [...data.questions];
 
         updated[qIndex].options.push({
             id: crypto.randomUUID(),
-            type,
+            type: type,
             value: '',
             file: null,
-            url: ''
+            url: type === 'image' ? '' : null,
         });
 
         setData('questions', updated);
@@ -72,18 +74,66 @@ export default function Edit({ quiz, topics = [] }) {
     };
 
     const handleOptionImage = (qIndex, oIndex, file) => {
+        const key = `${qIndex}-${oIndex}`;
+
+        setFiles(prev => ({
+            ...prev,
+            [key]: file
+        }));
+
         const updated = [...data.questions];
 
-        updated[qIndex].options[oIndex].file = file;
         updated[qIndex].options[oIndex].url = URL.createObjectURL(file);
 
         setData('questions', updated);
     };
 
+    const [files, setFiles] = useState({});
+
     const submit = (e) => {
         e.preventDefault();
 
-        put(route('admin.quizzes.update', quiz.id), data, {
+        const formData = new FormData();
+
+        formData.append('_method', 'PUT');
+
+        formData.append('title', data.title);
+        formData.append('description', data.description ?? '');
+        formData.append('topic_id', data.topic_id);
+        formData.append('difficulty_level', data.difficulty_level);
+        formData.append('points', data.points ?? 0);
+        formData.append('is_published', data.is_published ? 1 : 0);
+
+        // ✅ STEP 1: clean questions (NO FILES inside JSON)
+        const cleanQuestions = data.questions.map((q) => ({
+            id: q.id,
+            type: q.type,
+            question: q.question,
+            points: q.points,
+            correct_option_id: q.correct_option_id,
+            options: q.options.map((opt) => ({
+                id: opt.id,
+                type: opt.type,
+                value: opt.value,
+                url: opt.url ?? null,
+            })),
+        }));
+
+        formData.append('questions', JSON.stringify(cleanQuestions));
+
+        // ✅ STEP 2: attach ONLY real File objects
+        data.questions.forEach((q, qIndex) => {
+            q.options.forEach((opt, oIndex) => {
+                if (opt.file instanceof File) {
+                    formData.append(
+                        `files[${qIndex}-${oIndex}]`,
+                        opt.file
+                    );
+                }
+            });
+        });
+
+        router.post(route('admin.quizzes.update', quiz.id), formData, {
             forceFormData: true,
         });
     };

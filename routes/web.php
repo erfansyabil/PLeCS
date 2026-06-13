@@ -9,6 +9,9 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\CodingExerciseController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\GuidanceController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Student\QuizAttemptController;
 use Illuminate\Foundation\Application;
@@ -169,12 +172,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('progress.show');
 
         // UC012: Provide Feedback on Learning Modules
-        Route::get('/feedback', function () {
-            return Inertia::render('Student/Feedback/index');
-        })->name('feedback.index');
-        Route::get('/feedback/form', function () {
-            return Inertia::render('Student/Feedback/form');
-        })->name('feedback.form');
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+        Route::get('/analytics/{course}', [AnalyticsController::class, 'show'])->name('analytics.show');
+
+        // UC012: Provide Feedback on Learning Modules
+        Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+        Route::get('/feedback/{topic}', [FeedbackController::class, 'form'])->name('feedback.form');
+        Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
+        Route::post('/feedback/skip', [FeedbackController::class, 'skip'])->name('feedback.skip');
+
+        Route::patch('/guidance/{guidance}/read', [GuidanceController::class, 'markRead'])->name('guidance.read');
 
     });
 
@@ -208,6 +215,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/guidance', function () {
             return Inertia::render('Teacher/FeedbackAndGuidance/index');
         })->name('guidance.index');
+
+        Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
+        Route::get('/guidance/{student}', [GuidanceController::class, 'show'])->name('guidance.show');
+        Route::post('/guidance', [GuidanceController::class, 'store'])->name('guidance.store');
+        Route::delete('/guidance/{guidance}', [GuidanceController::class, 'destroy'])->name('guidance.destroy');
 
     });
 

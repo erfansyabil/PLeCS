@@ -146,4 +146,29 @@ class User extends Authenticatable
     {
         return $this->hasOne(LearningPath::class)->latestOfMany();
     }
+
+    public function analytics(): HasMany
+    {
+        return $this->hasMany(Analytic::class, 'student_id');
+    }
+
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class, 'student_id');
+    }
+
+    public function guidancesReceived(): HasMany
+    {
+        return $this->hasMany(Guidance::class, 'student_id');
+    }
+
+    public function guidancesGiven(): HasMany
+    {
+        return $this->hasMany(Guidance::class, 'teacher_id');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class, 'studentID');
+    }
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 09, 2026 at 06:00 PM
+-- Generation Time: Jun 13, 2026 at 02:37 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,6 +39,26 @@ CREATE TABLE `additional_learning_resources` (
   `order_index` int(10) UNSIGNED NOT NULL DEFAULT 0,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_by` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `analytics`
+--
+
+CREATE TABLE `analytics` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `student_id` bigint(20) UNSIGNED NOT NULL,
+  `course_id` bigint(20) UNSIGNED NOT NULL,
+  `topic_id` bigint(20) UNSIGNED NOT NULL,
+  `completion_rate` double NOT NULL DEFAULT 0,
+  `average_score` double NOT NULL DEFAULT 0,
+  `predicted_mastery_date` date DEFAULT NULL,
+  `weak_topics` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`weak_topics`)),
+  `risk_flag` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -130,6 +150,13 @@ CREATE TABLE `enrollments` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `enrollments`
+--
+
+INSERT INTO `enrollments` (`id`, `studentID`, `courseID`, `pathID`, `order`, `status`, `progress`, `enrolled_at`, `completed_at`, `created_at`, `updated_at`) VALUES
+(1, 3, 1, 1, 0, 'active', 0, '2026-06-09 09:19:43', NULL, '2026-06-09 09:19:43', '2026-06-09 09:19:43');
+
 -- --------------------------------------------------------
 
 --
@@ -144,6 +171,41 @@ CREATE TABLE `failed_jobs` (
   `payload` longtext NOT NULL,
   `exception` longtext NOT NULL,
   `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `feedbacks`
+--
+
+CREATE TABLE `feedbacks` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `student_id` bigint(20) UNSIGNED NOT NULL,
+  `topic_id` bigint(20) UNSIGNED NOT NULL,
+  `rating` tinyint(3) UNSIGNED DEFAULT NULL,
+  `comment` text DEFAULT NULL,
+  `tags` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`tags`)),
+  `skipped` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `guidance`
+--
+
+CREATE TABLE `guidance` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `teacher_id` bigint(20) UNSIGNED NOT NULL,
+  `student_id` bigint(20) UNSIGNED NOT NULL,
+  `topic_id` bigint(20) UNSIGNED NOT NULL,
+  `comment` text NOT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -412,6 +474,13 @@ CREATE TABLE `learning_paths` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `learning_paths`
+--
+
+INSERT INTO `learning_paths` (`pathID`, `studentID`, `pathName`, `complexityLevel`, `isAdaptive`, `estimatedDuration`, `currentProgress`, `status`, `path_data`, `deleted_at`, `created_at`, `updated_at`) VALUES
+(1, 3, 'My Learning Path', 'Beginner', 1, 0, 0, 'Active', NULL, NULL, '2026-06-09 09:19:43', '2026-06-09 09:19:43');
+
 -- --------------------------------------------------------
 
 --
@@ -426,6 +495,13 @@ CREATE TABLE `learning_path_courses` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `learning_path_courses`
+--
+
+INSERT INTO `learning_path_courses` (`id`, `pathID`, `courseID`, `order`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -476,7 +552,10 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (15, '2026_05_31_000003_create_quiz_attempts_table', 1),
 (16, '2026_05_31_000004_create_coding_exercise_attempts_table', 1),
 (17, '2026_05_31_000005_create_learning_content_prerequisites_table', 1),
-(18, '2026_06_09_120000_create_additional_learning_resources_table', 1);
+(18, '2026_06_09_120000_create_additional_learning_resources_table', 1),
+(19, '2026_06_11_152751_create_analytics_table', 2),
+(20, '2026_06_11_154207_create_feedbacks_table', 2),
+(21, '2026_06_11_154253_create_guidance_table', 2);
 
 -- --------------------------------------------------------
 
@@ -530,6 +609,14 @@ CREATE TABLE `quizzes` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `quizzes`
+--
+
+INSERT INTO `quizzes` (`id`, `topic_id`, `course_id`, `title`, `description`, `difficulty_level`, `points`, `questions`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 'Quiz 1', 'Quiz 1 Description', 'Beginner', 30, '[{\"id\":\"479efd05-b192-4043-a4f8-a251ae1d90e5\",\"type\":\"mcq\",\"question\":\"<p>Ini adalah soalan 1<\\/p>\",\"points\":\"10\",\"correct_option_id\":\"48e57ead-9b08-442c-83bd-b3122fef9fa2\",\"options\":[{\"id\":\"26c81552-7e7a-4db6-a41d-856363a28140\",\"type\":\"text\",\"value\":\"jawapan 1\",\"url\":null},{\"id\":\"48e57ead-9b08-442c-83bd-b3122fef9fa2\",\"type\":\"text\",\"value\":\"jawapan 2\",\"url\":null},{\"id\":\"07848b09-2329-4204-bed6-25dadcfe4362\",\"type\":\"text\",\"value\":\"jawapan 3\",\"url\":null},{\"id\":\"b79b5952-6183-4246-9281-83f3f1428ef9\",\"type\":\"text\",\"value\":\"jawapan 4\",\"url\":null}]},{\"id\":\"931ae3aa-9f18-402c-8988-3f19c846ac2b\",\"type\":\"mcq\",\"question\":\"<p>Ini adalah soalan 2<img src=\\\"\\/storage\\/learning-content\\/editor-images\\/XXdDd9NamOK04Bf4w8Kpzd3P83sFWQlLMMzdljsj.png\\\"><\\/p>\",\"points\":\"10\",\"correct_option_id\":\"c85db0a0-3292-44e4-ba82-58aa6a756978\",\"options\":[{\"id\":\"8a9e5421-9420-4e2a-8125-227f3e6acd01\",\"type\":\"text\",\"value\":\"jawapan 1\",\"url\":null},{\"id\":\"c85db0a0-3292-44e4-ba82-58aa6a756978\",\"type\":\"text\",\"value\":\"jawapan 1\",\"url\":null},{\"id\":\"4d856911-083c-4446-8610-fe4b50ac798f\",\"type\":\"text\",\"value\":\"jawapan 1\",\"url\":null}]},{\"id\":\"2f239d78-5417-4617-847d-04eea24229d3\",\"type\":\"mcq\",\"question\":\"<p>Ini adalah soalan 3<\\/p>\",\"points\":10,\"correct_option_id\":\"ac8a4a86-b9a1-45e8-aa52-06d35db0b84c\",\"options\":[{\"id\":\"7e06fd16-3497-4799-8f81-22fc5824413f\",\"type\":\"text\",\"value\":\"jawapan 1\",\"url\":null},{\"id\":\"ac8a4a86-b9a1-45e8-aa52-06d35db0b84c\",\"type\":\"text\",\"value\":\"jawapan 2\",\"url\":null},{\"id\":\"ef31f5a2-edf4-47cf-8f2e-fef0304a4650\",\"type\":\"text\",\"value\":\"jawapan 3\",\"url\":null},{\"id\":\"a799c626-58c3-459e-a572-1929a54dff44\",\"type\":\"image\",\"value\":\"\",\"url\":\"blob:http:\\/\\/127.0.0.1:8000\\/957e5cbf-73a8-42da-8fbd-bb6b6c4ddac2\"}]}]', 1, '2026-06-11 00:00:38', '2026-06-11 00:00:38', '2026-06-11 06:49:50'),
+(2, 1, 1, 'quiz 2', 'description 2', 'Beginner', 10, '[{\"id\":\"2e54006c-b0cc-4b6d-89aa-9bd911027206\",\"type\":\"mcq\",\"question\":\"<p>question 2<\\/p>\",\"image\":null,\"options\":[{\"id\":\"70e2a21e-b133-41fb-bcf0-63f7d5330b6f\",\"type\":\"image\",\"value\":null,\"url\":\"http:\\/\\/127.0.0.1:8000\\/storage\\/quiz-options\\/YfIgwNp6KklAbCw8VzlBZHNBngvMoTIp133cHnyP.png\"},{\"id\":\"204fa00b-eef6-46ed-aa23-16aa003198f8\",\"type\":\"image\",\"value\":null,\"url\":\"http:\\/\\/127.0.0.1:8000\\/storage\\/quiz-options\\/f2N91wEsGeGACaPqh12oauSScPrUttHOxVzxE9D5.png\"}],\"correct_option_id\":\"70e2a21e-b133-41fb-bcf0-63f7d5330b6f\",\"points\":\"10\"}]', 1, '2026-06-11 05:40:41', '2026-06-11 05:40:41', '2026-06-11 05:40:41');
+
 -- --------------------------------------------------------
 
 --
@@ -570,7 +657,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('mHW77oPKkcl5Rc1o8z0gDqqwemlnceftjTFlRF72', 3, '127.0.0.1', 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTTcyODFPaXJlNHJVU3FIQ1RtVkhQak9PeDB1Vk1ram1wMWlHNlJ1RCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MztzOjk6Il9wcmV2aW91cyI7YToxOntzOjM6InVybCI7czo0MDoiaHR0cDovLzEyNy4wLjAuMTo4MDAwL3N0dWRlbnQvZW5yb2xsbWVudCI7fX0=', 1781020476);
+('hxedYziKRgH2v8dwqDhsokiQeLPrXHZrmgYZTmAc', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiaVJzZFlDcWlIUXp3eHNBYXhIRzFRUlZHQTQ0TXpzTjNEOWYyWkpXSSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1781189397),
+('IunQAPIBCRTfvTDkCkhcoqJ0oWOZjy8mB1XnVM32', 3, '127.0.0.1', 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiR0pmYXk2Y1pGeHJxdmZtU3VVTjlDNlJ2TlpVM2UwdWJBMUFiNFJlVyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zdHVkZW50L3Byb2dyZXNzIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Mzt9', 1781354234);
 
 -- --------------------------------------------------------
 
@@ -636,9 +724,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `role`, `points`, `streak_days`, `last_quiz_date`, `badges`, `remember_token`, `created_at`, `updated_at`, `google_id`, `avatar`) VALUES
-(1, 'Admin', 'admin@gmail.com', '2026-05-31 00:36:17', '$2y$12$Ss1zAUyV16Az.ah5xRhCqezg9d1wmdI4aulEL857rrzthf.jOh5VK', 'administrator', 0, 0, '0000-00-00', NULL, '0u4FQEwhwsBlb3ni88V5fAX4A1P7GlbfU6JIbOzMNhBkyJ8fNTp9qa4AkhyC', '2026-05-31 00:36:17', '2026-05-31 00:36:17', NULL, NULL),
+(1, 'Admin', 'admin@gmail.com', '2026-05-31 00:36:17', '$2y$12$Ss1zAUyV16Az.ah5xRhCqezg9d1wmdI4aulEL857rrzthf.jOh5VK', 'administrator', 0, 0, '0000-00-00', NULL, 'X4gTclsr0MIMyr4AKh74LWIdAdyH4HgXxtCW2XlQav2C6PY3IJaPRYu1oCyg', '2026-05-31 00:36:17', '2026-05-31 00:36:17', NULL, NULL),
 (2, 'Razak', 'razak@gmail.com', '2026-05-31 00:36:17', '$2y$12$eWgJ2o942KkHlT.Ec2mxX.5Cdn54yyqsDrTedPHZBFW4eodDDCwji', 'teacher', 0, 0, '0000-00-00', NULL, 'peslkiyGg4', '2026-05-31 00:36:17', '2026-05-31 00:36:17', NULL, NULL),
-(3, 'Ahmad', 'ahmad@gmail.com', '2026-05-31 00:36:18', '$2y$12$iPbXfoJ.Dj3lY8eN2C3UbeL8nqLQsM53tyjDUIZhzmezXmmEq14/a', 'student', 0, 0, '0000-00-00', NULL, 'Qkq9CixAq8QIVVyDjWWetLtMpWtPpHEkdzkGf9ayiatJf5vIChSvQsMy9G4i', '2026-05-31 00:36:18', '2026-05-31 00:36:18', NULL, NULL);
+(3, 'Ahmad', 'ahmad@gmail.com', '2026-05-31 00:36:18', '$2y$12$iPbXfoJ.Dj3lY8eN2C3UbeL8nqLQsM53tyjDUIZhzmezXmmEq14/a', 'student', 0, 0, '0000-00-00', NULL, 'f6imNhhWV59Bzw4vBNisJzbfYRroybMGT04nhFUoT9dRUnqlPone95Y4021K', '2026-05-31 00:36:18', '2026-05-31 00:36:18', NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -652,6 +740,16 @@ ALTER TABLE `additional_learning_resources`
   ADD KEY `additional_learning_resources_topic_id_index` (`topic_id`),
   ADD KEY `additional_learning_resources_course_id_index` (`course_id`),
   ADD KEY `additional_learning_resources_created_by_index` (`created_by`);
+
+--
+-- Indexes for table `analytics`
+--
+ALTER TABLE `analytics`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `analytics_student_id_topic_id_unique` (`student_id`,`topic_id`),
+  ADD KEY `analytics_course_id_foreign` (`course_id`),
+  ADD KEY `analytics_topic_id_foreign` (`topic_id`),
+  ADD KEY `analytics_student_id_course_id_index` (`student_id`,`course_id`);
 
 --
 -- Indexes for table `cache`
@@ -695,6 +793,23 @@ ALTER TABLE `enrollments`
 ALTER TABLE `failed_jobs`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
+
+--
+-- Indexes for table `feedbacks`
+--
+ALTER TABLE `feedbacks`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `feedbacks_student_id_topic_id_unique` (`student_id`,`topic_id`),
+  ADD KEY `feedbacks_topic_id_foreign` (`topic_id`);
+
+--
+-- Indexes for table `guidance`
+--
+ALTER TABLE `guidance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `guidance_topic_id_foreign` (`topic_id`),
+  ADD KEY `guidance_student_id_topic_id_index` (`student_id`,`topic_id`),
+  ADD KEY `guidance_teacher_id_student_id_index` (`teacher_id`,`student_id`);
 
 --
 -- Indexes for table `jobs`
@@ -836,6 +951,12 @@ ALTER TABLE `additional_learning_resources`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `analytics`
+--
+ALTER TABLE `analytics`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `coding_exercises`
 --
 ALTER TABLE `coding_exercises`
@@ -851,12 +972,24 @@ ALTER TABLE `coding_exercise_attempts`
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
 --
 ALTER TABLE `failed_jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `feedbacks`
+--
+ALTER TABLE `feedbacks`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `guidance`
+--
+ALTER TABLE `guidance`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -893,13 +1026,13 @@ ALTER TABLE `learning_content_prerequisites`
 -- AUTO_INCREMENT for table `learning_paths`
 --
 ALTER TABLE `learning_paths`
-  MODIFY `pathID` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `pathID` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `learning_path_courses`
 --
 ALTER TABLE `learning_path_courses`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `learning_path_topics`
@@ -911,7 +1044,7 @@ ALTER TABLE `learning_path_topics`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
@@ -923,7 +1056,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `quizzes`
 --
 ALTER TABLE `quizzes`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `quiz_attempts`
@@ -956,6 +1089,14 @@ ALTER TABLE `additional_learning_resources`
   ADD CONSTRAINT `additional_learning_resources_topic_id_foreign` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topicID`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `analytics`
+--
+ALTER TABLE `analytics`
+  ADD CONSTRAINT `analytics_course_id_foreign` FOREIGN KEY (`course_id`) REFERENCES `learning_contents` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `analytics_student_id_foreign` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `analytics_topic_id_foreign` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topicID`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `coding_exercises`
 --
 ALTER TABLE `coding_exercises`
@@ -975,6 +1116,21 @@ ALTER TABLE `enrollments`
   ADD CONSTRAINT `enrollments_courseid_foreign` FOREIGN KEY (`courseID`) REFERENCES `learning_contents` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `enrollments_pathid_foreign` FOREIGN KEY (`pathID`) REFERENCES `learning_paths` (`pathID`) ON DELETE SET NULL,
   ADD CONSTRAINT `enrollments_studentid_foreign` FOREIGN KEY (`studentID`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `feedbacks`
+--
+ALTER TABLE `feedbacks`
+  ADD CONSTRAINT `feedbacks_student_id_foreign` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `feedbacks_topic_id_foreign` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topicID`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `guidance`
+--
+ALTER TABLE `guidance`
+  ADD CONSTRAINT `guidance_student_id_foreign` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `guidance_teacher_id_foreign` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `guidance_topic_id_foreign` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topicID`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `learning_contents`

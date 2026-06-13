@@ -116,4 +116,57 @@ class StudentProgressService
             $student->saveQuietly(); // avoid firing observers/events twice
         }
     }
+
+
+    public function recalculateAnalytics(int $studentId, int $topicId): void
+    {
+        // All quiz IDs under this topic
+        $quizIds = Quiz::where('topic_id', $topicId)
+            ->where('is_published', true)
+            ->pluck('id');
+
+        if ($quizIds->isEmpty()) return;
+
+        // All attempts by this student for quizzes in this topic
+        $attempts = QuizAttempt::where('student_id', $studentId)
+            ->whereIn('quiz_id', $quizIds)
+            ->get();
+
+        if ($attempts->isEmpty()) return;
+
+        // Average score as a percentage
+        $avgScore = $attempts->avg(fn ($a) =>
+            $a->max_score > 0 ? ($a->score / $a->max_score) * 100 : 0
+        );
+
+        // Completion rate: how many quizzes have at least one attempt
+        $attemptedQuizIds = $attempts->pluck('quiz_id')->unique()->count();
+        $completionRate   = ($attemptedQuizIds / $quizIds->count()) * 100;
+
+        // Risk flag: average below 50%
+        $riskFlag = $avgScore < 50;
+
+        // Predicted mastery: estimate based on current pace
+        // Simple heuristic: days remaining = (100 - avgScore) / avgScore * days elapsed
+        $firstAttempt = $attempts->sortBy('submitted_at')->first();
+        $daysElapsed  = now()->diffInDays($firstAttempt->submitted_at) ?: 1;
+        $predictedDate = $avgScore > 0
+            ? now()->addDays((int) ceil((100 - $avgScore) / $avgScore * $daysElapsed))
+            : null;
+
+        // Get course_id from topic
+        $topic    = Topic::where('topicID', $topicId)->firstOrFail();
+        $courseId = $topic->courseID;
+
+        Analytic::updateOrCreate(
+            ['student_id' => $studentId, 'topic_id' => $topicId],
+            [
+                'course_id'               => $courseId,
+                'average_score'           => round($avgScore, 2),
+                'completion_rate'         => round($completionRate, 2),
+                'risk_flag'               => $riskFlag,
+                'predicted_mastery_date'  => $predictedDate,
+            ]
+        );
+    }
 }

@@ -75,6 +75,21 @@ class Topic extends Model
     {
         return $this->hasMany(LearningContentAttachment::class, 'topic_id', 'topicID');
     }
+
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class, 'topic_id', 'topicID');
+    }
+
+    public function guidance(): HasMany
+    {
+        return $this->hasMany(Guidance::class, 'topic_id', 'topicID');
+    }
+
+    public function analytics(): HasMany
+    {
+        return $this->hasMany(Analytic::class, 'topic_id', 'topicID');
+    }
     // Provide compatibility accessors so existing views that expect `title`/`description`
     // on a LearningContent still work when handed a Topic instance.
     public function getTitleAttribute(): ?string

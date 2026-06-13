@@ -347,6 +347,8 @@ class AssessmentController extends Controller
             passed:       $passed,
         );
 
+        $this->progress->recalculateAnalytics(auth()->id(), $quiz->topic_id);
+
         return redirect()->route('student.assessment.quiz.show', [$course->id, $quiz->id]);
     }
 

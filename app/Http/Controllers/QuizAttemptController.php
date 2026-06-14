@@ -112,6 +112,7 @@ class QuizAttemptController extends Controller
         return Inertia::render('Student/Quizzes/show', [
             'quiz' => [
                 'id'               => $quiz->id,
+                'topic_id'         => $quiz->topic_id,
                 'title'            => $quiz->title,
                 'description'      => $quiz->description,
                 'difficulty_level' => $quiz->difficulty_level,

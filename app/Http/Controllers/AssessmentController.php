@@ -261,6 +261,7 @@ class AssessmentController extends Controller
             'course' => ['id' => $course->id, 'title' => $course->title],
             'quiz'   => [
                 'id'               => $quiz->id,
+                'topic_id'         => $topic->topicID,
                 'title'            => $quiz->title,
                 'description'      => $quiz->description,
                 'difficulty_level' => $quiz->difficulty_level,
@@ -317,7 +318,7 @@ class AssessmentController extends Controller
     // Submit routes — only these two methods changed from your original
     // -------------------------------------------------------------------------
 
-    public function storeQuizAttempt(Request $request, LearningContent $course, Quiz $quiz)
+    public function storeQuizAttempt(Request $request, LearningContent $course, Topic $topic, Quiz $quiz)
     {
         $this->ensureEnrollment($course);
         abort_unless((int) $quiz->course_id === (int) $course->id, 404);
@@ -349,7 +350,11 @@ class AssessmentController extends Controller
 
         $this->progress->recalculateAnalytics(auth()->id(), $quiz->topic_id);
 
-        return redirect()->route('student.assessment.quiz.show', [$course->id, $quiz->id]);
+        return redirect()->route('student.assessment.quiz.show', [
+            'course' => $course->id,
+            'topic'  => $topic->topicID,
+            'quiz'   => $quiz->id
+        ]);
     }
 
     public function storeCodingExerciseAttempt(Request $request, LearningContent $course, CodingExercise $codingExercise)

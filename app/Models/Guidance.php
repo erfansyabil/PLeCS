@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Guidance extends Model
 {
+    protected $table = 'guidance';
+
+
     protected $fillable = [
         'teacher_id', 'student_id', 'topic_id', 'comment', 'is_read',
     ];

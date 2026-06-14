@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Models\Analytic;
+use App\Models\Quiz;
+use App\Models\Topic;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 

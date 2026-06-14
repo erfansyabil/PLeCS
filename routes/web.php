@@ -177,9 +177,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC012: Provide Feedback on Learning Modules
         Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
-        Route::get('/feedback/{topic}', [FeedbackController::class, 'form'])->name('feedback.form');
         Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
         Route::post('/feedback/skip', [FeedbackController::class, 'skip'])->name('feedback.skip');
+        Route::get('/feedback/{topic}', [FeedbackController::class, 'form'])->name('feedback.form');
+        
 
         Route::patch('/guidance/{guidance}/read', [GuidanceController::class, 'markRead'])->name('guidance.read');
 
@@ -212,10 +213,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('additional-content.topics');
 
         // UC013: Provide Feedback and Guidance
-        Route::get('/guidance', function () {
-            return Inertia::render('Teacher/FeedbackAndGuidance/index');
-        })->name('guidance.index');
-
         Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
         Route::get('/guidance/{student}', [GuidanceController::class, 'show'])->name('guidance.show');
         Route::post('/guidance', [GuidanceController::class, 'store'])->name('guidance.store');

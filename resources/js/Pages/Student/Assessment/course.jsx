@@ -1,7 +1,7 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function CourseAssessmentPage({ course, quizzes = [], codingExercises = [] }) {
+export default function CourseAssessmentPage({ course, topics = [], codingExercises = [] }) {
     return (
         <StudentLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">{course.title}</h2>}>
             <Head title={`${course.title} Assessments`} />
@@ -25,7 +25,7 @@ export default function CourseAssessmentPage({ course, quizzes = [], codingExerc
                         </h3>
 
                         <div className="space-y-6">
-                            {course.topics?.map((topic) => (
+                            {topics.map((topic) => (
                                 <div
                                     key={topic.id}
                                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-600"
@@ -86,9 +86,7 @@ export default function CourseAssessmentPage({ course, quizzes = [], codingExerc
                                                         })}
                                                         className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                                                     >
-                                                        {topic.quizzes[0]?.latest_attempt
-                                                            ? 'Retake Quiz'
-                                                            : 'Attempt Quiz'}
+                                                        {quiz.latest_attempt ? 'Retake Quiz' : 'Attempt Quiz'}
                                                     </Link>
                                                 </div>
                                             ))}

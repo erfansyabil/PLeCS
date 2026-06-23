@@ -12,6 +12,7 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\GuidanceController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\FeedbackOverviewController;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -215,6 +216,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/additional-content-topics/{courseId}', [AdditionalLearningContentController::class, 'getTopicsForCourse'])
             ->name('additional-content.topics');
 
+        // UC012: Feedback Overview (FR047, FR049)
+        Route::get('/feedback-overview', [FeedbackOverviewController::class, 'index'])->name('feedback-overview.index');
+
         // UC013: Provide Feedback and Guidance
         Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
         Route::get('/guidance/{student}', [GuidanceController::class, 'show'])->name('guidance.show');
@@ -264,6 +268,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/learning-content/topic/{topic}', [LearningContentController::class, 'destroyTopic'])
                 ->whereNumber('topic')
                 ->name('learning-content.topic.destroy');
+
+        // UC012: Feedback Overview (FR047, FR049)
+        Route::get('/feedback-overview', [FeedbackOverviewController::class, 'index'])->name('feedback-overview.index');
 
         // UC004: Manage Learning Content
         Route::resource('learning-content', LearningContentController::class);

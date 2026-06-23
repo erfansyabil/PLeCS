@@ -55,6 +55,12 @@ export default function AdministratorLayout({ header, children }) {
                                 >
                                     Coding Exercises
                                 </NavLink>
+                                <NavLink
+                                    href={route('admin.feedback-overview.index')}
+                                    active={route().current('admin.feedback-overview.index')}
+                                >
+                                    Feedback Overview
+                                </NavLink>
                             </div>
                         </div>
 
@@ -180,6 +186,12 @@ export default function AdministratorLayout({ header, children }) {
                             active={route().current('admin.coding-exercises.index')}
                         >
                             Coding Exercises
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('admin.feedback-overview.index')}
+                            active={route().current('admin.feedback-overview.index')}
+                        >
+                            Feedback Overview
                         </ResponsiveNavLink>
                     </div>
 

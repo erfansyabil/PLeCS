@@ -25,12 +25,20 @@ class FeedbackController extends Controller
                 'course:id,title',
                 'feedbacks' => fn ($q) => $q->where('student_id', $studentId),
             ])
+            ->withAvg([
+                'feedbacks as avg_rating' => fn ($q) => $q->where('skipped', false)->whereNotNull('rating'),
+            ], 'rating')
+            ->withCount([
+                'feedbacks as peer_count' => fn ($q) => $q->where('skipped', false)->whereNotNull('rating'),
+            ])
             ->get()
             ->map(fn ($topic) => [
                 'id'           => $topic->topicID,
                 'name'         => $topic->name,
                 'course_title' => $topic->course?->title,
-                'feedback'     => $topic->feedbacks->first(),  // null if not reviewed
+                'feedback'     => $topic->feedbacks->first(),
+                'avg_rating'   => $topic->avg_rating ? round((float) $topic->avg_rating, 1) : null,
+                'peer_count'   => (int) $topic->peer_count,
             ]);
 
         // Separate into pending (no feedback or skipped) and reviewed

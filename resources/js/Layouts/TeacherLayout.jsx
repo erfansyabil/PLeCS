@@ -51,6 +51,12 @@ export default function TeacherLayout({ header, children }) {
                                 >
                                     Provide Feedback & Guidance
                                 </NavLink>
+                                <NavLink
+                                    href={route('teacher.feedback-overview.index')}
+                                    active={route().current('teacher.feedback-overview.index')}
+                                >
+                                    Feedback Overview
+                                </NavLink>
                             </div>
                         </div>
 
@@ -172,6 +178,12 @@ export default function TeacherLayout({ header, children }) {
                             active={route().current('teacher.guidance.index')}
                         >
                             Provide Feedback & Guidance
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('teacher.feedback-overview.index')}
+                            active={route().current('teacher.feedback-overview.index')}
+                        >
+                            Feedback Overview
                         </ResponsiveNavLink>
                     </div>
 

@@ -330,18 +330,26 @@ class AssessmentController extends Controller
             'submitted_at' => now(),
         ]);
 
-        // FIX 2: removed non-existent recalculateAnalytics() call
         $this->progress->recordAttempt(
             studentId:    auth()->id(),
             pointsEarned: $score,
             passed:       $passed,
         );
 
-        return redirect()->route('student.assessment.quiz.show', [
+        $this->progress->recalculateAnalytics(auth()->id(), $topic->topicID);
+        $this->progress->recomputeEnrollmentProgress(auth()->id(), $course->id);
+
+        $redirect = redirect()->route('student.assessment.quiz.show', [
             'course' => $course->id,
             'topic'  => $topic->topicID,
             'quiz'   => $quiz->id,
         ]);
+
+        if (! $passed) {
+            $redirect->with('gap_warning', "Knowledge gap identified in \"{$quiz->title}\". Your score ({$score}/{$maxScore}) is below the passing threshold. Review the topic content and try again to strengthen your understanding.");
+        }
+
+        return $redirect;
     }
 
     // -------------------------------------------------------------------------
@@ -413,9 +421,17 @@ class AssessmentController extends Controller
             passed:       $passed,
         );
 
-        return redirect()->route('student.assessment.coding-exercise.show', [
+        $this->progress->recomputeEnrollmentProgress(auth()->id(), $course->id);
+
+        $redirect = redirect()->route('student.assessment.coding-exercise.show', [
             $course->id,
             $codingExercise->id,
         ]);
+
+        if (! $passed) {
+            $redirect->with('gap_warning', "Knowledge gap identified in \"{$codingExercise->title}\". Your score ({$score}/{$maxScore}) is below the passing threshold. Review the instructions and missing requirements, then try again.");
+        }
+
+        return $redirect;
     }
 }

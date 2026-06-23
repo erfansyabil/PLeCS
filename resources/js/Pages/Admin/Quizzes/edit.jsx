@@ -142,13 +142,14 @@ export default function Edit({ quiz, topics = [] }) {
         <AdministratorLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                        Edit Quiz
-                    </h2>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">Edit Quiz</h2>
+                        <p className="mt-0.5 text-sm text-slate-500">{quiz.title}</p>
+                    </div>
 
                     <Link
                         href={route('admin.quizzes.index')}
-                        className="rounded-lg border px-4 py-2 text-sm"
+                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     >
                         Back
                     </Link>
@@ -164,21 +165,21 @@ export default function Edit({ quiz, topics = [] }) {
 
                         {/* TITLE */}
                         <input
-                            className="w-full border p-2 rounded"
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                             value={data.title}
                             onChange={(e) => setData('title', e.target.value)}
                         />
 
                         {/* DESCRIPTION */}
                         <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
                         />
 
                         {/* TOPIC */}
                         <select
-                            className="w-full border p-2 rounded"
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                             value={data.topic_id}
                             onChange={(e) => setData('topic_id', e.target.value)}
                         >
@@ -351,10 +352,8 @@ export default function Edit({ quiz, topics = [] }) {
                             Save Quiz
                         </PrimaryButton>
 
-                        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                            <div className="font-semibold">
-                                Total Quiz Points: {totalPoints}
-                            </div>
+                        <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700">
+                            Total quiz points: <span className="font-bold">{totalPoints}</span>
                         </div>
 
                     </form>

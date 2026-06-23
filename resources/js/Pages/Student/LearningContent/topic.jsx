@@ -2,11 +2,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useMemo } from 'react';
 import Header from '@/Components/ui/Header';
 
-export default function TopicPage({ topic, layout }) {
+export default function TopicPage({ topic, courseId, nextTopic, prevTopic, layout }) {
 
     // Determine which layout to use
         const getLayout = () => {
@@ -312,6 +312,46 @@ export default function TopicPage({ topic, layout }) {
                             )}
                         </div>
                     </div>
+
+                    {(prevTopic || nextTopic) && (
+                        <div className="mt-4 flex items-center justify-between gap-4">
+                            {prevTopic ? (
+                                <Link
+                                    href={route('student.learning-content.topic.show', { course: courseId, topic: prevTopic.id })}
+                                    className="flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    <span className="truncate max-w-[160px]">{prevTopic.title}</span>
+                                </Link>
+                            ) : (
+                                <div />
+                            )}
+
+                            {nextTopic ? (
+                                <Link
+                                    href={route('student.learning-content.topic.show', { course: courseId, topic: nextTopic.id })}
+                                    className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                                >
+                                    <span className="truncate max-w-[160px]">{nextTopic.title}</span>
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                            ) : courseId && (
+                                <Link
+                                    href={route('student.learning-content.show', { id: courseId })}
+                                    className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Back to Course
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </LayoutComponent>

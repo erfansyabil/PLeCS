@@ -19,3 +19,21 @@
 .rich-content ul li {
 	margin: 0.25rem 0;
 }
+
+/* Low-Bandwidth Mode */
+body.low-bandwidth *,
+body.low-bandwidth *::before,
+body.low-bandwidth *::after {
+	animation: none !important;
+	animation-duration: 0s !important;
+	transition: none !important;
+	transition-duration: 0s !important;
+}
+
+body.low-bandwidth img {
+	display: none !important;
+}
+
+body.low-bandwidth iframe {
+	display: none !important;
+}

@@ -258,6 +258,7 @@ class LearningPathController extends Controller
 
     /**
      * Recompute the path progress from enrolled courses.
+     * Marks the path Completed when every course reaches 100%.
      */
     private function syncPathProgress(LearningPath $path): float
     {
@@ -276,6 +277,11 @@ class LearningPathController extends Controller
             ->avg('progress') ?? 0;
 
         $path->currentProgress = round((float) $progress, 2);
+
+        if ($path->currentProgress >= 100 && $path->status === 'Active') {
+            $path->status = 'Completed';
+        }
+
         $path->saveQuietly();
 
         return $path->currentProgress;
@@ -503,6 +509,11 @@ class LearningPathController extends Controller
         if (empty($recommendations)) {
             return response()->json(['message' => 'No recommendations could be generated.'], 422);
         }
+
+        // Replace any existing draft so only one pending draft exists at a time.
+        LearningPath::where('studentID', auth()->id())
+            ->where('status', 'Paused')
+            ->delete();
 
         // Create a draft path so the student can review it before activation.
         $estimatedMinutes = collect($recommendations)->sum('estimated_hours') * 60;

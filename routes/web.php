@@ -13,7 +13,6 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\GuidanceController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\Auth\GoogleController;
-use App\Http\Controllers\Student\QuizAttemptController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -65,6 +64,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
 
     Route::prefix('student')->name('student.')->group(function () {
+
+        // Student preference toggles
+        Route::patch('/preferences/low-bandwidth', [\App\Http\Controllers\Student\LowBandwidthController::class, 'toggle'])
+            ->name('preferences.low-bandwidth');
 
         // UC002: Access Personalized Learning Content
         // UC003: View Topics (student view)
@@ -230,16 +233,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('role:administrator')->group(function () {
 
         // UC003: View Topics (admin view)
-        Route::get('/topics', function () {
-            return Inertia::render('Admin/Topics/index');
-        })->name('topics.index');
-        Route::get('/topics/{course}', function ($course) {
-            return Inertia::render('Admin/Topics/content', ['courseId' => $course]);
-        })->name('topics.show');
-        Route::get('/topics/{course}/{topic}', function ($course, $topic) {
-            abort_unless((int)$topic !== 0, 404);
-            return Inertia::render('Admin/Topics/show', ['topicId' => $topic, 'courseId' => $course]);
-        })->name('topics.topic.show');
+        // Route::get('/topics', function () {
+        //     return Inertia::render('Admin/Topics/index');
+        // })->name('topics.index');
+        // Route::get('/topics/{course}', function ($course) {
+        //     return Inertia::render('Admin/Topics/content', ['courseId' => $course]);
+        // })->name('topics.show');
+        // Route::get('/topics/{course}/{topic}', function ($course, $topic) {
+        //     abort_unless((int)$topic !== 0, 404);
+        //     return Inertia::render('Admin/Topics/show', ['topicId' => $topic, 'courseId' => $course]);
+        // })->name('topics.topic.show');
 
         // Admin: view a topic under a specific learning-content (course)
         Route::get('/learning-content/{course}/{topic}', [LearningContentController::class, 'topic'])

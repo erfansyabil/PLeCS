@@ -1,7 +1,7 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
-export default function LearningContentIndex({contents}) {
+export default function LearningContentIndex({ contents }) {
     const materialsList = Array.isArray(contents) ? contents : [];
 
     const deleteCourse = (courseId) => {
@@ -17,109 +17,113 @@ export default function LearningContentIndex({contents}) {
     return (
         <AdministratorLayout
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Manage Learning Content
-                    </h2>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">Learning Content</h2>
+                        <p className="mt-0.5 text-sm text-slate-500">Manage courses and topics for students</p>
+                    </div>
                     <Link
                         href={route('admin.learning-content.create')}
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        Add New Material
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        New Content
                     </Link>
                 </div>
             }
         >
-            <Head title="Manage Learning Content" />
+            <Head title="Learning Content" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-white">
-                            <p className="mb-6">
-                                Manage learning materials/contents for students. These materials provide supplementary resources to enhance their learning experience.
-                            </p>
-
-                            {materialsList.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <p className="text-gray-500 dark:text-gray-400 mb-4">No learning content found.</p>
-                                    <Link
-                                        href={route('admin.learning-content.create')}
-                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        Add Your First Material
-                                    </Link>
+            <div className="py-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                        {materialsList.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50">
+                                    <svg className="h-7 w-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
                                 </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                        <thead className="bg-gray-50 dark:bg-gray-700">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                    Title
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                    Type
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                    Created
-                                                </th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                    Actions
-                                                </th>
+                                <p className="mb-1 text-sm font-medium text-slate-700">No learning content yet</p>
+                                <p className="mb-6 text-sm text-slate-500">Get started by creating your first course.</p>
+                                <Link
+                                    href={route('admin.learning-content.create')}
+                                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                                >
+                                    Add Your First Course
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-slate-100">
+                                    <thead className="bg-slate-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                Title
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                Type
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                Created
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 bg-white">
+                                        {materialsList.map((material) => (
+                                            <tr key={material.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-semibold text-slate-900">
+                                                        {material.title}
+                                                    </div>
+                                                    <div className="mt-0.5 text-xs text-slate-500">
+                                                        {material.description && material.description.length > 60
+                                                            ? `${material.description.substring(0, 60)}...`
+                                                            : material.description || 'No description'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${material.type === 'course' ? 'bg-indigo-100 text-indigo-700' : 'bg-cyan-100 text-cyan-700'}`}>
+                                                        {material.type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-500">
+                                                    {new Date(material.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-4 text-sm">
+                                                        <Link
+                                                            href={route('admin.learning-content.show', material.id)}
+                                                            className="font-medium text-indigo-600 hover:text-indigo-800"
+                                                        >
+                                                            View
+                                                        </Link>
+                                                        <Link
+                                                            href={route('admin.learning-content.edit', material.id)}
+                                                            className="font-medium text-slate-600 hover:text-slate-900"
+                                                        >
+                                                            Edit
+                                                        </Link>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteCourse(material.id)}
+                                                            className="font-medium text-red-600 hover:text-red-800"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="bg-white dark:bg-gray-600 divide-y divide-gray-200 dark:divide-gray-700">
-                                            {materialsList.map((material) => (
-                                                <tr key={material.id} className="hover:bg-gray-50 dark:hover:bg-gray-500">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {material.title}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 dark:text-gray-300">
-                                                            {material.description && material.description.length > 50
-                                                                ? `${material.description.substring(0, 50)}...`
-                                                                : material.description || 'No description'}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                            {material.type}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                                        {new Date(material.created_at).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <div className="flex justify-end space-x-2">
-                                                                    <Link
-                                                                        href={route('admin.learning-content.show', material.id)}
-                                                                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                                                    >
-                                                                        View
-                                                                    </Link>
-                                                                    <Link
-                                                                        href={route('admin.learning-content.edit', material.id)}
-                                                                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                                                    >
-                                                                        Edit
-                                                                    </Link>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => deleteCourse(material.id)}
-                                                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -12,6 +12,7 @@ use App\Models\LearningContent;
 use App\Models\LearningContentAttachment;
 use App\Models\LearningContentBlock;
 use App\Models\Topic;
+use App\Services\StudentProgressService;
 
 class LearningContentController extends Controller
 {
@@ -321,13 +322,37 @@ class LearningContentController extends Controller
                 abort(404);
             }
 
+            $topicId = $topic->topicID;
+
             $topic = Topic::with([
                 'attachments' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'blocks' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-            ])->findOrFail($topic->topicID);
+            ])->findOrFail($topicId);
+
+            app(StudentProgressService::class)->recordTopicView(
+                $request->user()->id,
+                $topicId,
+                $course->id,
+            );
+
+            $allTopics = Topic::where('courseID', $course->id)
+                ->orderBy('orderIndex')
+                ->orderBy('topicID')
+                ->get(['topicID', 'name']);
+
+            $currentIndex = $allTopics->search(fn ($t) => $t->topicID === $topicId);
+            $nextTopic = ($currentIndex !== false && $currentIndex < $allTopics->count() - 1)
+                ? $allTopics[$currentIndex + 1]
+                : null;
+            $prevTopic = ($currentIndex !== false && $currentIndex > 0)
+                ? $allTopics[$currentIndex - 1]
+                : null;
 
             return Inertia::render('Student/LearningContent/topic', [
                 'topic' => $topic,
+                'courseId' => $course->id,
+                'nextTopic' => $nextTopic ? ['id' => $nextTopic->topicID, 'title' => $nextTopic->name] : null,
+                'prevTopic' => $prevTopic ? ['id' => $prevTopic->topicID, 'title' => $prevTopic->name] : null,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
         } else {

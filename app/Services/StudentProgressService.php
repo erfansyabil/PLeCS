@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\CodingExercise;
+use App\Models\CodingExerciseAttempt;
+use App\Models\Enrollment;
 use App\Models\QuizAttempt;
+use App\Models\StudentTopicView;
 use App\Models\User;
 use App\Models\Analytic;
 use App\Models\Quiz;
@@ -120,6 +124,91 @@ class StudentProgressService
         }
     }
 
+
+    /**
+     * Record that a student has viewed a topic, then recompute enrollment progress
+     * for the parent course as viewed_topics / total_active_topics * 100.
+     */
+    public function recordTopicView(int $studentId, int $topicId, int $courseId): void
+    {
+        StudentTopicView::firstOrCreate([
+            'student_id' => $studentId,
+            'topic_id'   => $topicId,
+        ]);
+
+        $this->recomputeEnrollmentProgress($studentId, $courseId);
+    }
+
+    /**
+     * Recompute and persist enrollment progress for one student/course pair.
+     * Progress = (viewed topics + passed quizzes + passed coding exercises)
+     *          / (total active topics + total published quizzes + total published exercises) × 100.
+     * Sets completed_at and status='completed' when progress first hits 100.
+     */
+    public function recomputeEnrollmentProgress(int $studentId, int $courseId): void
+    {
+        $topicIds = Topic::where('courseID', $courseId)
+            ->where('isActive', true)
+            ->pluck('topicID');
+
+        $totalTopics  = $topicIds->count();
+        $viewedTopics = $totalTopics > 0
+            ? StudentTopicView::where('student_id', $studentId)
+                ->whereIn('topic_id', $topicIds)
+                ->count()
+            : 0;
+
+        $quizIds = Quiz::whereIn('topic_id', $topicIds)
+            ->where('is_published', true)
+            ->pluck('id');
+
+        $totalQuizzes  = $quizIds->count();
+        $passedQuizzes = $totalQuizzes > 0
+            ? QuizAttempt::where('student_id', $studentId)
+                ->whereIn('quiz_id', $quizIds)
+                ->where('passed', true)
+                ->distinct('quiz_id')
+                ->count('quiz_id')
+            : 0;
+
+        $exerciseIds = CodingExercise::where('course_id', $courseId)
+            ->where('is_published', true)
+            ->pluck('id');
+
+        $totalExercises  = $exerciseIds->count();
+        $passedExercises = $totalExercises > 0
+            ? CodingExerciseAttempt::where('student_id', $studentId)
+                ->whereIn('coding_exercise_id', $exerciseIds)
+                ->where('passed', true)
+                ->distinct('coding_exercise_id')
+                ->count('coding_exercise_id')
+            : 0;
+
+        $total = $totalTopics + $totalQuizzes + $totalExercises;
+        if ($total === 0) {
+            return;
+        }
+
+        $completed = $viewedTopics + $passedQuizzes + $passedExercises;
+        $progress  = (int) round(($completed / $total) * 100);
+
+        $enrollment = Enrollment::where('studentID', $studentId)
+            ->where('courseID', $courseId)
+            ->first();
+
+        if (! $enrollment) {
+            return;
+        }
+
+        $enrollment->progress = $progress;
+
+        if ($progress >= 100 && ! $enrollment->completed_at) {
+            $enrollment->completed_at = now();
+            $enrollment->status = 'completed';
+        }
+
+        $enrollment->save();
+    }
 
     public function recalculateAnalytics(int $studentId, int $topicId): void
     {

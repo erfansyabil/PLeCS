@@ -147,24 +147,25 @@ export default function Edit({ content, courses = [] }) {
     return (
         <AdministratorLayout
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Edit Learning Content
-                    </h2>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">Edit Learning Content</h2>
+                        <p className="mt-0.5 text-sm text-slate-500">Update course or topic details</p>
+                    </div>
                     <Link
                         href={route('admin.learning-content.index')}
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                        Back to List
+                        Back
                     </Link>
                 </div>
             }
         >
             <Head title="Edit Learning Content" />
 
-            <div className="py-12">
+            <div className="py-8">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                         <form onSubmit={submit} className="p-6 text-gray-900 dark:text-white">
                             <div className="mb-4">
                                 <label htmlFor="title" className="block text-sm font-medium mb-2">
@@ -450,13 +451,13 @@ export default function Edit({ content, courses = [] }) {
                                 </div>
                             )}
 
-                            <div className="flex space-x-4">
+                            <div className="flex items-center gap-3">
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                                    className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                                 >
-                                    {processing ? 'Updating...' : 'Update Material'}
+                                    {processing ? 'Updating…' : 'Update Content'}
                                 </button>
                                 <Link
                                     href={
@@ -464,7 +465,7 @@ export default function Edit({ content, courses = [] }) {
                                             ? route('admin.learning-content.topic.show', [materialData.parent_id, materialData.id])
                                             : route('admin.learning-content.show', materialData.id)
                                     }
-                                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                                 >
                                     Cancel
                                 </Link>

@@ -1,5 +1,5 @@
 import StudentLayout from '@/Layouts/StudentLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -19,6 +19,23 @@ function XIcon() {
     );
 }
 
+// ─── Knowledge gap banner ──────────────────────────────────────────────────────
+function KnowledgeGapBanner() {
+    const { flash } = usePage().props;
+    if (!flash?.gap_warning) return null;
+    return (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20 p-4 flex gap-3">
+            <svg className="h-5 w-5 shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <div>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Knowledge Gap Detected</p>
+                <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">{flash.gap_warning}</p>
+            </div>
+        </div>
+    );
+}
+
 // ─── Result panel ─────────────────────────────────────────────────────────────
 function ResultPanel({ attempt, quiz, course, topic, onRetry }) {
     const percentage = attempt.max_score > 0
@@ -35,6 +52,8 @@ function ResultPanel({ attempt, quiz, course, topic, onRetry }) {
 
     return (
         <div className="space-y-6">
+            <KnowledgeGapBanner />
+
             {/* Score summary */}
             <div className="rounded-2xl bg-white p-8 shadow-sm dark:bg-gray-700 text-center">
                 <p className="text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">

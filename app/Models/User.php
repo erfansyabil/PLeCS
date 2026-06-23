@@ -30,7 +30,8 @@ class User extends Authenticatable
         'points',
         'streak_days',
         'last_quiz_date',
-        'badges'
+        'badges',
+        'low_bandwidth_mode',
     ];
 
     /**
@@ -53,8 +54,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'badges'         => 'array',
-            'last_quiz_date' => 'date',
+            'badges'             => 'array',
+            'last_quiz_date'     => 'date',
+            'low_bandwidth_mode' => 'boolean',
         ];
     }
 

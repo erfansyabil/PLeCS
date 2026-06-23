@@ -23,249 +23,218 @@ export default function Show({ content, topics = [] }) {
     };
 
     const getYouTubeEmbedUrl = (url) => {
-        if (!url) {
-            return null;
-        }
-
+        if (!url) return null;
         const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-        if (!match) {
-            return null;
-        }
-
+        if (!match) return null;
         return `https://www.youtube.com/embed/${match[1]}`;
     };
 
     const pdfUrl = materialData.resource_path ? `/storage/${materialData.resource_path}` : null;
     const youtubeEmbedUrl = getYouTubeEmbedUrl(materialData.resource_url);
-    const blocks = [...(materialData.blocks ?? [])].sort((left, right) => {
-        const leftOrder = Number(left.sort_order ?? 0);
-        const rightOrder = Number(right.sort_order ?? 0);
-        return leftOrder - rightOrder || left.id - right.id;
-    });
-    const attachments = [...(materialData.attachments ?? [])].sort((left, right) => {
-        const leftOrder = Number(left.sort_order ?? 0);
-        const rightOrder = Number(right.sort_order ?? 0);
-        return leftOrder - rightOrder || left.id - right.id;
-    });
+    const blocks = [...(materialData.blocks ?? [])].sort((a, b) =>
+        (Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)) || (a.id - b.id)
+    );
+    const attachments = [...(materialData.attachments ?? [])].sort((a, b) =>
+        (Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)) || (a.id - b.id)
+    );
 
     const getBlockFileUrl = (path) => {
-        if (!path) {
-            return null;
-        }
-
-        if (path.startsWith('http://') || path.startsWith('https://')) {
-            return path;
-        }
-
+        if (!path) return null;
+        if (path.startsWith('http://') || path.startsWith('https://')) return path;
         return `/storage/${path}`;
     };
 
     return (
         <AdministratorLayout
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                        Learning Content Details
-                    </h2>
-                    <Link
-                        href={route('admin.learning-content.index')}
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Back to List
-                    </Link>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">
+                            {materialData.type === 'course' ? 'Course Details' : 'Topic Details'}
+                        </h2>
+                        <p className="mt-0.5 text-sm text-slate-500">{materialData.title}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={route('admin.learning-content.edit', materialData.id)}
+                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                        >
+                            Edit
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={materialData.type === 'course' ? deleteCourse : () => deleteTopic(materialData.id)}
+                            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                        >
+                            {materialData.type === 'course' ? 'Delete Course' : 'Delete Topic'}
+                        </button>
+                        <Link
+                            href={route('admin.learning-content.index')}
+                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                            Back
+                        </Link>
+                    </div>
                 </div>
             }
         >
             <Head title="Learning Content Details" />
 
-            <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-white">
-                            <div className="mb-6">
-                                <h3 className="text-2xl font-bold mb-2">{materialData.title}</h3>
-                                <div
-                                    className="rich-content text-gray-600 dark:text-gray-300 mb-4"
-                                    dangerouslySetInnerHTML={{ __html: materialData.description || '' }}
-                                />
+            <div className="py-8">
+                <div className="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                    <div>
-                                        <strong>Type:</strong> {materialData.type}
-                                    </div>
-                                    <div>
-                                        <strong>Created:</strong> {new Date(materialData.created_at).toLocaleDateString()}
-                                    </div>
-                                </div>
-                                {materialData.prerequisites && (
-                                    <div className="mb-6">
-                                        <strong>Prerequisite{Array.isArray(materialData.prerequisites) && materialData.prerequisites.length !== 1 ? 's' : ''}:</strong>
+                    {/* Info card */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <div className="mb-4 flex items-start justify-between gap-4">
+                            <h3 className="text-2xl font-bold text-slate-900">{materialData.title}</h3>
+                            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${materialData.type === 'course' ? 'bg-indigo-100 text-indigo-700' : 'bg-cyan-100 text-cyan-700'}`}>
+                                {materialData.type}
+                            </span>
+                        </div>
 
-                                        {Array.isArray(materialData.prerequisites) ? (
-                                            <ul className="mt-2 space-y-2">
-                                                {materialData.prerequisites.map((prereq) => (
-                                                    <li key={prereq.id} className="rounded border border-gray-200 px-3 py-2 dark:border-gray-500">
-                                                        <Link
-                                                            href={route('admin.learning-content.show', prereq.id)}
-                                                            className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300"
-                                                        >
-                                                            {prereq.title}
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            materialData.prerequisites && (
-                                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{materialData.prerequisites}</p>
-                                            )
-                                        )}
-                                    </div>
-                                )}
-                                
-                                {blocks.length === 0 && materialData.content && (
-                                    <div className="mb-6">
-                                        <strong>Content:</strong>
-                                        <div
-                                            className="mt-2 rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
-                                            dangerouslySetInnerHTML={{ __html: materialData.content }}
-                                        />
-                                    </div>
-                                )}
+                        <div
+                            className="rich-content text-sm text-slate-600 mb-4"
+                            dangerouslySetInnerHTML={{ __html: materialData.description || '' }}
+                        />
 
-                                {blocks.length === 0 && materialData.type === 'topic' && materialData.resource_type !== 'none' && (
-                                    <div className="mb-6">
-                                        <strong>Media Resource:</strong>
-
-                                        {materialData.resource_type === 'pdf' && pdfUrl && (
-                                            <div className="mt-2">
-                                                <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                                    <iframe
-                                                        src={pdfUrl}
-                                                        title="Topic PDF"
-                                                        className="w-full h-[640px]"
-                                                    />
-                                                </div>
-                                                <a
-                                                    href={pdfUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-block mt-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
-                                                >
-                                                    Open PDF in new tab
-                                                </a>
-                                            </div>
-                                        )}
-
-                                        {materialData.resource_type === 'youtube' && youtubeEmbedUrl && (
-                                            <div className="mt-3">
-                                                <div className="aspect-video">
-                                                    <iframe
-                                                        src={youtubeEmbedUrl}
-                                                        title="YouTube video"
-                                                        className="w-full h-full rounded"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                        allowFullScreen
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {attachments.length > 0 && (
-                                    <div className="mb-6">
-                                        <strong>Attachments:</strong>
-                                        <div className="mt-3 space-y-6">
-                                            {attachments.map((attachment) => {
-                                                const attachmentUrl = `/storage/${attachment.file_path}`;
-
-                                                return (
-                                                    <div key={attachment.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
-                                                        <div className="flex items-center justify-between mb-3">
-                                                            <div>
-                                                                <p className="font-semibold">{attachment.title || 'Attachment'}</p>
-                                                                <p className="text-sm text-gray-500 dark:text-gray-300">
-                                                                    {attachment.type.toUpperCase()} · Order {attachment.sort_order ?? 0}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        {attachment.type === 'image' && (
-                                                            <img
-                                                                src={attachmentUrl}
-                                                                alt={attachment.title || 'Attachment image'}
-                                                                className="max-h-[640px] w-full object-contain rounded"
-                                                            />
-                                                        )}
-
-                                                        {attachment.type === 'pdf' && (
-                                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                                                <iframe
-                                                                    src={attachmentUrl}
-                                                                    title={attachment.title || 'Attachment PDF'}
-                                                                    className="w-full h-[640px]"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {topics.length > 0 && (
-                                    <div className="mb-6">
-                                        <strong>Topics:</strong>
-                                        <ul className="mt-2 space-y-2">
-                                            {topics.map((topic) => (
-                                                <li key={topic.id} className="flex items-center justify-between gap-4 rounded border border-gray-200 px-3 py-2 dark:border-gray-500">
-                                                    <span className="min-w-0 flex-1 truncate">{topic.title}</span>
-                                                    <div className="flex items-center gap-3 shrink-0">
-                                                        <Link
-                                                            href={route('admin.learning-content.topic.show', [materialData.id, topic.id])}
-                                                            className="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"
-                                                        >
-                                                            View
-                                                        </Link>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => deleteTopic(topic.id)}
-                                                            className="text-sm text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex space-x-4">
-                                <Link
-                                    href={route('admin.learning-content.edit', materialData.id)}
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    Edit
-                                </Link>
-                                <button
-                                    type="button"
-                                    onClick={materialData.type === 'course' ? deleteCourse : () => deleteTopic(materialData.id)}
-                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    {materialData.type === 'course' ? 'Delete Course' : 'Delete Topic'}
-                                </button>
-                                <Link
-                                    href={route('admin.learning-content.index')}
-                                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                                >
-                                    Back to List
-                                </Link>
-                            </div>
+                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 border-t border-slate-100 pt-4">
+                            <span>Created: <strong className="text-slate-700">{new Date(materialData.created_at).toLocaleDateString()}</strong></span>
                         </div>
                     </div>
+
+                    {/* Prerequisites */}
+                    {materialData.prerequisites && Array.isArray(materialData.prerequisites) && materialData.prerequisites.length > 0 && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Prerequisite{materialData.prerequisites.length !== 1 ? 's' : ''}
+                            </h4>
+                            <ul className="space-y-2">
+                                {materialData.prerequisites.map((prereq) => (
+                                    <li key={prereq.id}>
+                                        <Link
+                                            href={route('admin.learning-content.show', prereq.id)}
+                                            className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200"
+                                        >
+                                            <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                            {prereq.title}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Legacy content */}
+                    {blocks.length === 0 && materialData.content && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Content</h4>
+                            <div
+                                className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700"
+                                dangerouslySetInnerHTML={{ __html: materialData.content }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Legacy media */}
+                    {blocks.length === 0 && materialData.type === 'topic' && materialData.resource_type !== 'none' && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Media Resource</h4>
+
+                            {materialData.resource_type === 'pdf' && pdfUrl && (
+                                <div>
+                                    <div className="overflow-hidden rounded-lg border border-slate-200">
+                                        <iframe src={pdfUrl} title="Topic PDF" className="w-full h-[640px]" />
+                                    </div>
+                                    <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm text-indigo-600 hover:text-indigo-800">
+                                        Open PDF in new tab →
+                                    </a>
+                                </div>
+                            )}
+
+                            {materialData.resource_type === 'youtube' && youtubeEmbedUrl && (
+                                <div className="aspect-video rounded-lg overflow-hidden">
+                                    <iframe
+                                        src={youtubeEmbedUrl}
+                                        title="YouTube video"
+                                        className="w-full h-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Attachments */}
+                    {attachments.length > 0 && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Attachments</h4>
+                            <div className="space-y-4">
+                                {attachments.map((attachment) => {
+                                    const attachmentUrl = `/storage/${attachment.file_path}`;
+                                    return (
+                                        <div key={attachment.id} className="rounded-lg border border-slate-200 p-4">
+                                            <div className="mb-3 flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-medium text-slate-800">{attachment.title || 'Attachment'}</p>
+                                                    <p className="text-xs text-slate-500">
+                                                        {attachment.type.toUpperCase()} · Order {attachment.sort_order ?? 0}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {attachment.type === 'image' && (
+                                                <img
+                                                    src={attachmentUrl}
+                                                    alt={attachment.title || 'Attachment image'}
+                                                    className="max-h-[640px] w-full object-contain rounded-lg"
+                                                />
+                                            )}
+
+                                            {attachment.type === 'pdf' && (
+                                                <div className="overflow-hidden rounded-lg border border-slate-200">
+                                                    <iframe src={attachmentUrl} title={attachment.title || 'PDF'} className="w-full h-[640px]" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Topics */}
+                    {topics.length > 0 && (
+                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Topics ({topics.length})
+                            </h4>
+                            <ul className="space-y-2">
+                                {topics.map((topic) => (
+                                    <li key={topic.id} className="flex items-center justify-between gap-4 rounded-lg border border-slate-100 px-4 py-3 hover:bg-slate-50">
+                                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{topic.title}</span>
+                                        <div className="flex shrink-0 items-center gap-4 text-sm">
+                                            <Link
+                                                href={route('admin.learning-content.topic.show', [materialData.id, topic.id])}
+                                                className="font-medium text-indigo-600 hover:text-indigo-800"
+                                            >
+                                                View
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                onClick={() => deleteTopic(topic.id)}
+                                                className="font-medium text-red-600 hover:text-red-800"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </div>
         </AdministratorLayout>

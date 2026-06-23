@@ -38,6 +38,7 @@ class CodingExerciseController extends Controller
                 'difficulty_level' => $exercise->difficulty_level,
                 'points' => $exercise->points,
                 'is_published' => $exercise->is_published,
+                'test_cases_count' => count($exercise->test_cases ?? []),
                 'course' => [
                     'id' => $exercise->course?->id,
                     'title' => $exercise->course?->title,

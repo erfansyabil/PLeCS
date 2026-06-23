@@ -83,25 +83,22 @@ class LearningPath extends Model
         }
     }
 
-    // In LearningPath model or a service class
-    public function getNextRecommendedCourse()
+    public function getNextRecommendedCourse(): ?LearningContent
     {
-        // Get all course IDs in this path, ordered by pivot 'order'
         $orderedCourseIds = $this->courses()->orderBy('order')->pluck('courseID')->toArray();
-        
-        // Get IDs of courses the student is enrolled in (active or completed)
-        $enrolledCourseIds = Enrollment::where('studentID', $this->studentID)
+
+        // Map courseId → progress for all enrollments in this path
+        $progressMap = Enrollment::where('studentID', $this->studentID)
             ->whereIn('courseID', $orderedCourseIds)
-            ->pluck('courseID')
-            ->toArray();
-        
-        // Find first course in ordered list that is not enrolled
+            ->pluck('progress', 'courseID');
+
+        // First course not yet at 100% is the next one to work on
         foreach ($orderedCourseIds as $courseId) {
-            if (!in_array($courseId, $enrolledCourseIds)) {
+            if (($progressMap[$courseId] ?? 0) < 100) {
                 return LearningContent::find($courseId);
             }
         }
-        
-        return null; // All courses enrolled
+
+        return null; // All courses completed
     }
 }

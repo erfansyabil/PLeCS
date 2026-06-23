@@ -2,14 +2,31 @@ import ApplicationLogo from '@/Components/shared/ApplicationLogo';
 import Dropdown from '@/Components/ui/Dropdown';
 import NavLink from '@/Components/nav/NavLink';
 import ResponsiveNavLink from '@/Components/nav/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 export default function StudentLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    const [isLowBandwidth, setIsLowBandwidth] = useState(Boolean(user.low_bandwidth_mode));
+
+    useEffect(() => {
+        document.body.classList.toggle('low-bandwidth', isLowBandwidth);
+        return () => document.body.classList.remove('low-bandwidth');
+    }, [isLowBandwidth]);
+
+    const toggleLowBandwidth = () => {
+        const next = !isLowBandwidth;
+        setIsLowBandwidth(next);
+        router.patch(route('student.preferences.low-bandwidth'), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => setIsLowBandwidth(!next),
+        });
+    };
 
     return (
         <div className="min-h-screen bg-[#F1E2D1]">
@@ -123,6 +140,13 @@ export default function StudentLayout({ header, children }) {
                                         >
                                             Profile
                                         </Dropdown.Link>
+                                        <button
+                                            type="button"
+                                            onClick={toggleLowBandwidth}
+                                            className="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800"
+                                        >
+                                            {isLowBandwidth ? 'Disable Low Bandwidth' : 'Enable Low Bandwidth'}
+                                        </button>
                                         <Dropdown.Link
                                             href={route('logout')}
                                             method="post"
@@ -235,6 +259,13 @@ export default function StudentLayout({ header, children }) {
                             <ResponsiveNavLink href={route('profile.edit')}>
                                 Profile
                             </ResponsiveNavLink>
+                            <button
+                                type="button"
+                                onClick={toggleLowBandwidth}
+                                className="block w-full px-4 py-2.5 text-start text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                            >
+                                {isLowBandwidth ? 'Disable Low Bandwidth' : 'Enable Low Bandwidth'}
+                            </button>
                             <ResponsiveNavLink
                                 method="post"
                                 href={route('logout')}

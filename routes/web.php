@@ -201,7 +201,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // UC003: View Topics (teacher view)
         Route::get('/topics', function () {
-            return Inertia::render('Teacher/Topics/index');
+            $courses = \App\Models\LearningContent::query()
+                ->where('type', 'course')
+                ->whereNull('parent_id')
+                ->orderBy('title')
+                ->get(['id', 'title', 'description']);
+
+            return Inertia::render('Teacher/Topics/index', [
+                'courses' => $courses,
+            ]);
         })->name('topics.index');
         Route::get('/topics/{course}', function ($course) {
             return Inertia::render('Teacher/Topics/content', ['courseId' => $course]);

@@ -6,7 +6,7 @@ import { Head, Link } from '@inertiajs/react';
 import { useMemo } from 'react';
 import Header from '@/Components/ui/Header';
 
-export default function TopicPage({ topic, courseId, nextTopic, prevTopic, layout }) {
+export default function TopicPage({ topic, courseId, nextTopic, prevTopic, additionalResources = [], layout }) {
 
     // Determine which layout to use
         const getLayout = () => {
@@ -304,6 +304,47 @@ export default function TopicPage({ topic, courseId, nextTopic, prevTopic, layou
                                                             className="w-full h-[640px]"
                                                         />
                                                     </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {additionalResources.length > 0 && (
+                                <div className="mt-8 space-y-3">
+                                    <h4 className="font-semibold">Additional Resources</h4>
+                                    {additionalResources.map((resource) => {
+                                        const resourceUrl = resource.file_path
+                                            ? getBlockFileUrl(resource.file_path)
+                                            : resource.url;
+
+                                        return (
+                                            <div
+                                                key={resource.id}
+                                                className="rounded border border-gray-200 dark:border-gray-500 p-4 flex items-start justify-between gap-4"
+                                            >
+                                                <div>
+                                                    <p className="font-semibold">{resource.title}</p>
+                                                    {resource.description && (
+                                                        <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+                                                            {resource.description}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-xs uppercase text-gray-400 dark:text-gray-400 mt-1">
+                                                        {resource.type}
+                                                    </p>
+                                                </div>
+
+                                                {resourceUrl && (
+                                                    <a
+                                                        href={resourceUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="shrink-0 inline-block px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+                                                    >
+                                                        Open
+                                                    </a>
                                                 )}
                                             </div>
                                         );

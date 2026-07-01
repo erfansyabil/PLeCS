@@ -5,8 +5,8 @@ import { useState } from 'react';
 const emptyTestCase = () => ({ label: '', must_contain: [''], points: 10 });
 
 const inputClass =
-    'mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
-const labelClass = 'block text-sm font-medium text-slate-700';
+    'mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+const labelClass = 'block text-sm font-medium text-slate-300';
 
 export default function Create({ courses = [] }) {
     const [testCases, setTestCases] = useState([emptyTestCase()]);
@@ -82,12 +82,12 @@ export default function Create({ courses = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Create Coding Exercise</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">Add a new coding challenge for students</p>
+                        <h2 className="text-xl font-bold text-slate-100">Create Coding Exercise</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">Add a new coding challenge for students</p>
                     </div>
                     <Link
                         href={route('admin.coding-exercises.index')}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                     >
                         Back
                     </Link>
@@ -101,8 +101,8 @@ export default function Create({ courses = [] }) {
                     <form onSubmit={submit} className="space-y-6">
 
                         {/* ── Basic info ── */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
+                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 Basic Info
                             </h3>
 
@@ -118,7 +118,7 @@ export default function Create({ courses = [] }) {
                             </div>
 
                             <div>
-                                <label className={labelClass}>Description <span className="font-normal text-gray-400">(optional)</span></label>
+                                <label className={labelClass}>Description <span className="font-normal text-slate-500">(optional)</span></label>
                                 <textarea
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
@@ -155,7 +155,7 @@ export default function Create({ courses = [] }) {
                                 </div>
                                 <div>
                                     <label className={labelClass}>Total points</label>
-                                    <div className="mt-1 flex h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">
+                                    <div className="mt-1 flex h-9 items-center rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-400">
                                         {totalPoints} pts (from test cases)
                                     </div>
                                 </div>
@@ -163,8 +163,8 @@ export default function Create({ courses = [] }) {
                         </div>
 
                         {/* ── Instructions & starter code ── */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
+                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 Content
                             </h3>
 
@@ -181,7 +181,7 @@ export default function Create({ courses = [] }) {
                             </div>
 
                             <div>
-                                <label className={labelClass}>Starter code <span className="font-normal text-gray-400">(optional)</span></label>
+                                <label className={labelClass}>Starter code <span className="font-normal text-slate-500">(optional)</span></label>
                                 <textarea
                                     value={data.starter_code}
                                     onChange={(e) => setData('starter_code', e.target.value)}
@@ -194,15 +194,15 @@ export default function Create({ courses = [] }) {
                         </div>
 
                         {/* ── Test cases ── */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+                        <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                                     Test Cases
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={addTestCase}
-                                    className="rounded-lg border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+                                    className="rounded-lg border border-indigo-700 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-900/30"
                                 >
                                     + Add test case
                                 </button>
@@ -216,10 +216,10 @@ export default function Create({ courses = [] }) {
                                 {testCases.map((tc, tcIdx) => (
                                     <div
                                         key={tcIdx}
-                                        className="rounded-xl border border-slate-200 p-4 space-y-4"
+                                        className="rounded-xl border border-slate-700 p-4 space-y-4"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium text-slate-700">
+                                            <span className="text-sm font-medium text-slate-300">
                                                 Test Case {tcIdx + 1}
                                             </span>
                                             {testCases.length > 1 && (
@@ -235,7 +235,7 @@ export default function Create({ courses = [] }) {
 
                                         <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                                             <div>
-                                                <label className="text-xs font-medium text-slate-500">Label</label>
+                                                <label className="text-xs font-medium text-slate-400">Label</label>
                                                 <input
                                                     value={tc.label}
                                                     onChange={(e) => updateField(tcIdx, 'label', e.target.value)}
@@ -244,7 +244,7 @@ export default function Create({ courses = [] }) {
                                                 />
                                             </div>
                                             <div className="sm:w-24">
-                                                <label className="text-xs font-medium text-slate-500">Points</label>
+                                                <label className="text-xs font-medium text-slate-400">Points</label>
                                                 <input
                                                     type="number"
                                                     min={1}
@@ -256,7 +256,7 @@ export default function Create({ courses = [] }) {
                                         </div>
 
                                         <div>
-                                            <label className="text-xs font-medium text-slate-500">
+                                            <label className="text-xs font-medium text-slate-400">
                                                 Required snippets{' '}
                                                 <span className="font-normal">(submission must contain each, case-insensitive)</span>
                                             </label>
@@ -267,13 +267,13 @@ export default function Create({ courses = [] }) {
                                                             value={snippet}
                                                             onChange={(e) => updateSnippet(tcIdx, sIdx, e.target.value)}
                                                             placeholder="e.g. for, print, return"
-                                                            className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                                                            className="flex-1 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                                                         />
                                                         {tc.must_contain.length > 1 && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeSnippet(tcIdx, sIdx)}
-                                                                className="rounded-lg px-2 text-slate-400 hover:text-red-500"
+                                                                className="rounded-lg px-2 text-slate-500 hover:text-red-400"
                                                             >
                                                                 ×
                                                             </button>
@@ -283,7 +283,7 @@ export default function Create({ courses = [] }) {
                                                 <button
                                                     type="button"
                                                     onClick={() => addSnippet(tcIdx)}
-                                                    className="mt-1 text-xs text-indigo-600 hover:underline"
+                                                    className="mt-1 text-xs text-indigo-400 hover:underline"
                                                 >
                                                     + Add snippet
                                                 </button>
@@ -293,19 +293,19 @@ export default function Create({ courses = [] }) {
                                 ))}
                             </div>
 
-                            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700">
+                            <div className="rounded-lg border border-indigo-800 bg-indigo-900/40 px-4 py-3 text-sm font-medium text-indigo-300">
                                 Total exercise points: <span className="font-bold">{totalPoints}</span>
                             </div>
                         </div>
 
                         {/* ── Publish & submit ── */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex items-center justify-between">
-                            <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-700">
+                        <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-sm flex items-center justify-between">
+                            <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-300">
                                 <input
                                     type="checkbox"
                                     checked={data.is_published}
                                     onChange={(e) => setData('is_published', e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
                                 />
                                 Publish immediately
                             </label>
@@ -313,7 +313,7 @@ export default function Create({ courses = [] }) {
                             <div className="flex gap-3">
                                 <Link
                                     href={route('admin.coding-exercises.index')}
-                                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                                 >
                                     Cancel
                                 </Link>

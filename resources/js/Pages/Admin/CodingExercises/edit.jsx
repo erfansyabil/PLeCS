@@ -5,8 +5,8 @@ import { useState } from 'react';
 const emptyTestCase = () => ({ label: '', must_contain: [''], points: 10 });
 
 const inputClass =
-    'mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
-const labelClass = 'block text-sm font-medium text-slate-700';
+    'mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+const labelClass = 'block text-sm font-medium text-slate-300';
 
 function parseTestCases(json) {
     try {
@@ -99,19 +99,19 @@ export default function Edit({ codingExercise, courses = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Edit Coding Exercise</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">{codingExercise.title}</p>
+                        <h2 className="text-xl font-bold text-slate-100">Edit Coding Exercise</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">{codingExercise.title}</p>
                     </div>
                     <div className="flex gap-3">
                         <Link
                             href={route('admin.coding-exercises.show', codingExercise.id)}
-                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                         >
                             View
                         </Link>
                         <Link
                             href={route('admin.coding-exercises.index')}
-                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                         >
                             Back
                         </Link>
@@ -126,8 +126,8 @@ export default function Edit({ codingExercise, courses = [] }) {
                     <form onSubmit={submit} className="space-y-6">
 
                         {/* ── Basic info ── */}
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-700 space-y-5">
-                            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
+                            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                                 Basic Info
                             </h3>
 
@@ -138,11 +138,11 @@ export default function Edit({ codingExercise, courses = [] }) {
                                     onChange={(e) => setData('title', e.target.value)}
                                     className={inputClass}
                                 />
-                                {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
+                                {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title}</p>}
                             </div>
 
                             <div>
-                                <label className={labelClass}>Description <span className="font-normal text-gray-400">(optional)</span></label>
+                                <label className={labelClass}>Description <span className="font-normal text-slate-500">(optional)</span></label>
                                 <textarea
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
@@ -163,7 +163,7 @@ export default function Edit({ codingExercise, courses = [] }) {
                                             <option key={c.id} value={c.id}>{c.title}</option>
                                         ))}
                                     </select>
-                                    {errors.course_id && <p className="mt-1 text-xs text-red-600">{errors.course_id}</p>}
+                                    {errors.course_id && <p className="mt-1 text-xs text-red-400">{errors.course_id}</p>}
                                 </div>
                                 <div>
                                     <label className={labelClass}>Difficulty</label>
@@ -179,7 +179,7 @@ export default function Edit({ codingExercise, courses = [] }) {
                                 </div>
                                 <div>
                                     <label className={labelClass}>Total points</label>
-                                    <div className="mt-1 flex h-9 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                    <div className="mt-1 flex h-9 items-center rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-400">
                                         {totalPoints} pts (from test cases)
                                     </div>
                                 </div>
@@ -187,8 +187,8 @@ export default function Edit({ codingExercise, courses = [] }) {
                         </div>
 
                         {/* ── Content ── */}
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-700 space-y-5">
-                            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
+                            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                                 Content
                             </h3>
 
@@ -200,11 +200,11 @@ export default function Edit({ codingExercise, courses = [] }) {
                                     rows={6}
                                     className={inputClass}
                                 />
-                                {errors.instructions && <p className="mt-1 text-xs text-red-600">{errors.instructions}</p>}
+                                {errors.instructions && <p className="mt-1 text-xs text-red-400">{errors.instructions}</p>}
                             </div>
 
                             <div>
-                                <label className={labelClass}>Starter code <span className="font-normal text-gray-400">(optional)</span></label>
+                                <label className={labelClass}>Starter code <span className="font-normal text-slate-500">(optional)</span></label>
                                 <textarea
                                     value={data.starter_code}
                                     onChange={(e) => setData('starter_code', e.target.value)}
@@ -216,39 +216,39 @@ export default function Edit({ codingExercise, courses = [] }) {
                         </div>
 
                         {/* ── Test cases ── */}
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-700 space-y-5">
+                        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                                     Test Cases
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={addTestCase}
-                                    className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+                                    className="rounded-lg bg-emerald-900/30 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-900/50"
                                 >
                                     + Add test case
                                 </button>
                             </div>
 
                             {errors.test_cases_json && (
-                                <p className="text-xs text-red-600">{errors.test_cases_json}</p>
+                                <p className="text-xs text-red-400">{errors.test_cases_json}</p>
                             )}
 
                             <div className="space-y-4">
                                 {testCases.map((tc, tcIdx) => (
                                     <div
                                         key={tcIdx}
-                                        className="rounded-xl border border-gray-200 p-4 dark:border-gray-600 space-y-4"
+                                        className="rounded-xl border border-slate-700 p-4 space-y-4"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                            <span className="text-sm font-medium text-slate-200">
                                                 Test Case {tcIdx + 1}
                                             </span>
                                             {testCases.length > 1 && (
                                                 <button
                                                     type="button"
                                                     onClick={() => removeTestCase(tcIdx)}
-                                                    className="text-xs text-red-500 hover:text-red-700"
+                                                    className="text-xs text-red-400 hover:text-red-300"
                                                 >
                                                     Remove
                                                 </button>
@@ -257,7 +257,7 @@ export default function Edit({ codingExercise, courses = [] }) {
 
                                         <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                                             <div>
-                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Label</label>
+                                                <label className="text-xs font-medium text-slate-400">Label</label>
                                                 <input
                                                     value={tc.label}
                                                     onChange={(e) => updateField(tcIdx, 'label', e.target.value)}
@@ -266,7 +266,7 @@ export default function Edit({ codingExercise, courses = [] }) {
                                                 />
                                             </div>
                                             <div className="sm:w-24">
-                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Points</label>
+                                                <label className="text-xs font-medium text-slate-400">Points</label>
                                                 <input
                                                     type="number"
                                                     min={1}
@@ -278,7 +278,7 @@ export default function Edit({ codingExercise, courses = [] }) {
                                         </div>
 
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                            <label className="text-xs font-medium text-slate-400">
                                                 Required snippets{' '}
                                                 <span className="font-normal">(submission must contain each, case-insensitive)</span>
                                             </label>
@@ -289,13 +289,13 @@ export default function Edit({ codingExercise, courses = [] }) {
                                                             value={snippet}
                                                             onChange={(e) => updateSnippet(tcIdx, sIdx, e.target.value)}
                                                             placeholder="e.g. for, print, return"
-                                                            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                                                            className="flex-1 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 px-3 py-1.5 text-sm focus:border-emerald-500 focus:outline-none"
                                                         />
                                                         {tc.must_contain.length > 1 && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeSnippet(tcIdx, sIdx)}
-                                                                className="rounded-lg px-2 text-gray-400 hover:text-red-500"
+                                                                className="rounded-lg px-2 text-slate-500 hover:text-red-400"
                                                             >
                                                                 ×
                                                             </button>
@@ -305,7 +305,7 @@ export default function Edit({ codingExercise, courses = [] }) {
                                                 <button
                                                     type="button"
                                                     onClick={() => addSnippet(tcIdx)}
-                                                    className="mt-1 text-xs text-emerald-600 hover:underline dark:text-emerald-400"
+                                                    className="mt-1 text-xs text-emerald-400 hover:underline"
                                                 >
                                                     + Add snippet
                                                 </button>
@@ -315,19 +315,19 @@ export default function Edit({ codingExercise, courses = [] }) {
                                 ))}
                             </div>
 
-                            <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            <div className="rounded-lg bg-emerald-900/30 px-4 py-3 text-sm font-medium text-emerald-300">
                                 Total exercise points: {totalPoints}
                             </div>
                         </div>
 
                         {/* ── Publish & submit ── */}
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-700 flex items-center justify-between">
-                            <label className="flex cursor-pointer items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+                        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-sm flex items-center justify-between">
+                            <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-200">
                                 <input
                                     type="checkbox"
                                     checked={data.is_published}
                                     onChange={(e) => setData('is_published', e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                    className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-600 focus:ring-emerald-500"
                                 />
                                 Published
                             </label>

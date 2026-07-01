@@ -348,11 +348,18 @@ class LearningContentController extends Controller
                 ? $allTopics[$currentIndex - 1]
                 : null;
 
+            $additionalResources = \App\Models\AdditionalLearningResource::where('topic_id', $topicId)
+                ->where('is_active', true)
+                ->orderBy('order_index')
+                ->orderBy('id')
+                ->get(['id', 'title', 'description', 'type', 'url', 'file_path']);
+
             return Inertia::render('Student/LearningContent/topic', [
                 'topic' => $topic,
                 'courseId' => $course->id,
                 'nextTopic' => $nextTopic ? ['id' => $nextTopic->topicID, 'title' => $nextTopic->name] : null,
                 'prevTopic' => $prevTopic ? ['id' => $prevTopic->topicID, 'title' => $prevTopic->name] : null,
+                'additionalResources' => $additionalResources,
                 'layout' => $this->layoutForRole($request->user()->role),
             ]);
         } else {

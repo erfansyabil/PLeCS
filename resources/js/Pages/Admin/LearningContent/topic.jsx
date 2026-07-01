@@ -134,7 +134,7 @@ export default function TopicPage({ topic }) {
         return (
             <AdministratorLayout>
                 <Head title="Topic Not Found" />
-                <div className="p-6 text-gray-900 dark:text-white">
+                <div className="p-6 text-slate-100">
                     <h2 className="text-xl font-semibold mb-4">Topic Not Found</h2>
                     <p>The topic you are looking for does not exist.</p>
                 </div>
@@ -146,7 +146,7 @@ export default function TopicPage({ topic }) {
         <AdministratorLayout
             header={
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    <h2 className="text-xl font-semibold leading-tight text-slate-100">
                         {topic.title}
                     </h2>
                     <div className="flex items-center gap-3">
@@ -158,7 +158,7 @@ export default function TopicPage({ topic }) {
                         </Link>
                         <Link
                             href={route('admin.learning-content.index')}
-                            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                            className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded"
                         >
                             Back to List
                         </Link>
@@ -169,8 +169,8 @@ export default function TopicPage({ topic }) {
             <Head title={topic.title} />
             <div className="py-12">
                 <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-white">
+                    <div className="bg-slate-900 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6 text-slate-100">
                             <h3 className="text-lg font-bold mb-4">{topic.title}</h3>
                             {blocks.length > 0 ? (
                                 <div className="space-y-6">
@@ -179,7 +179,7 @@ export default function TopicPage({ topic }) {
                                         const blockVideoUrl = getYouTubeEmbedUrl(block.url);
 
                                         return (
-                                            <div key={block.id} className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4">
+                                            <div key={block.id} className="rounded border border-slate-700 bg-slate-800/40 p-4">
                                                 {block.title && <h4 className="font-semibold mb-3">{block.title}</h4>}
 
                                                 {block.type === 'text' && (
@@ -200,7 +200,7 @@ export default function TopicPage({ topic }) {
 
                                                 {block.type === 'pdf' && blockFileUrl && (
                                                     <div>
-                                                        <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                        <div className="rounded border border-slate-700 overflow-hidden">
                                                             <iframe
                                                                 src={blockFileUrl}
                                                                 title={block.title || 'Topic PDF'}
@@ -211,7 +211,7 @@ export default function TopicPage({ topic }) {
                                                             href={blockFileUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                                            className="inline-block mt-2 text-indigo-400 hover:text-indigo-300"
                                                         >
                                                             Open PDF in new tab
                                                         </a>
@@ -232,14 +232,14 @@ export default function TopicPage({ topic }) {
                             ) : (
                                 <>
                                     <div
-                                        className="rounded border border-gray-200 dark:border-gray-500 bg-white/50 dark:bg-gray-700/40 p-4"
+                                        className="rounded border border-slate-700 bg-slate-800/40 p-4"
                                         dangerouslySetInnerHTML={{ __html: renderedContent }}
                                     />
 
                                     {topic.resource_type === 'pdf' && pdfUrl && (
                                         <div className="mt-6">
                                             <h4 className="font-semibold mb-2">PDF Resource</h4>
-                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                            <div className="rounded border border-slate-700 overflow-hidden">
                                                 <iframe
                                                     src={pdfUrl}
                                                     title="Topic PDF"
@@ -250,7 +250,7 @@ export default function TopicPage({ topic }) {
                                                 href={pdfUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                                className="inline-block mt-2 text-indigo-400 hover:text-indigo-300"
                                             >
                                                 Open PDF in new tab
                                             </a>
@@ -281,10 +281,10 @@ export default function TopicPage({ topic }) {
                                         const attachmentUrl = `/storage/${attachment.file_path}`;
 
                                         return (
-                                            <div key={attachment.id} className="rounded border border-gray-200 dark:border-gray-500 p-4">
+                                            <div key={attachment.id} className="rounded border border-slate-700 p-4">
                                                 <div className="mb-3">
                                                     <p className="font-semibold">{attachment.title || 'Attachment'}</p>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-300">
+                                                    <p className="text-sm text-slate-400">
                                                         {attachment.type.toUpperCase()} · Order {attachment.sort_order ?? 0}
                                                     </p>
                                                 </div>
@@ -298,7 +298,7 @@ export default function TopicPage({ topic }) {
                                                 )}
 
                                                 {attachment.type === 'pdf' && (
-                                                    <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                    <div className="rounded border border-slate-700 overflow-hidden">
                                                         <iframe
                                                             src={attachmentUrl}
                                                             title={attachment.title || 'Attachment PDF'}

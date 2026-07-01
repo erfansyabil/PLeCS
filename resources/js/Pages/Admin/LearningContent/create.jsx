@@ -2,8 +2,8 @@ import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import RichTextEditor from '@/Components/RichTextEditor';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-const inputCls = 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
-const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
+const inputCls = 'w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+const labelCls = 'block text-sm font-medium text-slate-300 mb-1.5';
 
 export default function Create({ courses = [] }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -86,12 +86,12 @@ export default function Create({ courses = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Add Learning Content</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">Create a new course or topic</p>
+                        <h2 className="text-xl font-bold text-slate-100">Add Learning Content</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">Create a new course or topic</p>
                     </div>
                     <Link
                         href={route('admin.learning-content.index')}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                     >
                         Back
                     </Link>
@@ -105,22 +105,22 @@ export default function Create({ courses = [] }) {
                     <form onSubmit={submit} className="space-y-6">
 
                         {/* Info banner */}
-                        <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
-                            <p className="mb-1 text-sm font-semibold text-indigo-800">Course and Topic Structure</p>
-                            <p className="text-sm text-indigo-700">
+                        <div className="rounded-lg border border-indigo-800 bg-indigo-900/40 p-4">
+                            <p className="mb-1 text-sm font-semibold text-indigo-300">Course and Topic Structure</p>
+                            <p className="text-sm text-indigo-300">
                                 Create the course first, then add topics by selecting Type = Topic and choosing the parent course.
                             </p>
                         </div>
 
                         {/* Current courses list */}
                         {sortedCourses.length > 0 && (
-                            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Existing Courses</h3>
-                                <div className="divide-y divide-slate-100 rounded-lg border border-slate-100 overflow-hidden">
+                            <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-sm">
+                                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Existing Courses</h3>
+                                <div className="divide-y divide-slate-800 rounded-lg border border-slate-800 overflow-hidden">
                                     {sortedCourses.map((course) => (
                                         <div key={course.id} className="flex items-center justify-between px-3 py-2.5 text-sm">
-                                            <span className="text-slate-800">{course.title}</span>
-                                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                                            <span className="text-slate-100">{course.title}</span>
+                                            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
                                                 {course.children_count ?? 0} topic{(course.children_count ?? 0) === 1 ? '' : 's'}
                                             </span>
                                         </div>
@@ -130,8 +130,8 @@ export default function Create({ courses = [] }) {
                         )}
 
                         {/* Main form card */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Content Details</h3>
+                        <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
+                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Content Details</h3>
 
                             <div>
                                 <label htmlFor="title" className={labelCls}>Title</label>
@@ -279,7 +279,7 @@ export default function Create({ courses = [] }) {
                                             <option key={course.id} value={course.id}>{course.title}</option>
                                         ))}
                                     </select>
-                                    <p className="mt-1 text-xs text-slate-500">Hold Ctrl/Cmd to select multiple.</p>
+                                    <p className="mt-1 text-xs text-slate-400">Hold Ctrl/Cmd to select multiple.</p>
                                     {errors.prerequisites && <p className="mt-1 text-xs text-red-600">{errors.prerequisites}</p>}
                                 </div>
                             )}
@@ -290,13 +290,13 @@ export default function Create({ courses = [] }) {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-slate-700">Topic Blocks</h3>
-                                        <p className="text-xs text-slate-500">Arrange your lesson flow: text, video, PDF, image.</p>
+                                        <h3 className="text-sm font-semibold text-slate-300">Topic Blocks</h3>
+                                        <p className="text-xs text-slate-400">Arrange your lesson flow: text, video, PDF, image.</p>
                                     </div>
                                 </div>
 
                                 {data.blocks.map((block, index) => (
-                                    <div key={index} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                                    <div key={index} className="rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-sm space-y-4">
                                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                             <div>
                                                 <label className={labelCls}>Block Type</label>
@@ -363,16 +363,16 @@ export default function Create({ courses = [] }) {
                                                     type="file"
                                                     accept={block.type === 'pdf' ? 'application/pdf' : 'image/*'}
                                                     onChange={(e) => updateBlock(index, 'file', e.target.files?.[0] ?? null)}
-                                                    className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
+                                                    className="text-sm text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-900/50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-300 hover:file:bg-indigo-900/70"
                                                 />
                                             </div>
                                         )}
 
-                                        <div className="flex justify-end border-t border-slate-100 pt-3">
+                                        <div className="flex justify-end border-t border-slate-800 pt-3">
                                             <button
                                                 type="button"
                                                 onClick={() => removeBlock(index)}
-                                                className="text-sm font-medium text-red-500 hover:text-red-700"
+                                                className="text-sm font-medium text-red-400 hover:text-red-300"
                                             >
                                                 Remove Block
                                             </button>
@@ -383,7 +383,7 @@ export default function Create({ courses = [] }) {
                                 <button
                                     type="button"
                                     onClick={() => addBlock('text')}
-                                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-indigo-300 px-4 py-3 text-sm font-medium text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50"
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-indigo-700 px-4 py-3 text-sm font-medium text-indigo-400 hover:border-indigo-500 hover:bg-indigo-900/30"
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -396,10 +396,10 @@ export default function Create({ courses = [] }) {
                         )}
 
                         {/* Footer */}
-                        <div className="flex items-center justify-end gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="flex items-center justify-end gap-3 rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-sm">
                             <Link
                                 href={route('admin.learning-content.index')}
-                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                             >
                                 Cancel
                             </Link>

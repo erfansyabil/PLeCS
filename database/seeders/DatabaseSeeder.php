@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             // ContentSeeder::class,
             // AssessmentSeeder::class,
+            // PlecsLatestSeeder::class, // restores real data from plecs_latest.sql
         ]);
     }
 }

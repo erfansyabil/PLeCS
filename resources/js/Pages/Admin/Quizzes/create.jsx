@@ -2,8 +2,8 @@ import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import RichTextEditor from '@/Components/RichTextEditor';
 
-const inputCls = 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
-const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
+const inputCls = 'w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+const labelCls = 'block text-sm font-medium text-slate-300 mb-1.5';
 
 export default function Create({ topics = [] }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -98,12 +98,12 @@ export default function Create({ topics = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Create Quiz</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">Build a new quiz with questions and options</p>
+                        <h2 className="text-xl font-bold text-slate-100">Create Quiz</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">Build a new quiz with questions and options</p>
                     </div>
                     <Link
                         href={route('admin.quizzes.index')}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                     >
                         Back
                     </Link>
@@ -117,8 +117,8 @@ export default function Create({ topics = [] }) {
                     <form onSubmit={submit} className="space-y-6">
 
                         {/* Basic info card */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quiz Details</h3>
+                        <div className="rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-sm space-y-5">
+                            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Quiz Details</h3>
 
                             <div>
                                 <label className={labelCls}>Quiz Title</label>
@@ -163,7 +163,7 @@ export default function Create({ topics = [] }) {
                                         value={data.topic_id}
                                         onChange={(e) => setData('topic_id', e.target.value)}
                                         disabled={!data.course_id}
-                                        className={inputCls + ' disabled:bg-slate-50 disabled:text-slate-400'}
+                                        className={inputCls + ' disabled:bg-slate-800/60 disabled:text-slate-500'}
                                     >
                                         <option value="">Select Topic</option>
                                         {topics
@@ -196,8 +196,8 @@ export default function Create({ topics = [] }) {
                                             checked={data.is_published}
                                             onChange={(e) => setData('is_published', e.target.checked)}
                                         />
-                                        <div className="h-5 w-9 rounded-full bg-slate-200 peer-checked:bg-indigo-600 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-all peer-checked:after:translate-x-4" />
-                                        <span className="ml-3 text-sm font-medium text-slate-700">Publish immediately</span>
+                                        <div className="h-5 w-9 rounded-full bg-slate-700 peer-checked:bg-indigo-600 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-all peer-checked:after:translate-x-4" />
+                                        <span className="ml-3 text-sm font-medium text-slate-300">Publish immediately</span>
                                     </label>
                                 </div>
                             </div>
@@ -206,14 +206,14 @@ export default function Create({ topics = [] }) {
                         {/* Questions */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-700">
+                                <h3 className="text-sm font-semibold text-slate-300">
                                     Questions
-                                    <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700">{data.questions.length}</span>
+                                    <span className="ml-2 rounded-full bg-indigo-900/50 px-2 py-0.5 text-xs text-indigo-300">{data.questions.length}</span>
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={addQuestion}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-700 px-3 py-1.5 text-sm font-medium text-indigo-300 hover:bg-indigo-900/30"
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -223,15 +223,15 @@ export default function Create({ topics = [] }) {
                             </div>
 
                             {data.questions.map((q, qIndex) => (
-                                <div key={q.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                                <div key={q.id} className="rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-sm space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-900/50 text-xs font-bold text-indigo-300">
                                             {qIndex + 1}
                                         </span>
                                         <button
                                             type="button"
                                             onClick={() => removeQuestion(qIndex)}
-                                            className="text-sm font-medium text-red-500 hover:text-red-700"
+                                            className="text-sm font-medium text-red-400 hover:text-red-300"
                                         >
                                             Remove
                                         </button>
@@ -260,17 +260,17 @@ export default function Create({ topics = [] }) {
                                         <label className={labelCls}>Answer Options</label>
                                         <div className="space-y-2">
                                             {q.options.map((opt, oIndex) => (
-                                                <div key={opt.id} className={`flex items-center gap-3 rounded-lg border p-3 ${q.correct_option_id === opt.id ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                                <div key={opt.id} className={`flex items-center gap-3 rounded-lg border p-3 ${q.correct_option_id === opt.id ? 'border-emerald-700 bg-emerald-900/30' : 'border-slate-700 bg-slate-800'}`}>
                                                     <input
                                                         type="radio"
-                                                        className="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                        className="h-4 w-4 border-slate-600 text-indigo-600 focus:ring-indigo-500"
                                                         checked={q.correct_option_id === opt.id}
                                                         onChange={() => handleQuestionChange(qIndex, 'correct_option_id', opt.id)}
                                                     />
 
                                                     {opt.type === 'text' && (
                                                         <input
-                                                            className="flex-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm focus:border-indigo-400 focus:outline-none"
+                                                            className="flex-1 rounded border border-slate-600 bg-slate-900 text-slate-100 px-2 py-1.5 text-sm focus:border-indigo-400 focus:outline-none"
                                                             value={opt.value}
                                                             onChange={(e) => {
                                                                 const updated = [...data.questions];
@@ -290,7 +290,7 @@ export default function Create({ topics = [] }) {
                                                                 onChange={(e) => handleOptionImage(qIndex, oIndex, e.target.files[0])}
                                                             />
                                                             {opt.url && (
-                                                                <img src={opt.url} className="h-20 w-20 rounded object-cover border border-slate-200" alt="" />
+                                                                <img src={opt.url} className="h-20 w-20 rounded object-cover border border-slate-700" alt="" />
                                                             )}
                                                         </div>
                                                     )}
@@ -302,7 +302,7 @@ export default function Create({ topics = [] }) {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeOption(qIndex, oIndex)}
-                                                        className="ml-auto shrink-0 text-slate-400 hover:text-red-500"
+                                                        className="ml-auto shrink-0 text-slate-500 hover:text-red-400"
                                                     >
                                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -316,14 +316,14 @@ export default function Create({ topics = [] }) {
                                             <button
                                                 type="button"
                                                 onClick={() => addOption(qIndex, 'text')}
-                                                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                                                className="text-sm font-medium text-indigo-400 hover:text-indigo-300"
                                             >
                                                 + Text option
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => addOption(qIndex, 'image')}
-                                                className="text-sm font-medium text-violet-600 hover:text-violet-800"
+                                                className="text-sm font-medium text-violet-400 hover:text-violet-300"
                                             >
                                                 + Image option
                                             </button>
@@ -334,14 +334,14 @@ export default function Create({ topics = [] }) {
                         </div>
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <div className="text-sm text-slate-600">
-                                Total points: <span className="font-bold text-indigo-700">{totalPoints}</span>
+                        <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-sm">
+                            <div className="text-sm text-slate-400">
+                                Total points: <span className="font-bold text-indigo-300">{totalPoints}</span>
                             </div>
                             <div className="flex gap-3">
                                 <Link
                                     href={route('admin.quizzes.index')}
-                                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                                 >
                                     Cancel
                                 </Link>

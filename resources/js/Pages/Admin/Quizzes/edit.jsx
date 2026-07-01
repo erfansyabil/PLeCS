@@ -143,13 +143,13 @@ export default function Edit({ quiz, topics = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Edit Quiz</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">{quiz.title}</p>
+                        <h2 className="text-xl font-bold text-slate-100">Edit Quiz</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">{quiz.title}</p>
                     </div>
 
                     <Link
                         href={route('admin.quizzes.index')}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                     >
                         Back
                     </Link>
@@ -165,21 +165,21 @@ export default function Edit({ quiz, topics = [] }) {
 
                         {/* TITLE */}
                         <input
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                             value={data.title}
                             onChange={(e) => setData('title', e.target.value)}
                         />
 
                         {/* DESCRIPTION */}
                         <textarea
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
                         />
 
                         {/* TOPIC */}
                         <select
-                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                             value={data.topic_id}
                             onChange={(e) => setData('topic_id', e.target.value)}
                         >
@@ -194,7 +194,7 @@ export default function Edit({ quiz, topics = [] }) {
                         <div className="space-y-6">
 
                             <div className="flex justify-between items-center">
-                                <h3 className="font-bold">Questions</h3>
+                                <h3 className="font-bold text-slate-100">Questions</h3>
 
                                 <button
                                     type="button"
@@ -206,7 +206,7 @@ export default function Edit({ quiz, topics = [] }) {
                             </div>
 
                             {data.questions.map((q, qIndex) => (
-                                <div key={q.id} className="border p-4 rounded space-y-4">
+                                <div key={q.id} className="border border-slate-700 bg-slate-900 p-4 rounded space-y-4 text-slate-100">
 
                                     {/* QUESTION */}
                                     <RichTextEditor
@@ -217,7 +217,7 @@ export default function Edit({ quiz, topics = [] }) {
                                     />
 
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">
+                                        <label className="block text-sm font-medium mb-1 text-slate-300">
                                             Points for this question
                                         </label>
 
@@ -232,7 +232,7 @@ export default function Edit({ quiz, topics = [] }) {
                                                     Number(e.target.value)
                                                 )
                                             }
-                                            className="border rounded p-2 w-32"
+                                            className="border border-slate-700 bg-slate-800 text-slate-100 rounded p-2 w-32"
                                         />
                                     </div>
 
@@ -247,8 +247,8 @@ export default function Edit({ quiz, topics = [] }) {
                                             return (
                                                 <div
                                                     key={opt.id}
-                                                    className={`flex gap-2 items-center border p-2 rounded
-                                                        ${isCorrect ? 'bg-green-100' : ''}`}
+                                                    className={`flex gap-2 items-center border border-slate-700 p-2 rounded text-slate-100
+                                                        ${isCorrect ? 'bg-emerald-900/30' : 'bg-slate-800'}`}
                                                 >
 
                                                     {/* correct selector */}
@@ -267,7 +267,7 @@ export default function Edit({ quiz, topics = [] }) {
                                                     {/* TEXT OPTION */}
                                                     {opt.type === 'text' && (
                                                         <input
-                                                            className="border p-1 flex-1"
+                                                            className="border border-slate-700 bg-slate-900 text-slate-100 p-1 flex-1"
                                                             value={opt.value}
                                                             onChange={(e) =>
                                                                 handleOptionChange(
@@ -309,7 +309,7 @@ export default function Edit({ quiz, topics = [] }) {
                                                         onClick={() =>
                                                             removeOption(qIndex, oIndex)
                                                         }
-                                                        className="text-red-500"
+                                                        className="text-red-400"
                                                     >
                                                         X
                                                     </button>
@@ -325,6 +325,7 @@ export default function Edit({ quiz, topics = [] }) {
                                             onClick={() =>
                                                 addOption(qIndex, 'text')
                                             }
+                                            className="text-sm font-medium text-indigo-400 hover:text-indigo-300"
                                         >
                                             + Text
                                         </button>
@@ -334,6 +335,7 @@ export default function Edit({ quiz, topics = [] }) {
                                             onClick={() =>
                                                 addOption(qIndex, 'image')
                                             }
+                                            className="text-sm font-medium text-violet-400 hover:text-violet-300"
                                         >
                                             + Image
                                         </button>
@@ -352,7 +354,7 @@ export default function Edit({ quiz, topics = [] }) {
                             Save Quiz
                         </PrimaryButton>
 
-                        <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700">
+                        <div className="rounded-lg border border-indigo-800 bg-indigo-900/40 px-4 py-3 text-sm font-medium text-indigo-300">
                             Total quiz points: <span className="font-bold">{totalPoints}</span>
                         </div>
 

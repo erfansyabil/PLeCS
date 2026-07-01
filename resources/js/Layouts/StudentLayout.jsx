@@ -92,13 +92,7 @@ export default function StudentLayout({ header, children }) {
                                 >
                                     Assessment
                                 </NavLink>
-                                <NavLink
-                                    href={route('student.progress.index')}
-                                    active={route().current('student.progress.index')}
-                                >
-                                    Progress
-                                </NavLink>
-                                <NavLink
+<NavLink
                                     href={route('student.feedback.index')}
                                     active={route().current('student.feedback.index')}
                                 >
@@ -231,13 +225,7 @@ export default function StudentLayout({ header, children }) {
                         >
                             Assessment
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('student.progress.index')}
-                            active={route().current('student.progress.index')}
-                        >
-                            Progress
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
+<ResponsiveNavLink
                             href={route('student.feedback.index')}
                             active={route().current('student.feedback.index')}
                         >

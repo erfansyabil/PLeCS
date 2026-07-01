@@ -149,12 +149,12 @@ export default function Edit({ content, courses = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Edit Learning Content</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">Update course or topic details</p>
+                        <h2 className="text-xl font-bold text-slate-100">Edit Learning Content</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">Update course or topic details</p>
                     </div>
                     <Link
                         href={route('admin.learning-content.index')}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                     >
                         Back
                     </Link>
@@ -165,8 +165,8 @@ export default function Edit({ content, courses = [] }) {
 
             <div className="py-8">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                        <form onSubmit={submit} className="p-6 text-gray-900 dark:text-white">
+                    <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-sm">
+                        <form onSubmit={submit} className="p-6 text-slate-100">
                             <div className="mb-4">
                                 <label htmlFor="title" className="block text-sm font-medium mb-2">
                                     Title
@@ -176,7 +176,7 @@ export default function Edit({ content, courses = [] }) {
                                     id="title"
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
                                 />
                                 {errors.title && <div className="text-red-500 text-sm mt-1">{errors.title}</div>}
@@ -196,7 +196,7 @@ export default function Edit({ content, courses = [] }) {
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows="4"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 /> */}
                                 {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
                             </div>
@@ -209,12 +209,12 @@ export default function Edit({ content, courses = [] }) {
                                     id="type"
                                     value={data.type}
                                     disabled
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                    className="w-full px-3 py-2 border border-slate-700 rounded-md shadow-sm bg-slate-800/60 text-slate-400"
                                 >
                                     <option value="course">Course</option>
                                     <option value="topic">Topic</option>
                                 </select>
-                                <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
+                                <p className="text-xs text-slate-400 mt-1">
                                     Type is fixed after creation. Create a new item to add a course or topic.
                                 </p>
                                 {errors.type && <div className="text-red-500 text-sm mt-1">{errors.type}</div>}
@@ -229,7 +229,7 @@ export default function Edit({ content, courses = [] }) {
                                         id="difficultyLevel"
                                         value={data.difficultyLevel}
                                         onChange={(e) => setData('difficultyLevel', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
                                         <option value="Beginner">Beginner</option>
                                         <option value="Intermediate">Intermediate</option>
@@ -251,7 +251,7 @@ export default function Edit({ content, courses = [] }) {
                                         max="2000"
                                         value={data.estimated_hours}
                                         onChange={(e) => setData('estimated_hours', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                     {errors.estimated_hours && <div className="text-red-500 text-sm mt-1">{errors.estimated_hours}</div>}
                                 </div>
@@ -267,7 +267,7 @@ export default function Edit({ content, courses = [] }) {
                                         id="keywords"
                                         value={data.keywords}
                                         onChange={(e) => setData('keywords', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="python, loops, fundamentals"
                                     />
                                     {errors.keywords && <div className="text-red-500 text-sm mt-1">{errors.keywords}</div>}
@@ -284,7 +284,7 @@ export default function Edit({ content, courses = [] }) {
                                         multiple
                                         value={data.prerequisites}
                                         onChange={(e) => setData('prerequisites', Array.from(e.target.selectedOptions, (o) => o.value))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
                                         {courses
                                             .filter((c) => c.id !== materialData.id)
@@ -292,7 +292,7 @@ export default function Edit({ content, courses = [] }) {
                                                 <option key={course.id} value={course.id}>{course.title}</option>
                                             ))}
                                     </select>
-                                    <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">Select any prerequisite courses required before enrolling.</p>
+                                    <p className="text-xs text-slate-400 mt-1">Select any prerequisite courses required before enrolling.</p>
                                     {errors.prerequisites && <div className="text-red-500 text-sm mt-1">{errors.prerequisites}</div>}
                                 </div>
                             )}
@@ -306,7 +306,7 @@ export default function Edit({ content, courses = [] }) {
                                         id="parent_id"
                                         value={data.parent_id}
                                         onChange={(e) => setData('parent_id', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                        className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         required
                                     >
                                         <option value="">Select a course</option>
@@ -325,20 +325,20 @@ export default function Edit({ content, courses = [] }) {
                                             Ordered Topic Blocks
                                         </label>
                                     </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-300 mb-3">
+                                    <p className="text-xs text-slate-400 mb-3">
                                         Use sort order to control final page flow.
                                     </p>
 
                                     <div className="space-y-4">
                                         {data.blocks.map((block, index) => (
-                                            <div key={index} className="rounded-lg border border-gray-200 dark:border-gray-500 p-4">
+                                            <div key={index} className="rounded-lg border border-slate-700 p-4">
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                                     <div>
                                                         <label className="block text-sm font-medium mb-2">Type</label>
                                                         <select
                                                             value={block.type}
                                                             onChange={(e) => updateBlockType(index, e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                            className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         >
                                                             <option value="text">Text</option>
                                                             <option value="youtube">YouTube</option>
@@ -352,7 +352,7 @@ export default function Edit({ content, courses = [] }) {
                                                             type="text"
                                                             value={block.title}
                                                             onChange={(e) => updateBlock(index, 'title', e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                            className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         />
                                                     </div>
                                                     <div>
@@ -362,7 +362,7 @@ export default function Edit({ content, courses = [] }) {
                                                             min=""
                                                             value={block.sort_order}
                                                             onChange={(e) => updateBlock(index, 'sort_order', e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                            className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         />
                                                     </div>
                                                 </div>
@@ -386,7 +386,7 @@ export default function Edit({ content, courses = [] }) {
                                                             value={block.url}
                                                             onChange={(e) => updateBlock(index, 'url', e.target.value)}
                                                             placeholder="https://www.youtube.com/watch?v=..."
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                            className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         />
                                                     </div>
                                                 )}
@@ -400,10 +400,10 @@ export default function Edit({ content, courses = [] }) {
                                                             type="file"
                                                             accept={block.type === 'pdf' ? 'application/pdf' : 'image/*'}
                                                             onChange={(e) => updateBlock(index, 'file', e.target.files?.[0] ?? null)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                                            className="w-full px-3 py-2 border border-slate-700 bg-slate-800 text-slate-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         />
                                                         {block.existing_file_path && (
-                                                            <p className="text-xs mt-1 text-gray-500 dark:text-gray-300">
+                                                            <p className="text-xs mt-1 text-slate-400">
                                                                 Existing file will be kept if you do not upload a replacement.
                                                             </p>
                                                         )}
@@ -414,7 +414,7 @@ export default function Edit({ content, courses = [] }) {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeBlock(index)}
-                                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
+                                                        className="text-sm text-red-400 hover:text-red-300"
                                                     >
                                                         Remove Block
                                                     </button>
@@ -427,7 +427,7 @@ export default function Edit({ content, courses = [] }) {
                                         <button
                                             type="button"
                                             onClick={addBlock}
-                                            className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200"
+                                            className="text-sm text-indigo-400 hover:text-indigo-300"
                                         >
                                             Add Block
                                         </button>
@@ -465,7 +465,7 @@ export default function Edit({ content, courses = [] }) {
                                             ? route('admin.learning-content.topic.show', [materialData.parent_id, materialData.id])
                                             : route('admin.learning-content.show', materialData.id)
                                     }
-                                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                                 >
                                     Cancel
                                 </Link>

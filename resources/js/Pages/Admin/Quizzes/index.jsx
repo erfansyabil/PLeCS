@@ -2,9 +2,9 @@ import AdministratorLayout from '@/Layouts/AdministratorLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 const difficultyBadge = {
-    Beginner:     'bg-emerald-100 text-emerald-700',
-    Intermediate: 'bg-amber-100 text-amber-700',
-    Advanced:     'bg-red-100 text-red-700',
+    Beginner:     'bg-emerald-900/50 text-emerald-300',
+    Intermediate: 'bg-amber-900/50 text-amber-300',
+    Advanced:     'bg-red-900/50 text-red-300',
 };
 
 export default function Index({ quizzes = [] }) {
@@ -13,13 +13,13 @@ export default function Index({ quizzes = [] }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">Quiz Management</h2>
-                        <p className="mt-0.5 text-sm text-slate-500">Create and manage course quizzes</p>
+                        <h2 className="text-xl font-bold text-slate-100">Quiz Management</h2>
+                        <p className="mt-0.5 text-sm text-slate-400">Create and manage course quizzes</p>
                     </div>
                     <div className="flex gap-3">
                         <Link
                             href={route('admin.coding-exercises.index')}
-                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                         >
                             Coding Exercises
                         </Link>
@@ -40,59 +40,59 @@ export default function Index({ quizzes = [] }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-sm">
                         {quizzes.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-slate-300 m-6 p-12 text-center">
-                                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50">
+                            <div className="rounded-xl border border-dashed border-slate-700 m-6 p-12 text-center">
+                                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-900/40">
                                     <svg className="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
-                                <p className="text-sm text-slate-500">No quizzes have been created yet.</p>
-                                <Link href={route('admin.quizzes.create')} className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                                <p className="text-sm text-slate-400">No quizzes have been created yet.</p>
+                                <Link href={route('admin.quizzes.create')} className="mt-3 inline-block text-sm font-medium text-indigo-400 hover:text-indigo-300">
                                     Create the first quiz →
                                 </Link>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-slate-100">
-                                    <thead className="bg-slate-50">
+                                <table className="min-w-full divide-y divide-slate-800">
+                                    <thead className="bg-slate-800">
                                         <tr>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Title</th>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Course</th>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Difficulty</th>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Points</th>
-                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                                            <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Title</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Course</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Difficulty</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Points</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
+                                            <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 bg-white">
+                                    <tbody className="divide-y divide-slate-800 bg-slate-900">
                                         {quizzes.map((quiz) => (
-                                            <tr key={quiz.id} className="hover:bg-slate-50 transition-colors">
+                                            <tr key={quiz.id} className="hover:bg-slate-800 transition-colors">
                                                 <td className="px-5 py-4">
-                                                    <div className="font-medium text-slate-900">{quiz.title}</div>
-                                                    <div className="mt-0.5 text-xs text-slate-500">{quiz.description ?? 'No description provided.'}</div>
+                                                    <div className="font-medium text-slate-100">{quiz.title}</div>
+                                                    <div className="mt-0.5 text-xs text-slate-400">{quiz.description ?? 'No description provided.'}</div>
                                                 </td>
-                                                <td className="px-5 py-4 text-sm text-slate-600">{quiz.course?.title ?? <span className="italic text-slate-400">Unassigned</span>}</td>
+                                                <td className="px-5 py-4 text-sm text-slate-400">{quiz.course?.title ?? <span className="italic text-slate-400">Unassigned</span>}</td>
                                                 <td className="px-5 py-4">
-                                                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${difficultyBadge[quiz.difficulty_level] ?? 'bg-slate-100 text-slate-600'}`}>
+                                                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${difficultyBadge[quiz.difficulty_level] ?? 'bg-slate-800 text-slate-300'}`}>
                                                         {quiz.difficulty_level}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-4 text-sm font-medium text-slate-700">{quiz.points} pts</td>
+                                                <td className="px-5 py-4 text-sm font-medium text-slate-300">{quiz.points} pts</td>
                                                 <td className="px-5 py-4">
-                                                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${quiz.is_published ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${quiz.is_published ? 'bg-emerald-900/50 text-emerald-300' : 'bg-slate-800 text-slate-300'}`}>
                                                         {quiz.is_published ? 'Published' : 'Draft'}
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-4 text-sm">
-                                                        <Link href={route('admin.quizzes.show', quiz.id)} className="font-medium text-indigo-600 hover:text-indigo-800">View</Link>
-                                                        <Link href={route('admin.quizzes.edit', quiz.id)} className="font-medium text-slate-600 hover:text-slate-900">Edit</Link>
+                                                        <Link href={route('admin.quizzes.show', quiz.id)} className="font-medium text-indigo-400 hover:text-indigo-300">View</Link>
+                                                        <Link href={route('admin.quizzes.edit', quiz.id)} className="font-medium text-slate-400 hover:text-slate-100">Edit</Link>
                                                         <button
                                                             type="button"
                                                             onClick={() => router.delete(route('admin.quizzes.destroy', quiz.id), { preserveScroll: true })}
-                                                            className="font-medium text-red-600 hover:text-red-800"
+                                                            className="font-medium text-red-400 hover:text-red-300"
                                                         >
                                                             Delete
                                                         </button>

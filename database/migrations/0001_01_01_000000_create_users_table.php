@@ -18,9 +18,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['student', 'teacher', 'administrator'])->default('student');
-            $table->unsignedBigInteger('points');
-            $table->unsignedInteger('streak_days');
-            $table->date('last_quiz_date');
+            $table->unsignedBigInteger('points')->default(0);
+            $table->unsignedInteger('streak_days')->default(0);
+            $table->date('last_quiz_date')->nullable()->default(null);
             $table->json('badges')->nullable();
             $table->rememberToken();
             $table->timestamps();

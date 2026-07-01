@@ -12,7 +12,7 @@ export default function AdministratorLayout({ header, children }) {
         useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-100">
+        <div className="min-h-screen bg-slate-950">
             <nav className="border-b border-slate-700 bg-slate-900">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
@@ -222,14 +222,14 @@ export default function AdministratorLayout({ header, children }) {
             </nav>
 
             {header && (
-                <header className="border-b border-slate-200 bg-white shadow-sm">
-                    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+                <header className="border-b border-slate-800 bg-slate-900 shadow-sm">
+                    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 text-slate-100">
                         {header}
                     </div>
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="text-slate-100">{children}</main>
         </div>
     );
 }

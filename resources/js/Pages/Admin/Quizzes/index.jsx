@@ -1,5 +1,7 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
+import Modal from '@/Components/ui/Modal';
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 const difficultyBadge = {
     Beginner:     'bg-emerald-900/50 text-emerald-300',
@@ -8,6 +10,22 @@ const difficultyBadge = {
 };
 
 export default function Index({ quizzes = [] }) {
+    const [quizPendingDeletion, setQuizPendingDeletion] = useState(null);
+
+    const confirmDelete = (quiz) => setQuizPendingDeletion(quiz);
+    const cancelDelete = () => setQuizPendingDeletion(null);
+
+    const deleteQuiz = () => {
+        if (!quizPendingDeletion) {
+            return;
+        }
+
+        router.delete(route('admin.quizzes.destroy', quizPendingDeletion.id), {
+            preserveScroll: true,
+            onFinish: () => setQuizPendingDeletion(null),
+        });
+    };
+
     return (
         <AdministratorLayout
             header={
@@ -91,7 +109,7 @@ export default function Index({ quizzes = [] }) {
                                                         <Link href={route('admin.quizzes.edit', quiz.id)} className="font-medium text-slate-400 hover:text-slate-100">Edit</Link>
                                                         <button
                                                             type="button"
-                                                            onClick={() => router.delete(route('admin.quizzes.destroy', quiz.id), { preserveScroll: true })}
+                                                            onClick={() => confirmDelete(quiz)}
                                                             className="font-medium text-red-400 hover:text-red-300"
                                                         >
                                                             Delete
@@ -107,6 +125,36 @@ export default function Index({ quizzes = [] }) {
                     </div>
                 </div>
             </div>
+
+            <Modal show={quizPendingDeletion !== null} onClose={cancelDelete}>
+                <div className="bg-slate-900 p-6">
+                    <h2 className="text-lg font-medium text-slate-100">
+                        Delete "{quizPendingDeletion?.title}"?
+                    </h2>
+
+                    <p className="mt-1 text-sm text-slate-400">
+                        This will permanently delete the quiz and all associated student attempts. This action cannot be undone.
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={cancelDelete}
+                            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={deleteQuiz}
+                            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
+                        >
+                            Delete Quiz
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </AdministratorLayout>
     );
 }

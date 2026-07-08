@@ -104,14 +104,14 @@ class GuidanceController extends Controller
     {
         $data = $request->validate([
             'student_id' => ['required', 'exists:users,id'],
-            'topic_id'   => ['required', 'integer'],
+            'topic_id'   => ['nullable', 'integer'],
             'comment'    => ['required', 'string', 'max:2000'],
         ]);
 
         Guidance::create([
             'teacher_id' => auth()->id(),
             'student_id' => $data['student_id'],
-            'topic_id'   => $data['topic_id'],
+            'topic_id'   => $data['topic_id'] ?? null,
             'comment'    => $data['comment'],
         ]);
 

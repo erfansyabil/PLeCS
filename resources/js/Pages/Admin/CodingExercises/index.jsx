@@ -1,5 +1,7 @@
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
+import Modal from '@/Components/ui/Modal';
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 const difficultyBadge = {
     Beginner:     'bg-emerald-900/50 text-emerald-300',
@@ -8,9 +10,20 @@ const difficultyBadge = {
 };
 
 export default function Index({ codingExercises = [] }) {
-    const handleDelete = (exercise) => {
-        if (!window.confirm(`Delete "${exercise.title}"? This cannot be undone.`)) return;
-        router.delete(route('admin.coding-exercises.destroy', exercise.id), { preserveScroll: true });
+    const [exercisePendingDeletion, setExercisePendingDeletion] = useState(null);
+
+    const confirmDelete = (exercise) => setExercisePendingDeletion(exercise);
+    const cancelDelete = () => setExercisePendingDeletion(null);
+
+    const deleteExercise = () => {
+        if (!exercisePendingDeletion) {
+            return;
+        }
+
+        router.delete(route('admin.coding-exercises.destroy', exercisePendingDeletion.id), {
+            preserveScroll: true,
+            onFinish: () => setExercisePendingDeletion(null),
+        });
     };
 
     return (
@@ -101,7 +114,7 @@ export default function Index({ codingExercises = [] }) {
                                                         </Link>
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleDelete(exercise)}
+                                                            onClick={() => confirmDelete(exercise)}
                                                             className="font-medium text-red-400 hover:text-red-300"
                                                         >
                                                             Delete
@@ -130,6 +143,36 @@ export default function Index({ codingExercises = [] }) {
                     </div>
                 </div>
             </div>
+
+            <Modal show={exercisePendingDeletion !== null} onClose={cancelDelete}>
+                <div className="bg-slate-900 p-6">
+                    <h2 className="text-lg font-medium text-slate-100">
+                        Delete "{exercisePendingDeletion?.title}"?
+                    </h2>
+
+                    <p className="mt-1 text-sm text-slate-400">
+                        This will permanently delete the coding exercise and all associated student attempts. This action cannot be undone.
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={cancelDelete}
+                            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={deleteExercise}
+                            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
+                        >
+                            Delete Exercise
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </AdministratorLayout>
     );
 }

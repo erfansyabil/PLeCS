@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -308,29 +309,32 @@ class LearningPathController extends Controller
         $catalog = $this->courseCatalog();
         $catalogJson = json_encode($catalog);
 
-        $tempFile = storage_path('app/temp_catalog_' . auth()->id() . '.json');
-        file_put_contents($tempFile, $catalogJson);
+        $baseUrl = 'https://ethe1k-plecs-recommender.hf.space';
 
-        $scriptPath = base_path('storage/scripts/hf_recommend.py');
-        $command = sprintf(
-            'python %s %s %s %s %s %s 2>&1',
-            escapeshellarg($scriptPath),
-            escapeshellarg($formLevel),
-            escapeshellarg($interestsString),
-            escapeshellarg($background),
-            escapeshellarg($learningGoal),
-            escapeshellarg($tempFile)
-        );
+        try {
+            $submitResponse = Http::timeout(30)->post("{$baseUrl}/gradio_api/call/generate_learning_path", [
+                'data' => [$formLevel, $interestsString, $background, $learningGoal, $catalogJson],
+            ]);
 
-        $output = shell_exec($command);
-        @unlink($tempFile);
+            $eventId = $submitResponse->json('event_id');
 
-        $outputLines = explode("\n", trim($output));
-        $jsonLine = end($outputLines);
-        $responseData = json_decode($jsonLine, true);
+            if (!$submitResponse->successful() || !$eventId) {
+                Log::error('HF Space error', ['output' => $submitResponse->body()]);
+                return [];
+            }
+
+            $streamResponse = Http::timeout(60)
+                ->withHeaders(['Accept' => 'text/event-stream'])
+                ->get("{$baseUrl}/gradio_api/call/generate_learning_path/{$eventId}");
+
+            $responseData = $this->parseGradioEventStream($streamResponse->body());
+        } catch (\Throwable $e) {
+            Log::error('HF Space error', ['output' => $e->getMessage()]);
+            return [];
+        }
 
         if (!$responseData || isset($responseData['error']) || ($responseData['success'] ?? null) === false) {
-            Log::error('HF Space error', ['output' => $output]);
+            Log::error('HF Space error', ['output' => json_encode($responseData)]);
             return [];
         }
 
@@ -339,6 +343,43 @@ class LearningPathController extends Controller
         }
 
         return $this->resolveRecommendations($responseData, $catalog);
+    }
+
+    /**
+     * Parse a Gradio queue SSE response body and decode the "complete" event's
+     * payload back into the associative array the recommender returns.
+     */
+    private function parseGradioEventStream(string $raw): ?array
+    {
+        $event = null;
+
+        foreach (explode("\n", $raw) as $line) {
+            $line = rtrim($line, "\r");
+
+            if (str_starts_with($line, 'event:')) {
+                $event = trim(substr($line, 6));
+                continue;
+            }
+
+            if (!str_starts_with($line, 'data:')) {
+                continue;
+            }
+
+            $dataLine = trim(substr($line, 5));
+
+            if ($event === 'complete') {
+                $decoded = json_decode($dataLine, true);
+                $result = is_array($decoded) ? ($decoded[0] ?? null) : null;
+
+                return is_string($result) ? json_decode($result, true) : $result;
+            }
+
+            if ($event === 'error') {
+                return ['success' => false, 'error' => $dataLine];
+            }
+        }
+
+        return null;
     }
 
     /**

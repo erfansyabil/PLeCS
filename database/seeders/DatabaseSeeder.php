@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
             // Ting3Bab1PemikiranKomputasionalQuizSeeder::class,
             // Ting3Bab2PerwakilanDataQuizSeeder::class,
             // Ting3Bab3AlgoritmaQuizSeeder::class,
+            // Ting3Bab4KodArahanTopicSeeder::class,
+            // Ting3Bab4KodArahanQuizSeeder::class,
+            // Ting3Bab4KodArahanCodingExerciseSeeder::class,
         ]);
     }
 }

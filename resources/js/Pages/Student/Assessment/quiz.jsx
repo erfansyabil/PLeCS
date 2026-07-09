@@ -313,7 +313,7 @@ export default function QuizPage({ course, topic, quiz, latestAttempt }) {
 
                     {/* Quiz header */}
                     <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-600">
-                        <p className="text-sm uppercase text-gray-500">{course.title}</p>
+                        <p className="text-sm uppercase text-gray-500 dark:text-gray-300">{course.title}</p>
                         <h3 className="mt-2 text-2xl font-semibold dark:text-white">{quiz.title}</h3>
                         {quiz.description && (
                             <p className="mt-3 text-gray-700 dark:text-gray-200">{quiz.description}</p>

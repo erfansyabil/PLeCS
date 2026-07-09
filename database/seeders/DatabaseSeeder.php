@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             // Bab2PerwakilanDataQuizSeeder::class,
             // Bab3AlgoritmaQuizSeeder::class,
             // Bab4KodArahanQuizSeeder::class,
+            // Ting2Bab1PerwakilanDataQuizSeeder::class,
+            // Ting2Bab2AlgoritmaQuizSeeder::class,
+            // Ting2Bab3KodArahanQuizSeeder::class,
         ]);
     }
 }

@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
             // ContentSeeder::class,
             // AssessmentSeeder::class,
             // PlecsLatestSeeder::class, // restores real data from plecs_latest.sql
+            // Bab1PemikiranKomputasionalQuizSeeder::class,
+            // Bab2PerwakilanDataQuizSeeder::class,
+            // Bab3AlgoritmaQuizSeeder::class,
+            // Bab4KodArahanQuizSeeder::class,
         ]);
     }
 }

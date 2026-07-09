@@ -31,7 +31,7 @@ export default function LearningContentIndex({ layout, contents = [] }) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-600 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-white bg-gray-800">
+                        <div className="p-6 text-gray-900 dark:text-white">
                             <p className="mb-6">
                                 Welcome to the Learning Content module. Here you can browse, add, and manage your learning materials.
                             </p>

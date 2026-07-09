@@ -370,7 +370,7 @@ export default function Dashboard(props) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="mb-4">
-                        <h3 className="text-lg font-medium text-gray-800 dark:text-white">
+                        <h3 className="text-lg font-medium text-gray-800">
                             Welcome back, {auth.user.name}!
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">

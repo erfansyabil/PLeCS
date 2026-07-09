@@ -315,7 +315,7 @@ export default function EnrollmentIndex({ auth, layout, courses = [] }) {
                 <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
                     {!showRecommendations ? (
                         // Survey Section
-                        <div className="bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-8 text-gray-900 dark:text-white">
                                 <div className="mb-8">
                                     <h1 className="text-3xl font-bold mb-2">Find Your Perfect Course</h1>

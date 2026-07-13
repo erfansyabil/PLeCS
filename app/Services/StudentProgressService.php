@@ -97,16 +97,30 @@ class StudentProgressService
 
         $totalAttempts = fn () => QuizAttempt::where('student_id', $student->id)->count();
 
+        $totalPassedCodingExercises = fn () => CodingExerciseAttempt::where('student_id', $student->id)
+            ->where('passed', true)
+            ->distinct('coding_exercise_id')
+            ->count('coding_exercise_id');
+
         $milestones = [
-            'first_quiz'    => fn () => $totalAttempts() >= 1,
-            'streak_3'      => fn () => ($student->streak_days ?? 0) >= 3,
-            'streak_7'      => fn () => ($student->streak_days ?? 0) >= 7,
-            'points_100'    => fn () => ($student->points ?? 0) >= 100,
-            'points_500'    => fn () => ($student->points ?? 0) >= 500,
-            'points_1000'   => fn () => ($student->points ?? 0) >= 1000,
-            'perfect_score' => fn () => QuizAttempt::where('student_id', $student->id)
+            'first_quiz'             => fn () => $totalAttempts() >= 1,
+            'streak_3'               => fn () => ($student->streak_days ?? 0) >= 3,
+            'streak_7'               => fn () => ($student->streak_days ?? 0) >= 7,
+            'streak_14'              => fn () => ($student->streak_days ?? 0) >= 14,
+            'streak_30'              => fn () => ($student->streak_days ?? 0) >= 30,
+            'points_100'             => fn () => ($student->points ?? 0) >= 100,
+            'points_500'             => fn () => ($student->points ?? 0) >= 500,
+            'points_1000'            => fn () => ($student->points ?? 0) >= 1000,
+            'points_2500'            => fn () => ($student->points ?? 0) >= 2500,
+            'perfect_score'          => fn () => QuizAttempt::where('student_id', $student->id)
                 ->whereColumn('score', 'max_score')
                 ->where('max_score', '>', 0)
+                ->exists(),
+            'quiz_veteran'           => fn () => $totalAttempts() >= 25,
+            'first_coding_exercise'  => fn () => $totalPassedCodingExercises() >= 1,
+            'coding_master'          => fn () => $totalPassedCodingExercises() >= 10,
+            'course_complete'        => fn () => Enrollment::where('studentID', $student->id)
+                ->where('status', 'completed')
                 ->exists(),
         ];
 
@@ -202,12 +216,18 @@ class StudentProgressService
 
         $enrollment->progress = $progress;
 
-        if ($progress >= 100 && ! $enrollment->completed_at) {
+        $justCompleted = $progress >= 100 && ! $enrollment->completed_at;
+        if ($justCompleted) {
             $enrollment->completed_at = now();
             $enrollment->status = 'completed';
         }
 
         $enrollment->save();
+
+        if ($justCompleted) {
+            $student = User::lockForUpdate()->findOrFail($studentId);
+            $this->evaluateBadges($student);
+        }
     }
 
     public function recalculateAnalytics(int $studentId, int $topicId): void

@@ -126,13 +126,20 @@ function RecentQuizzes({ attempts }) {
 }
 
 const BADGE_LABELS = {
-    first_quiz:    '🎯 First Quiz',
-    streak_3:      '🔥 3-Day Streak',
-    streak_7:      '🔥 7-Day Streak',
-    points_100:    '⭐ 100 Points',
-    points_500:    '⭐ 500 Points',
-    points_1000:   '🏆 1000 Points',
-    perfect_score: '💯 Perfect Score',
+    first_quiz:            '🎯 First Quiz',
+    streak_3:              '🔥 3-Day Streak',
+    streak_7:              '🔥 7-Day Streak',
+    streak_14:             '🔥 14-Day Streak',
+    streak_30:             '🔥 30-Day Streak',
+    points_100:            '⭐ 100 Points',
+    points_500:            '⭐ 500 Points',
+    points_1000:           '🏆 1000 Points',
+    points_2500:           '🏆 2500 Points',
+    perfect_score:         '💯 Perfect Score',
+    quiz_veteran:          '📚 Quiz Veteran',
+    first_coding_exercise: '💻 First Code Exercise',
+    coding_master:         '🧑‍💻 Coding Master',
+    course_complete:       '🎓 Course Complete',
 };
 
 function WeakTopics({ weakTopics }) {

@@ -29,7 +29,7 @@ class AssessmentController extends Controller
             Enrollment::query()
                 ->where('studentID', auth()->id())
                 ->where('courseID', $course->id)
-                ->where('status', 'active')
+                ->whereIn('status', ['active', 'completed'])
                 ->exists(),
             403
         );

@@ -2,11 +2,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentLayout from '@/Layouts/StudentLayout';
 import TeacherLayout from '@/Layouts/TeacherLayout';
 import AdministratorLayout from '@/Layouts/AdministratorLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 import Header from '@/Components/ui/Header';
+import MediaUnavailable from '@/Components/ui/MediaUnavailable';
 
 export default function TopicPage({ topic, courseId, nextTopic, prevTopic, additionalResources = [], layout }) {
+    const isLowBandwidth = Boolean(usePage().props.auth.user?.low_bandwidth_mode);
 
     // Determine which layout to use
         const getLayout = () => {
@@ -120,8 +122,17 @@ export default function TopicPage({ topic, courseId, nextTopic, prevTopic, addit
             anchor.replaceWith(wrapper);
         });
 
+        if (isLowBandwidth) {
+            doc.querySelectorAll('img, iframe, video').forEach((mediaEl) => {
+                const placeholder = doc.createElement('div');
+                placeholder.className = 'flex items-center justify-center gap-2 rounded border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500 my-4';
+                placeholder.textContent = 'Media is not available due to current low-bandwidth mode.';
+                mediaEl.replaceWith(placeholder);
+            });
+        }
+
         return doc.body.innerHTML;
-    }, [topic?.content]);
+    }, [topic?.content, isLowBandwidth]);
 
     const pdfUrl = topic?.resource_path ? `/storage/${topic.resource_path}` : null;
     const youtubeEmbedUrl = getYouTubeEmbedUrl(topic?.resource_url);
@@ -186,43 +197,55 @@ export default function TopicPage({ topic, courseId, nextTopic, prevTopic, addit
                                                 )}
 
                                                 {block.type === 'youtube' && blockVideoUrl && (
-                                                    <div className="aspect-video">
-                                                        <iframe
-                                                            src={blockVideoUrl}
-                                                            title={block.title || 'Topic video'}
-                                                            className="w-full h-full rounded"
-                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                            allowFullScreen
-                                                        />
-                                                    </div>
+                                                    isLowBandwidth ? (
+                                                        <MediaUnavailable label="This video" />
+                                                    ) : (
+                                                        <div className="aspect-video">
+                                                            <iframe
+                                                                src={blockVideoUrl}
+                                                                title={block.title || 'Topic video'}
+                                                                className="w-full h-full rounded"
+                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                allowFullScreen
+                                                            />
+                                                        </div>
+                                                    )
                                                 )}
 
                                                 {block.type === 'pdf' && blockFileUrl && (
-                                                    <div>
-                                                        <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                                            <iframe
-                                                                src={blockFileUrl}
-                                                                title={block.title || 'Topic PDF'}
-                                                                className="w-full h-[640px]"
-                                                            />
+                                                    isLowBandwidth ? (
+                                                        <MediaUnavailable label="This PDF preview" />
+                                                    ) : (
+                                                        <div>
+                                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                                <iframe
+                                                                    src={blockFileUrl}
+                                                                    title={block.title || 'Topic PDF'}
+                                                                    className="w-full h-[640px]"
+                                                                />
+                                                            </div>
+                                                            <a
+                                                                href={blockFileUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                                            >
+                                                                Open PDF in new tab
+                                                            </a>
                                                         </div>
-                                                        <a
-                                                            href={blockFileUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
-                                                        >
-                                                            Open PDF in new tab
-                                                        </a>
-                                                    </div>
+                                                    )
                                                 )}
 
                                                 {block.type === 'image' && blockFileUrl && (
-                                                    <img
-                                                        src={blockFileUrl}
-                                                        alt={block.title || 'Topic image'}
-                                                        className="max-h-[640px] w-full object-contain rounded"
-                                                    />
+                                                    isLowBandwidth ? (
+                                                        <MediaUnavailable label="This image" />
+                                                    ) : (
+                                                        <img
+                                                            src={blockFileUrl}
+                                                            alt={block.title || 'Topic image'}
+                                                            className="max-h-[640px] w-full object-contain rounded"
+                                                        />
+                                                    )
                                                 )}
                                             </div>
                                         );
@@ -238,36 +261,46 @@ export default function TopicPage({ topic, courseId, nextTopic, prevTopic, addit
                                     {topic.resource_type === 'pdf' && pdfUrl && (
                                         <div className="mt-6">
                                             <h4 className="font-semibold mb-2">PDF Resource</h4>
-                                            <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                                <iframe
-                                                    src={pdfUrl}
-                                                    title="Topic PDF"
-                                                    className="w-full h-[640px]"
-                                                />
-                                            </div>
-                                            <a
-                                                href={pdfUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
-                                            >
-                                                Open PDF in new tab
-                                            </a>
+                                            {isLowBandwidth ? (
+                                                <MediaUnavailable label="This PDF preview" />
+                                            ) : (
+                                                <>
+                                                    <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                        <iframe
+                                                            src={pdfUrl}
+                                                            title="Topic PDF"
+                                                            className="w-full h-[640px]"
+                                                        />
+                                                    </div>
+                                                    <a
+                                                        href={pdfUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-block mt-2 text-indigo-600 hover:text-indigo-800"
+                                                    >
+                                                        Open PDF in new tab
+                                                    </a>
+                                                </>
+                                            )}
                                         </div>
                                     )}
 
                                     {topic.resource_type === 'youtube' && youtubeEmbedUrl && (
                                         <div className="mt-6">
                                             <h4 className="font-semibold mb-2">Video Resource</h4>
-                                            <div className="aspect-video">
-                                                <iframe
-                                                    src={youtubeEmbedUrl}
-                                                    title="Topic video"
-                                                    className="w-full h-full rounded"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                />
-                                            </div>
+                                            {isLowBandwidth ? (
+                                                <MediaUnavailable label="This video" />
+                                            ) : (
+                                                <div className="aspect-video">
+                                                    <iframe
+                                                        src={youtubeEmbedUrl}
+                                                        title="Topic video"
+                                                        className="w-full h-full rounded"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </>
@@ -289,21 +322,29 @@ export default function TopicPage({ topic, courseId, nextTopic, prevTopic, addit
                                                 </div>
 
                                                 {attachment.type === 'image' && (
-                                                    <img
-                                                        src={attachmentUrl}
-                                                        alt={attachment.title || 'Attachment image'}
-                                                        className="max-h-[640px] w-full object-contain rounded"
-                                                    />
+                                                    isLowBandwidth ? (
+                                                        <MediaUnavailable label="This image" />
+                                                    ) : (
+                                                        <img
+                                                            src={attachmentUrl}
+                                                            alt={attachment.title || 'Attachment image'}
+                                                            className="max-h-[640px] w-full object-contain rounded"
+                                                        />
+                                                    )
                                                 )}
 
                                                 {attachment.type === 'pdf' && (
-                                                    <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
-                                                        <iframe
-                                                            src={attachmentUrl}
-                                                            title={attachment.title || 'Attachment PDF'}
-                                                            className="w-full h-[640px]"
-                                                        />
-                                                    </div>
+                                                    isLowBandwidth ? (
+                                                        <MediaUnavailable label="This PDF preview" />
+                                                    ) : (
+                                                        <div className="rounded border border-gray-200 dark:border-gray-500 overflow-hidden">
+                                                            <iframe
+                                                                src={attachmentUrl}
+                                                                title={attachment.title || 'Attachment PDF'}
+                                                                className="w-full h-[640px]"
+                                                            />
+                                                        </div>
+                                                    )
                                                 )}
                                             </div>
                                         );

@@ -1,61 +1,124 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PLeCS — Personalized Learning Content System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+PLeCS is a web-based Learning Management System (LMS) built for secondary-school students. It delivers personalized course content, gamified assessments (quizzes and coding exercises), AI-assisted learning path recommendations, and progress analytics, with dedicated experiences for three roles: **Student**, **Teacher**, and **Administrator**.
 
-## About Laravel
+Built with **Laravel 12** on the backend and **React 18 + Inertia.js** on the frontend, sharing a single codebase and auth flow across all three roles.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features / Modules
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Student
+- **Learning Content** — browse courses and topics, with rich content blocks and attachments.
+- **Enrollment** — enroll/drop courses, view enrollment history and active enrollments.
+- **Learning Path** — build and reorder a personalized learning path, or generate one automatically from a survey via the AI recommender.
+- **Assessments** — attempt gamified quizzes (MCQ, auto-graded) and coding exercises (snippet-based grading), earning points, streaks, and badges.
+- **Progress & Analytics** — view per-course/topic performance analytics, mastery predictions, and risk flags.
+- **Feedback** — submit feedback on learning modules/topics.
+- **Guidance** — view guidance messages left by teachers.
+- **Low-bandwidth mode** — toggle a lightweight UI mode that hides heavy media.
+- **Google OAuth login** in addition to standard email/password auth.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Teacher
+- **Topics** — view course/topic structure.
+- **Additional Materials** — manage supplementary learning content per topic.
+- **Feedback Overview** — review aggregated student feedback.
+- **Guidance** — send feedback/guidance messages to individual students.
 
-## Learning Laravel
+### Administrator
+- **Learning Content Management** — full CRUD over courses, topics, and content blocks (rich-text editor via Tiptap), including image uploads.
+- **Quiz Management** — full CRUD over quizzes and their questions/options.
+- **Coding Exercise Management** — full CRUD over coding exercises and grading criteria.
+- **Feedback Overview** — review aggregated student feedback across courses.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### AI Learning Path Recommendation
+Given a student's survey answers and the current course catalog, a Hugging Face Space (Gradio-backed recommender) suggests a personalized set of courses, which is resolved back to course records in the database.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Prerequisites
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **PHP** >= 8.2 with the extensions Laravel 12 requires (mbstring, openssl, PDO, tokenizer, xml, ctype, json, bcmath, fileinfo)
+- **Composer** 2.x
+- **Node.js** >= 18 and npm
+- **MySQL** (or another Laravel-supported database — MySQL is the default configured connection)
+- **Python 3** with the [`gradio_client`](https://pypi.org/project/gradio-client/) package installed — required only for the AI learning-path recommendation feature (invoked via `storage/scripts/hf_recommend.py`)
+- A **Google OAuth 2.0 Client ID/Secret** — required only for "Sign in with Google"
 
-## Laravel Sponsors
+## Setup Instructions
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd PLeCS
+   ```
 
-### Premium Partners
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+3. **Install JavaScript dependencies**
+   ```bash
+   npm install
+   ```
 
-## Contributing
+4. **Configure environment**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   Then edit `.env` and set:
+   - `DB_*` — your MySQL connection details (create the `plecs` database beforehand, or point `DB_DATABASE` at an existing one)
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` (and matching `VITE_GOOGLE_CLIENT_ID`) — for Google login
+   - `HUGGINGFACE_SPACE_URL` / `HUGGINGFACE_API_TOKEN` — for the AI recommender feature
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. **Run database migrations** (and seed sample data, optional)
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
 
-## Code of Conduct
+6. **Install Python dependency for the AI recommender** (optional, only needed for learning-path recommendations)
+   ```bash
+   pip install gradio_client
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+7. **Start the development environment**
 
-## Security Vulnerabilities
+   Full stack (PHP server + queue worker + log viewer + Vite HMR, all in one command):
+   ```bash
+   composer dev
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   Or lightweight (Vite + `artisan serve` only):
+   ```bash
+   npm run dev
+   ```
 
-## License
+8. **Visit the app** at [http://localhost:8000](http://localhost:8000)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Useful Commands
+
+```bash
+# Run the full test suite
+composer test
+# or
+php artisan test
+
+# Run a single test file
+php artisan test tests/Feature/SomeTest.php
+
+# Lint/format PHP code
+./vendor/bin/pint
+
+# Production frontend build
+npm run build
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 (PHP 8.2+) |
+| Frontend | React 18, Inertia.js, Tailwind CSS v3, Vite 6 |
+| Auth | Laravel Breeze (email/password) + Google OAuth (Socialite) |
+| Routing helper | Ziggy (Laravel routes usable in React via `route()`) |
+| Rich text editor | Tiptap |
+| AI recommendations | Hugging Face Space via Gradio Client (Python bridge) |
